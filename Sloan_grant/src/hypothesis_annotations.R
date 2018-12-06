@@ -1,21 +1,41 @@
-#hypothes.is API work
-
-library(devtools)
-install_github("mdlincoln/hypothesisr")
+#load libraries
 library(hypothesisr)
-library(dplyr)
-library(purrr)
-library(stringr)
+library(tidyverse)
+library(lubridate)
+library(here)
 
-preprint_domains <- c('agrixiv', 'arabixiv', 'eartharxiv', 'ecsarxiv', 'engrxiv', 'frenxiv', 'marxiv', 'mindrxiv', 'osf', 'paleorxiv','psyarxiv', 'thesiscommons')
-all_osf_annotations <- map_dfr(preprint_domains, ~hs_search_all(custom =  list(uri.parts = .)))
+preprint_domains <- c('agrixiv', 'afriarxiv', 'arabixiv', 'bitss', 'eartharxiv', 'ecsarxiv', 
+                      'engrxiv', 'frenxiv', 'inarxiv','marxiv', 'mindrxiv',  'nutrixiv',
+                      'osf', 'paleorxiv', 'psyarxiv', 'socarxiv', 'sportrxiv', 'thesiscommons')
 
-only_prod_annotations <- all_osf_annotations %>%
-                            filter(!grepl('cos', uri), !grepl('staging',uri), !grepl('wiki', uri), !grepl('developer', uri), !grepl('github', uri), !grepl('mfr', uri), !grepl('files', uri)) %>%
-                            mutate(guid = case_when(str_detect(str_sub(uri, -1), "/") ~ str_sub(uri, -6, -2),
-                                                    str_detect(str_sub(uri, -1), "/") == FALSE ~ str_sub(uri, -5, -1))) %>%
-                            select(updated, text, created, uri, guid, user, id, links.json, links.html, links.incontext, document.title)
+get_annotations = function(preprint_domains, date) {
+  
+  all_annotations <- distinct(map_dfr(preprint_domains, ~hs_search_all(sort = "created", custom =  list(search_after = date, uri.parts = .), order = "asc")), id, .keep_all = T)
+  
+  only_production <- all_annotations %>%
+    filter(!grepl('cos', uri), !grepl('staging',uri), !grepl('wiki', uri), !grepl('developer', uri), 
+           !grepl('github', uri), !grepl('mfr', uri), !grepl('files', uri), !grepl("blogs", uri), !grepl("register", uri)) %>%
+    mutate(guid = case_when(str_detect(str_sub(uri, -1), "/") ~ str_sub(uri, -6, -2),
+                            str_detect(str_sub(uri, -1), "/") == FALSE ~ str_sub(uri, -5, -1))) %>%
+    mutate(created = ymd_hms(created), updated = ymd_hms(updated)) %>%
+    select(updated, text, created, uri, guid, user, id, links.json, links.html, links.incontext)
+  
+  return(only_production)
+}
 
-View(all_osf_annotations)
-View(only_prod_annotations)
+old_annotations <- read_csv(file = here::here("data", "annotation_info.csv"))
+
+##get most recent data that exists in preprint file
+date <- date(old_annotations$created[1])
+
+#make API call
+new_annotations <- get_annotations(preprint_domains, date)
+
+#add combine new and old preprints and deduplicate (API can only filter by day, so their will be some overlap)
+all_annotations <- rbind(new_annotations, old_annotations)
+all_annotations <- distinct(all_annotations, id, .keep_all = T)
+
+#write out new file
+write_csv(all_annotations, path = here::here("data", "annotation_info.csv"))
+
 

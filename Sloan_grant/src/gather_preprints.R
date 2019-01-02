@@ -4,7 +4,7 @@ library(tidyverse)
 library(here)
 library(lubridate)
 
-url <- 'https://api.osf.io/v2/preprints/?filter[date_created][gte]='
+url <- 'https://api.osf.io/v2/preprints/?filter[date_published][gte]='
 
 process_pagination <- function(res) {
   # Create variable to hold original page
@@ -25,17 +25,18 @@ process_json <- function(x) {
 }
 
 
-#create GET request that includes base URL and filtering for preprints on and after that date & take API response & return table with needed attritbutes
+#create GET request that includes base URL and filtering for preprints published on and after that date & take API response & return table with needed attritbutes
 get_preprints <- function(url, date) {
   call <- GET(url = paste0(url, date))
   res <- process_json(call)
   preprints <- process_pagination(res)
   guid <- preprints %>% map_chr("id")
   preprint_doi <- preprints %>% map("links") %>% map_chr("preprint_doi")
-  date_created <- preprints %>% map("attributes") %>% map_chr("date_created")
-  preprint_info <- as.tibble(cbind(guid, preprint_doi, date_created))
+  date_published <- preprints %>% map("attributes") %>% map_chr("date_published")
+  preprint_info <- as.tibble(cbind(date_published, guid, preprint_doi))
   preprint_info <- preprint_info %>%
-                      mutate(date_created = ymd_hms(date_created))
+                      mutate(date_published = ymd_hms(date_published), preprint_doi = str_remove(preprint_doi, 'https://doi.org/')) %>%
+                      arrange(desc(date_published))
   return(preprint_info)
 }
 
@@ -44,7 +45,7 @@ get_preprints <- function(url, date) {
 old_preprints <- read_csv(file = here::here("data", "preprint_info.csv"))
 
 ##get most recent data that exists in preprint file
-date <- date(old_preprints$date_created[1])
+date <- date(old_preprints$date_published[1])
   
 #make API call
 new_preprints <- get_preprints(url, date)

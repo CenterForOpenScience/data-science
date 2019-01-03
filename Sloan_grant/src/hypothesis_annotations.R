@@ -33,7 +33,8 @@ new_annotations <- get_annotations(preprint_domains, date)
 
 #add combine new and old preprints and deduplicate (API can only filter by day, so their will be some overlap)
 all_annotations <- rbind(new_annotations, old_annotations)
-all_annotations <- distinct(all_annotations, id, .keep_all = T)
+all_annotations <- distinct(all_annotations, id, .keep_all = T) %>%
+                      arrange(desc(updated))
 
 #write out new file
 write_csv(all_annotations, path = here::here("data", "annotation_info.csv"))

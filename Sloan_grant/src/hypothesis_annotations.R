@@ -3,6 +3,7 @@ library(hypothesisr)
 library(tidyverse)
 library(lubridate)
 library(here)
+library(googledrive)
 
 preprint_domains <- c('agrixiv', 'afriarxiv', 'arabixiv', 'bitss', 'eartharxiv', 'ecsarxiv', 
                       'engrxiv', 'frenxiv', 'inarxiv','marxiv', 'mindrxiv',  'nutrixiv',
@@ -23,7 +24,9 @@ get_annotations = function(preprint_domains, date) {
   return(only_production)
 }
 
-old_annotations <- read_csv(file = here::here("data", "annotation_info.csv"))
+
+drive_download("annotation_info.csv", overwrite = T)
+old_annotations <- read_csv(file = here::here("annotation_info.csv"))
 
 ##get most recent data that exists in preprint file
 date <- date(old_annotations$created[1])
@@ -32,11 +35,12 @@ date <- date(old_annotations$created[1])
 new_annotations <- get_annotations(preprint_domains, date)
 
 #add combine new and old preprints and deduplicate (API can only filter by day, so their will be some overlap)
-all_annotations <- rbind(new_annotations, old_annotations)
-all_annotations <- distinct(all_annotations, id, .keep_all = T) %>%
+annotation_info <- rbind(new_annotations, old_annotations)
+annotation_info <- distinct(annotation_info, id, .keep_all = T) %>%
                       arrange(desc(updated))
 
 #write out new file
-write_csv(all_annotations, path = here::here("data", "annotation_info.csv"))
+write_csv(annotation_info, path = here::here("annotation_info.csv"))
+drive_update(file = 'Sloan Signals of Trust Grant/Data/annotation_info.csv', media = "annotation_info.csv")
 
 

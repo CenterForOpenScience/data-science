@@ -3,6 +3,7 @@ library(httr)
 library(tidyverse)
 library(here)
 library(lubridate)
+library(googledrive)
 
 url <- 'https://api.osf.io/v2/preprints/?filter[date_published][gte]='
 
@@ -42,7 +43,8 @@ get_preprints <- function(url, date) {
 
 
 #read in preprint info to date
-old_preprints <- read_csv(file = here::here("data", "preprint_info.csv"))
+drive_download("preprint_info.csv", overwrite = T)
+old_preprints <- read_csv(file = here::here("preprint_info.csv"))
 
 ##get most recent data that exists in preprint file
 date <- date(old_preprints$date_published[1])
@@ -51,10 +53,11 @@ date <- date(old_preprints$date_published[1])
 new_preprints <- get_preprints(url, date)
 
 #add combine new and old preprints and deduplicate (API can only filter by day, so their will be some overlap)
-all_preprints <- rbind(new_preprints, old_preprints)
-all_preprints <- distinct(all_preprints, guid, .keep_all = T)
+preprint_info <- rbind(new_preprints, old_preprints)
+preprint_info <- distinct(preprint_info, guid, .keep_all = T)
 
 #write out new file
-write_csv(all_preprints, path = here::here("data", "preprint_info.csv"))
+write_csv(preprint_info, path = here::here("preprint_info.csv"))
+drive_update(file = 'Sloan Signals of Trust Grant/Data/preprint_info.csv', media = "preprint_info.csv")
 
 

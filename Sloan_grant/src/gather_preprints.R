@@ -35,12 +35,16 @@ get_preprints <- function(url, date) {
   preprint_doi <- preprints %>% map("links") %>% map_chr("preprint_doi")
   date_published <- preprints %>% map("attributes") %>% map_chr("date_published")
   provider <- preprints %>% map("relationships") %>% map_chr(~.x$provider$links$related$href)
-  preprint_info <- as.tibble(cbind(date_published, guid, preprint_doi, provider))
+  supp_node <- as.character(preprints %>% map("relationships") %>% map(~.x$node$data$id))
+  supp_node <- sapply(supp_node, function(x) ifelse(x == "NULL", NA, x))
+  preprint_info <- as.tibble(cbind(date_published, guid, preprint_doi, provider, supp_node))
   preprint_info <- preprint_info %>%
-                      mutate(date_published = ymd_hms(date_published), 
+                      mutate(date_published = ymd_hms(date_published),
                              preprint_doi = str_remove(preprint_doi, 'https://doi.org/'),
                              provider = str_remove(provider, 'https://api.osf.io/v2/providers/preprints/'),
-                             provider = str_remove(provider, '/')) %>%
+                             provider = str_remove(provider, '/'),
+                             supp_node = as.character(supp_node),
+                             guid = as.character(guid)) %>%
                       arrange(desc(date_published))
   return(preprint_info)
 }

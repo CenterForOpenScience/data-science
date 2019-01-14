@@ -1,11 +1,12 @@
 #loading libraries
+library(osfr)
 library(httr)
 library(tidyverse)
 library(here)
 library(lubridate)
-library(googledrive)
 
 url <- 'https://api.osf.io/v2/preprints/?filter[date_published][gte]='
+preprint_file <- osf_retrieve_file("")
 
 process_pagination <- function(res) {
   # Create variable to hold original page
@@ -51,7 +52,7 @@ get_preprints <- function(url, date) {
 
 
 #read in preprint info to date
-drive_download("preprint_info.csv", overwrite = T)
+osf_download(preprint_file, overwrite = T)
 old_preprints <- read_csv(file = here::here("preprint_info.csv"))
 
 ##get most recent data that exists in preprint file
@@ -66,6 +67,6 @@ preprint_info <- distinct(preprint_info, guid, .keep_all = T)
 
 #write out new file
 write_csv(preprint_info, path = here::here("preprint_info.csv"))
-drive_update(file = 'Sloan Signals of Trust Grant/Data/preprint_info.csv', media = "preprint_info.csv")
+osf_upload(osf_grant_node, path = here::here("preprint_info.csv"))
 
 

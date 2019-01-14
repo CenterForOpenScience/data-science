@@ -3,7 +3,10 @@ library(hypothesisr)
 library(tidyverse)
 library(lubridate)
 library(here)
-library(googledrive)
+library(osfr)
+
+osf_grant_node <- osf_retrieve_node("h9mwd")
+annotations_file <- osf_retrieve_file("9dpqm")
 
 preprint_domains <- c('agrixiv', 'afriarxiv', 'arabixiv', 'bitss', 'eartharxiv', 'ecsarxiv', 
                       'engrxiv', 'frenxiv', 'inarxiv','marxiv', 'mindrxiv',  'nutrixiv',
@@ -24,8 +27,7 @@ get_annotations = function(preprint_domains, date) {
   return(only_production)
 }
 
-
-drive_download("annotation_info.csv", overwrite = T)
+osf_download(annotations_file, overwrite = T)
 old_annotations <- read_csv(file = here::here("annotation_info.csv"))
 
 ##get most recent data that exists in preprint file
@@ -41,6 +43,6 @@ annotation_info <- distinct(annotation_info, id, .keep_all = T) %>%
 
 #write out new file
 write_csv(annotation_info, path = here::here("annotation_info.csv"))
-drive_update(file = 'Sloan Signals of Trust Grant/Data/annotation_info.csv', media = "annotation_info.csv")
+osf_upload(osf_grant_node, path = here::here("annotation_info.csv"), overwrite = T)
 
 

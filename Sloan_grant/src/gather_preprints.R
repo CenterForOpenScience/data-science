@@ -6,7 +6,8 @@ library(here)
 library(lubridate)
 
 url <- 'https://api.osf.io/v2/preprints/?filter[date_published][gte]='
-preprint_file <- osf_retrieve_file("")
+preprint_file <- osf_retrieve_file("9ycfa")
+osf_grant_node <- osf_retrieve_node('h9mwd')
 
 process_pagination <- function(res) {
   # Create variable to hold original page
@@ -38,7 +39,7 @@ get_preprints <- function(url, date) {
   provider <- preprints %>% map("relationships") %>% map_chr(~.x$provider$links$related$href)
   supp_node <- as.character(preprints %>% map("relationships") %>% map(~.x$node$data$id))
   supp_node <- sapply(supp_node, function(x) ifelse(x == "NULL", NA, x))
-  preprint_info <- as.tibble(cbind(date_published, guid, preprint_doi, provider, supp_node))
+  preprint_info <- as_tibble(cbind(date_published, guid, preprint_doi, provider, supp_node))
   preprint_info <- preprint_info %>%
                       mutate(date_published = ymd_hms(date_published),
                              preprint_doi = str_remove(preprint_doi, 'https://doi.org/'),
@@ -67,6 +68,6 @@ preprint_info <- distinct(preprint_info, guid, .keep_all = T)
 
 #write out new file
 write_csv(preprint_info, path = here::here("preprint_info.csv"))
-osf_upload(osf_grant_node, path = here::here("preprint_info.csv"))
+osf_upload(osf_grant_node, path = here::here("preprint_info.csv"), overwrite = T)
 
 

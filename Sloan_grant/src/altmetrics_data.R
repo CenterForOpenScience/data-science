@@ -14,11 +14,10 @@ osf_altmetrics_node <- osf_retrieve_node('wh8ks')
 
 
 safe_altmetrics <- safely(altmetrics, otherwise = NULL)
-#step 1: pull in lates file with all the preprint DOIs
-#current_dois <- read_csv(file = here::here("preprint_info.csv")) %>%
-#                  select(preprint_doi)
 
-current_dois <- read_csv(file = '/Users/courtneysoderberg/Documents/data-science/Sloan_grant/src/preprint_info.csv') %>% select(preprint_doi)
+#step 1: pull in lates file with all the preprint DOIs
+current_dois <- read_csv(file = here::here("preprint_info.csv")) %>%
+                 select(preprint_doi)
 
 call_count <- 0
 result <- list()

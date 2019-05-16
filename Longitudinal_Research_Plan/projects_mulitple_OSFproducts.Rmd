@@ -1,0 +1,104 @@
+---
+title: "projects_multiple_OSFproducts"
+output: html_document
+---
+
+This analysis is collecting initial data on the number of projects that take advantage of two of the major behaviors on the OSF that also represent different different points in the workflow: sharing files and registrations. The initial analysis does not take into account when these behaviors happen in relation to each other (e.g. are files uploaded to the project/modified after the registration or only before?), but that may be included as a more complicated relationship in later analyses. 
+
+Data caveats and explanations:
+
+* The data used for the analyses below goes through 4/8/19. 
+* 'Sharing a file' is measured by looking for non-registered nodes that are public and have a file in them. It includes files from OSFstorage and all add-ons. If any node in a project is public and has a file in it, the top-level project is counted as sharing a file, even if the top-level itself is private. The registration does not have to be on or include the node that is sharing a file, it just has to be on a node within the same project.
+* Only non-spam projects/nodes are counted, and only non-withdrawn registrations are counted (excluding old private registrations). Registrations can be under embargo though and still be counted.
+* Supplemental preprint nodes are include as 'projects' for this analysis.
+* Linked nodes are not included in this initial analysis. So, if a project is public has no files in it, but does have a linked node that is public and has a file in it, the project would not be counted as having a public file. 
+
+```{sql, eval = FALSE, echo = FALSE}
+
+/* query that generates data that gets pulled in; not connected to the DB directly, but here for record keeping */
+WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(created) AS first_file_created, MAX(created) AS last_file_created
+													FROM osf_basefilenode
+													WHERE type NOT LIKE '%folder%' AND osf_basefilenode.deleted_on IS NULL AND osf_basefilenode.target_content_type_id = 30
+													GROUP BY target_object_id),
+	registered_projects AS (SELECT DISTINCT ON (osf_abstractnode.root_id) osf_abstractnode.id, type, registered_date, root_id, is_public, is_deleted, date_retracted, embargo_id, osf_embargo.state, registered_from_id
+													FROM osf_abstractnode
+													LEFT JOIN osf_retraction
+													ON osf_abstractnode.retraction_id = osf_retraction.id
+													LEFT JOIN osf_embargo
+													ON osf_abstractnode.embargo_id = osf_embargo.id
+													WHERE type LIKE 'osf.registration' AND is_deleted IS FALSE AND (spam_status = 4 OR spam_status IS NULL) AND date_retracted IS NULL AND (is_public IS TRUE OR embargo_id IS NOT NULL)),
+	files_and_registrations AS (SELECT osf_abstractnode.id AS node_id, osf_abstractnode.root_id, COALESCE(num_files,0) AS number_files, osf_abstractnode.is_public, first_file_created, last_file_created, osf_abstractnode.created AS node_created, registered_projects.registered_date AS registration_date
+													FROM osf_abstractnode
+													LEFT JOIN existing_files
+													ON osf_abstractnode.id = existing_files.target_object_id
+													LEFT JOIN registered_projects
+													ON osf_abstractnode.id = registered_projects.registered_from_id
+													WHERE osf_abstractnode.type LIKE 'osf.node' AND osf_abstractnode.is_deleted IS FALSE AND (osf_abstractnode.spam_status = 4 OR osf_abstractnode.spam_status IS NULL))
+
+Select root_id, MIN(first_file_created), MAX(last_file_created), MAX(registration_date)
+	FROM files_and_registrations
+	WHERE number_files > 0 AND is_public IS TRUE
+	GROUP BY (root_id);
+
+```
+
+```{r warning=FALSE, echo=FALSE, message=FALSE}
+library(tidyverse)
+library(lubridate)
+library(scales)
+library(googledrive)
+library(kableExtra)
+
+knitr::opts_chunk$set(fig.width=12, fig.height=8) 
+
+data_projects <- read_csv('/Users/courtneysoderberg/Downloads/projects_multiple_OSFproducts.csv')
+```
+
+```{r echo = FALSE}
+sharing_and_registered <- data_projects %>%
+                            group_by(root_id) %>%
+                            mutate(shared_file = case_when(any(number_files > 0 & is_public > 0) ~ 1, TRUE ~ 0)) %>%
+                            mutate(registered = case_when(any(!is.na(registration_date)) ~ 1, TRUE ~ 0)) %>%
+                            summarize(shared_file = max(shared_file), registered = max(registered), earliest_node_creation = min(node_created)) %>%
+                            mutate(products = case_when(
+                                                          shared_file ==1 & registered == 0 ~ 'OSF_sharing_only',
+                                                          shared_file == 0 & registered ==1 ~ 'Registrations_only',
+                                                          shared_file == 1 & registered == 1 ~ 'OSF_sharing_and_registrations',
+                                                          shared_file == 0 & registered == 0 ~ 'Neither')) %>%
+                            mutate(by_day = as_date(earliest_node_creation))
+```
+
+```{r echo = FALSE}
+aggregate_data <- sharing_and_registered %>%
+                    summarize(`Projects sharing > 0 files` = sum(shared_file > 0), 
+                              `Projects with > 0 registrations` = sum(registered > 0),
+                              `Projects sharing > 0 files and registered` = sum(shared_file > 0 & registered > 0)) %>%
+                    gather() %>%
+                    mutate(percentage = round((value/141313)*100,2))
+
+kable(aggregate_data,
+  col.names = c('Project actions', 'Number of top-level projects', 'Percentage of top-level projects')) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+  
+sharing_projects <- sharing_and_registered %>% filter(shared_file == 1) %>% nrow()
+registered_projects <- sharing_and_registered %>% filter(registered == 1) %>% nrow()
+sharing_registered <- sharing_and_registered %>% filter(shared_file ==1 & registered ==1) %>% nrow()
+
+```
+
+
+```{r echo = FALSE}
+
+ graph <- ggplot(sharing_and_registered, aes(by_day, color = products)) + 
+  geom_freqpoly(binwidth = 30) +
+  xlab('When projects were created') +
+  ylab('Number of Top Level Projects') +
+  scale_x_date(breaks = date_breaks("3 month"), labels = date_format("%b %y"))
+ 
+ graph + theme(axis.text.x  = element_text(angle=45,hjust = 1,vjust = 1))
+ 
+```
+
+Potential Next Steps for more complex relationships:
+
+* 

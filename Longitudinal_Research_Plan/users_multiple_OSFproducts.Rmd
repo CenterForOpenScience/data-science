@@ -126,3 +126,7 @@ The graphs below shows when the different types of users were confirmed. For the
  
 ```
 
+Potential Next Steps for more complex relationships:
+
+* What is the timecourse of the actions (e.g. for researchers who are on sharing projects and registrations, which tended to happen first and how long in between the actions)
+* Are the users in the different 'action_type' groups from particular disciplines? (infered from OSF4M and preprint services until we have better disciplinary information)

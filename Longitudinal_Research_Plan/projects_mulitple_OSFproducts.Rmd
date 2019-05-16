@@ -101,4 +101,6 @@ sharing_registered <- sharing_and_registered %>% filter(shared_file ==1 & regist
 
 Potential Next Steps for more complex relationships:
 
-* 
+* Are files that are eventually shared being added/modified before or after registrations?
+* Add linked projects to the analyses
+* How many of the 4817 projects that share files and are registered have contributors in common (i.e. are these projects by a diverse group of people or a smaller set of users who doing this repeatedly across projects)?

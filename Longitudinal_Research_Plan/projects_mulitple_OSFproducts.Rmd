@@ -9,7 +9,7 @@ Data caveats and explanations:
 
 * The data used for the analyses below goes through 4/8/19. 
 * 'Sharing a file' is measured by looking for non-registered nodes that are public and have a file in them. It includes files from OSFstorage and all add-ons. If any node in a project is public and has a file in it, the top-level project is counted as sharing a file, even if the top-level itself is private. The registration does not have to be on or include the node that is sharing a file, it just has to be on a node within the same project.
-* Only non-spam projects/nodes are counted, and only non-withdrawn registrations are counted (excluding old private registrations). Registrations can be under embargo though and still be counted.
+* Only non-spam non-deleted projects/nodes are counted, and only non-withdrawn, non-deleted registrations are counted (excluding old private registrations). Registrations can be under embargo though and still be counted.
 * Supplemental preprint nodes are include as 'projects' for this analysis.
 * Linked nodes are not included in this initial analysis. So, if a project is public has no files in it, but does have a linked node that is public and has a file in it, the project would not be counted as having a public file. 
 
@@ -57,14 +57,15 @@ data_projects <- read_csv('/Users/courtneysoderberg/Downloads/projects_multiple_
 ```{r echo = FALSE}
 sharing_and_registered <- data_projects %>%
                             group_by(root_id) %>%
+                            mutate(has_file = case_when(any(number_files > 0) ~ 1, TRUE ~ 0)) %>%
                             mutate(shared_file = case_when(any(number_files > 0 & is_public > 0) ~ 1, TRUE ~ 0)) %>%
                             mutate(registered = case_when(any(!is.na(registration_date)) ~ 1, TRUE ~ 0)) %>%
-                            summarize(shared_file = max(shared_file), registered = max(registered), earliest_node_creation = min(node_created)) %>%
-                            mutate(products = case_when(
-                                                          shared_file ==1 & registered == 0 ~ 'OSF_sharing_only',
+                            summarize(has_file = max(has_file), shared_file = max(shared_file), registered = max(registered), earliest_node_creation = min(node_created)) %>%
+                            mutate(products = case_when(has_file > 0 & shared_file == 0 & registered == 0 ~ 'OSF_privatefiles_only',
+                                                          shared_file ==1 & registered == 0 ~ 'OSF_sharingfiles_only',
                                                           shared_file == 0 & registered ==1 ~ 'Registrations_only',
-                                                          shared_file == 1 & registered == 1 ~ 'OSF_sharing_and_registrations',
-                                                          shared_file == 0 & registered == 0 ~ 'Neither')) %>%
+                                                          shared_file == 1 & registered == 1 ~ 'OSF_sharingfiles_and_registrations',
+                                                          shared_file == 0 & registered == 0 ~ 'None')) %>%
                             mutate(by_day = as_date(earliest_node_creation))
 ```
 
@@ -72,14 +73,15 @@ The table below shows the number of projects that have each of the actions. Thes
 
 ```{r echo = FALSE}
 aggregate_data <- sharing_and_registered %>%
-                    summarize(`Projects sharing > 0 files` = sum(shared_file > 0), 
+                    summarize(`Projects with files` = sum(has_file > 0),
+                              `Projects sharing > 0 files` = sum(shared_file > 0), 
                               `Projects with > 0 registrations` = sum(registered > 0),
                               `Projects sharing > 0 files and registered` = sum(shared_file > 0 & registered > 0)) %>%
                     gather() %>%
-                    mutate(percentage = round((value/141313)*100,2))
-
+                    mutate(percentage_total_project = round((value/141313)*100,2), percentage_public_projects = ifelse(key != 'Projects with > 0 registrations' & key != 'Projects with files', round((value/56937)*100,2), NA))
+                                                                                                                          
 kable(aggregate_data,
-  col.names = c('Project actions', 'Number of top-level projects', 'Percentage of top-level projects')) %>%
+  col.names = c('Project actions', 'Number of top-level projects', 'Percentage of top-level projects', 'Percentage of top-level projects with at least 1 public node')) %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
   
 sharing_projects <- sharing_and_registered %>% filter(shared_file == 1) %>% nrow()
@@ -88,7 +90,7 @@ sharing_registered <- sharing_and_registered %>% filter(shared_file ==1 & regist
 
 ```
 
-The graph shows the number of top-level projects that were created each month that either *only* share files, *only* have a registration, do both of these things, or do neither of these things.
+The graph shows the number of top-level projects that were created each month that either *only* share files, *only* have a registration, do both of these things, or do neither of these things. So, these numbers are mutually exclusive and will not exactly match the number in the table above, which are not mutually exclusive.
 
 ```{r echo = FALSE}
 
@@ -107,3 +109,4 @@ Potential Next Steps for more complex relationships:
 * Are files that are eventually shared being added/modified before or after registrations?
 * Add linked projects to the analyses
 * How many of the 4817 projects that share files and are registered have contributors in common (i.e. are these projects by a diverse group of people or a smaller set of users who doing this repeatedly across projects)?
+* What are the projects with no files in them doing? A lot of them will be empty preprint supplemental nodes, the majority left over from NPD but many newly created supplemental nodes are also left empty. But, not all of them will be supplemental nodes, so what *is* in those projects?

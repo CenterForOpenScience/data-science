@@ -90,7 +90,7 @@ sharing_registered <- sharing_and_registered %>% filter(shared_file ==1 & regist
 
 ```
 
-The graph shows the number of top-level projects that were created each month that either *only* share files, *only* have a registration, do both of these things, or do neither of these things. So, these numbers are mutually exclusive and will not exactly match the number in the table above, which are not mutually exclusive.
+The graph shows the number of top-level projects that were created each month that either *only* share files, *only* have a registration, do both of these things, are private and have files but no registration, or do none of these things. So, these numbers are mutually exclusive and will not exactly match the number in the table above, which are not mutually exclusive.
 
 ```{r echo = FALSE}
 

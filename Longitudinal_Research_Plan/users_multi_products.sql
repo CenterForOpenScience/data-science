@@ -1,3 +1,5 @@
+/* getting currently active add-on folders, which we have to assume have files in them b/c add-on files only show up in the basefilenode table if the API has touched them 
+(if I connect a dropbox file then don't open any of the files, they won't show up in the basefilenode table) */
 WITH pp_contrib AS (SELECT user_id, COUNT(preprint_id) AS number_pp, MIN(created) AS first_preprint, MAX(created) AS last_preprint
 						FROM osf_preprintcontributor
 						LEFT JOIN osf_preprint pp
@@ -11,25 +13,85 @@ WITH pp_contrib AS (SELECT user_id, COUNT(preprint_id) AS number_pp, MIN(created
 						ON osf_contributor.node_id = osf_abstractnode.id
 						LEFT JOIN osf_retraction
 						ON osf_abstractnode.retraction_id = osf_retraction.id
-						WHERE is_deleted IS FALSE AND (spam_status = 4 OR spam_status IS NULL) AND ((type LIKE 'osf.node' AND is_public IS TRUE) OR (type LIKE 'osf.registration' AND date_retracted IS NULL AND (is_public IS TRUE OR 										embargo_id IS NOT NULL)))),
+						WHERE is_deleted IS FALSE AND (spam_status = 4 OR spam_status IS NULL) AND ((type LIKE 'osf.node' AND is_public IS TRUE) OR (type LIKE 'osf.registration' AND date_retracted IS NULL AND (is_public IS TRUE OR embargo_id IS NOT NULL)))),
 	  existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(created) AS first_file_created, MAX(created) AS last_file_created
-													FROM osf_basefilenode
-													WHERE type NOT LIKE '%folder%' AND osf_basefilenode.deleted_on IS NULL AND osf_basefilenode.target_content_type_id = 30
-													GROUP BY target_object_id),
-		files_on_nodes AS (SELECT node_id, user_id, type, node_created, is_public, registered_date, embargo_id, registered_from_id, root_id, COALESCE(num_files, 0) AS num_files, first_file_created, last_file_created
-													FROM node_contrib
-													LEFT JOIN existing_files
-													ON node_contrib.node_id = existing_files.target_object_id
-													WHERE type LIKE 'osf.registration' OR (type LIKE 'osf.node' AND num_files > 0)),		
-						
+						FROM osf_basefilenode
+						WHERE type NOT LIKE '%folder%' AND provider LIKE 'osfstorage' AND osf_basefilenode.deleted_on IS NULL AND osf_basefilenode.target_content_type_id = 30
+						GROUP BY target_object_id),
+	  addon_connections AS (SELECT node_contrib.type, node_contrib.node_id, node_contrib.root_id, node_contrib.user_id, node_contrib.node_created, node_contrib.registered_date, node_contrib.registered_from_id, node_contrib.node_created, bitbucket.repo AS bitbucket_repo, bitbucket.created AS bitbucket_created, bitbucket.modified AS bitbucket_modified, 
+											  box.folder_name AS box_folder, box.created AS box_created, box.modified AS box_modified,
+											  dataverse.dataset AS dataverse_dataset, dataverse.created AS dataverse_created, dataverse.modified AS dataverse_modified,
+											  dropbox.folder AS dropbox_folder, dropbox.created AS dropbox_created, dropbox.modified AS dropbox_modified,
+											  figshare.folder_name AS figshare_folder, figshare.created AS figshare_created, figshare.modified AS figshare_modified,
+											  github.repo AS github_repo, github.created AS github_created, github.modified AS github_modified,
+											  gitlab.repo AS gitlab_repo, gitlab.created AS gitlab_created, gitlab.modified AS gitlab_modified,
+											  googledrive.folder_path AS googledrive_folderpath, googledrive.created AS googledrive_created, googledrive.modified AS googledrive_modified,
+											  onedrive.folder_path AS onedrive_folderpath, onedrive.created AS onedrive_created, onedrive.modified AS onedrive_modified,
+											  owncloud.folder_id AS owncloud_folderid, owncloud.created AS owncloud_created, owncloud.modified AS owncloud_modified,
+											  s3.folder_name AS s3_foldername, s3.created AS s3_created, s3.modified AS s3_modified
+						FROM node_contrib
+						LEFT JOIN (SELECT created, modified, owner_id, repo
+										FROM addons_bitbucket_nodesettings
+										WHERE deleted IS FALSE AND repo IS NOT NULL) bitbucket
+						ON node_contrib.node_id = bitbucket.owner_id
+						LEFT JOIN (SELECT folder_name, owner_id, created, modified
+										FROM addons_box_nodesettings
+										WHERE deleted IS FALSE AND folder_name IS NOT NULL) box
+						ON node_contrib.node_id = box.owner_id
+						LEFT JOIN (SELECT dataverse, dataset, created, modified, owner_id
+										FROM addons_dataverse_nodesettings
+										WHERE deleted IS FALSE AND dataset IS NOT NULL) dataverse
+						ON node_contrib.node_id = dataverse.owner_id
+						LEFT JOIN (SELECT folder, owner_id, created, modified
+										FROM addons_dropbox_nodesettings
+										WHERE deleted IS FALSE AND folder IS NOT NULL) dropbox
+						ON node_contrib.node_id = dropbox.owner_id
+						LEFT JOIN (SELECT folder_name, owner_id, created, modified
+										FROM addons_figshare_nodesettings
+										WHERE deleted IS FALSE AND folder_name IS NOT NULL) figshare
+						ON node_contrib.node_id = figshare.owner_id
+						LEFT JOIN (SELECT repo, owner_id, created, modified
+										FROM addons_github_nodesettings
+										WHERE deleted IS FALSE AND repo IS NOT NULL) github
+						ON node_contrib.node_id = github.owner_id
+						LEFT JOIN (SELECT repo, owner_id, created, modified
+										FROM addons_gitlab_nodesettings
+										WHERE deleted IS FALSE AND repo IS NOT NULL) gitlab
+						ON node_contrib.node_id = gitlab.owner_id
+						LEFT JOIN (SELECT folder_path, owner_id, created, modified
+										FROM addons_googledrive_nodesettings
+										WHERE deleted IS FALSE AND folder_path IS NOT NULL) googledrive
+						ON node_contrib.node_id = googledrive.owner_id
+						LEFT JOIN (SELECT folder_path, owner_id, created, modified
+										FROM addons_onedrive_nodesettings
+										WHERE deleted IS FALSE AND folder_path IS NOT NULL) onedrive
+						ON node_contrib.node_id = onedrive.owner_id
+						LEFT JOIN (SELECT folder_id, owner_id, created, modified
+										FROM addons_owncloud_nodesettings
+										WHERE deleted IS FALSE AND folder_id IS NOT NULL) owncloud
+						ON node_contrib.node_id = owncloud.owner_id
+						LEFT JOIN (SELECT folder_name, owner_id, created, modified
+										FROM addons_s3_nodesettings
+										WHERE deleted IS FALSE AND folder_name IS NOT NULL) s3
+						ON node_contrib.node_id = s3.owner_id),
+	    files_on_nodes AS (SELECT node_id, user_id, type, node_created, is_public, registered_date, embargo_id, registered_from_id, root_id, COALESCE(num_files, 0) AS number_files, first_osf_file_created, last_osf_file_created,
+	    						bitbucket_repo, box_folder, dataverse_dataset, dropbox_folder, figshare_folder, github_repo, gitlab_repo, googledrive_folderpath, onedrive_folderpath, owncloud_folderid, s3_foldername
+						FROM addon_connections
+						LEFT JOIN existing_files
+						ON addon_connections.node_id = existing_files.target_object_id
+						WHERE type LIKE 'osf.registration' OR (type LIKE 'osf.node' 
+							AND (number_files > 0 OR bitbucket_repo IS NOT NULL OR box_folder IS NOT NULL OR dataverse_dataset IS NOT NULL 
+							OR dropbox_folder IS NOT NULL OR figshare_folder IS NOT NULL OR github_repo IS NOT NULL OR gitlab_repo IS NOT NULL 
+							OR googledrive_folderpath IS NOT NULL OR onedrive_folderpath IS NOT NULL OR owncloud_folderid IS NOT NULL OR s3_foldername IS NOT NULL))),					
 		eligible_node_contribs AS (SELECT user_id, COUNT(DISTINCT root_id) FILTER (WHERE type LIKE 'osf.node') AS eligible_nodes, COUNT(DISTINCT root_id) FILTER (WHERE type LIKE 'osf.registration') AS eligible_regs, 
-																			MIN(node_created) FILTER (WHERE type LIKE 'osf.node') AS first_node, MAX(node_created) FILTER (WHERE type LIKE 'osf.node') AS last_node,
-																			MIN(registered_date) FILTER (WHERE type LIKE 'osf.registration') AS first_registration, MAX(registered_date) FILTER (WHERE type LIKE 'osf.registration') AS last_registration		 															FROM files_on_nodes
-																	GROUP BY user_id),
-	all_contribs AS (SELECT COALESCE(eligible_node_contribs.user_id, pp_contrib.user_id) AS user_id, COALESCE(eligible_nodes, 0) AS number_nodes, COALESCE(eligible_regs, 0) AS number_regs, first_node, last_node, first_registration, 														last_registration, COALESCE(number_pp, 0) AS number_pp, first_preprint,last_preprint
-												FROM eligible_node_contribs
-												FULL OUTER JOIN pp_contrib
-												ON eligible_node_contribs.user_id = pp_contrib.user_id)
+						MIN(node_created) FILTER (WHERE type LIKE 'osf.node') AS first_node, MAX(node_created) FILTER (WHERE type LIKE 'osf.node') AS last_node,
+						MIN(registered_date) FILTER (WHERE type LIKE 'osf.registration') AS first_registration, MAX(registered_date) FILTER (WHERE type LIKE 'osf.registration') AS last_registration
+						FROM files_on_nodes
+						GROUP BY user_id),
+		all_contribs AS (SELECT COALESCE(eligible_node_contribs.user_id, pp_contrib.user_id) AS user_id, COALESCE(eligible_nodes, 0) AS number_nodes, COALESCE(eligible_regs, 0) AS number_regs, first_node, last_node, first_registration, 														last_registration, COALESCE(number_pp, 0) AS number_pp, first_preprint,last_preprint
+						FROM eligible_node_contribs
+						FULL OUTER JOIN pp_contrib
+						ON eligible_node_contribs.user_id = pp_contrib.user_id)
 
 SELECT * 
 	FROM all_contribs

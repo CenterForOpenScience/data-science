@@ -73,22 +73,32 @@ The table below shows the raw number and percentage of active users who are cont
 data <- data %>%
            mutate(by_day_confirmed = as_date(date_confirmed)) %>%
            mutate(by_day_registered = as_date(date_registered)) %>%
-           mutate(action_types = case_when(number_nodes == 0 & number_regs == 0 & number_pp == 0 ~ 'No products',
-                                           number_nodes > 0 & number_regs == 0 & number_pp == 0 ~ 'Only projects',
-                                           number_nodes == 0 & number_regs > 0 & number_pp == 0 ~ 'Only regs',
-                                           number_nodes == 0 & number_regs == 0 & number_pp > 0 ~ 'Only preprints',
-                                           number_nodes > 0 & number_regs > 0 & number_pp == 0 ~ 'Projects & regs',
-                                           number_nodes > 0 & number_regs == 0 & number_pp > 0 ~ 'Projects & preprints',
-                                           number_nodes == 0 & number_regs > 0 & number_pp > 0 ~ 'Regs & preprints',
-                                           number_nodes > 0 & number_regs > 0 & number_pp > 0 ~ 'All products'))
+           mutate(action_types = case_when(number_public_file_nodes == 0 & number_regs == 0 & number_pp == 0 & number_private_file_nodes == 0 ~ 'No products',
+                                           number_public_file_nodes == 0 & number_regs == 0 & number_pp == 0 & number_private_file_nodes > 0 ~ 'Only private file nodes',
+                                           number_public_file_nodes > 0 & number_regs == 0 & number_pp == 0 ~ 'Only projects',
+                                           number_public_file_nodes == 0 & number_regs > 0 & number_pp == 0 ~ 'Only regs',
+                                           number_public_file_nodes == 0 & number_regs == 0 & number_pp > 0 ~ 'Only preprints',
+                                           number_public_file_nodes > 0 & number_regs > 0 & number_pp == 0 ~ 'Projects & regs',
+                                           number_public_file_nodes > 0 & number_regs == 0 & number_pp > 0 ~ 'Projects & preprints',
+                                           number_public_file_nodes == 0 & number_regs > 0 & number_pp > 0 ~ 'Regs & preprints',
+                                           number_public_file_nodes > 0 & number_regs > 0 & number_pp > 0 ~ 'All products'))
 
 aggregate_numbers <- data %>% filter(is_active == 'TRUE') %>% 
-                        summarize(on_sharing_project = sum(number_nodes > 0), on_registrations = sum(number_regs > 0), 
-                                  on_preprint = sum(number_pp > 0), on_sharingproject_regs = sum(number_regs > 0 & number_nodes > 0), on_sharingproject_pp = sum(number_nodes > 0 & number_pp > 0), on_regs_pp = sum(number_regs > 0 & number_pp > 0), on_sharingproject_reg_preprint = sum(number_nodes>0 & number_regs > 0 & number_pp > 0))
+                        summarize(on_none = sum(number_public_file_nodes == 0 & number_regs == 0 & number_pp == 0 & number_private_file_nodes == 0),
+                                  on_private_file_project = sum(number_private_file_nodes > 0 & number_public_file_nodes == 0),
+                                  on_sharing_project = sum(number_public_file_nodes > 0), 
+                                  on_registrations = sum(number_regs > 0), 
+                                  on_preprint = sum(number_pp > 0), 
+                                  on_sharingproject_regs = sum(number_regs > 0 & number_public_file_nodes > 0), 
+                                  on_sharingproject_pp = sum(number_public_file_nodes > 0 & number_pp > 0), 
+                                  on_regs_pp = sum(number_regs > 0 & number_pp > 0), 
+                                  on_sharingproject_reg_preprint = sum(number_public_file_nodes>0 & number_regs > 0 & number_pp > 0))
 
 table_data <- gather(aggregate_numbers) %>% 
                   mutate(percentages = round((value / 142931) * 100,2)) %>%
-                  mutate(key = case_when(grepl('on_sharing_project', key) ~ 'Projects sharing > 0 files',
+                  mutate(key = case_when(grepl('on_none', key) ~ 'On none of the project types',
+                                         grepl('on_private_file_project', key) ~ 'Only Private projects with files',
+                                         grepl('on_sharing_project', key) ~ 'Projects sharing > 0 files',
                                          grepl('on_registrations',key) ~ 'Registration',
                                          grepl('on_preprint',key) ~ 'Preprints',
                                          grepl('on_sharingproject_regs',key) ~ 'Public sharing project and a regisration',
@@ -125,6 +135,12 @@ The graphs below shows when the different types of users were confirmed. For the
  graph2 + theme(axis.text.x  = element_text(angle=45,hjust = 1,vjust = 1))
  
 ```
+
+
+##What are the 'none' users doing?
+
+The number of these users who have uploaded quickfiles is: `r data %>% filter(action_types == 'No products') %>% summarize(quickfiles = sum(quickfile_nodes > 0))`
+
 
 Potential Next Steps for more complex relationships:
 

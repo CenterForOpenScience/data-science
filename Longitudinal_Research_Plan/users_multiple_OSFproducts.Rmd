@@ -96,7 +96,7 @@ aggregate_numbers <- data %>% filter(is_active == 'TRUE') %>%
 
 table_data <- gather(aggregate_numbers) %>% 
                   mutate(percentages = round((value / 142931) * 100,2)) %>%
-                  mutate(key = case_when(grepl('on_none', key) ~ 'On none of the project types',
+                  mutate(key = case_when(grepl('on_none', key) ~ 'On none of the product types',
                                          grepl('on_private_file_project', key) ~ 'Only Private projects with files',
                                          grepl('on_sharing_project', key) ~ 'Projects sharing > 0 files',
                                          grepl('on_registrations',key) ~ 'Registration',
@@ -116,7 +116,7 @@ The graphs below shows when the different types of users were confirmed. For the
 
 ```{r echo = FALSE}
 
- graph <- ggplot(data %>% filter(number_nodes >0 & number_regs > 0 & number_pp > 0) %>% filter(is_active), aes(by_day_confirmed)) + 
+ graph <- ggplot(data %>% filter(number_public_file_nodes >0 & number_regs > 0 & number_pp > 0) %>% filter(is_active == 'TRUE'), aes(by_day_confirmed)) + 
   geom_freqpoly(binwidth = 30) +
   xlab('When user was confirmed') +
   ylab('Number of users') +
@@ -126,7 +126,7 @@ The graphs below shows when the different types of users were confirmed. For the
  graph + theme(axis.text.x  = element_text(angle=45,hjust = 1,vjust = 1))
  
 
- graph2 <- ggplot(data %>% filter(is_active), aes(by_day_confirmed, color = action_types)) + 
+ graph2 <- ggplot(data %>% filter(is_active == 'TRUE') %>% filter(action_types != 'Only private file nodes'), aes(by_day_confirmed, color = action_types)) + 
   geom_freqpoly(binwidth = 30) +
   xlab('When user was confirmed') +
   ylab('Number of users') +
@@ -139,7 +139,7 @@ The graphs below shows when the different types of users were confirmed. For the
 
 ##What are the 'none' users doing?
 
-The number of these users who have uploaded quickfiles is: `r data %>% filter(action_types == 'No products') %>% summarize(quickfiles = sum(quickfile_nodes > 0))`
+The number of these users who have uploaded quickfiles is: `r data %>% filter(action_types == 'No products') %>% summarize(quickfiles = sum(quickfile_node > 0))`
 
 
 Potential Next Steps for more complex relationships:

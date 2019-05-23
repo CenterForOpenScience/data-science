@@ -94,3 +94,15 @@ SELECT *
 	FROM all_contribs
 	LEFT JOIN osf_osfuser
 	ON all_contribs.user_id = osf_osfuser.id;
+
+
+/* counts of logs for each user grouped by log action */
+SELECT action, user_id, COUNT(id)
+							FROM osf_nodelog
+							GROUP BY user_id, action;
+/* all the project and registration nodes each user is a contributor on, excluding bookmarks */							
+SELECT osf_contributor.node_id, osf_contributor.user_id, root_id, is_deleted, is_public, is_fork, spam_status, created, modified, type, deleted_date, title, embargo_id, retraction_id, registered_from_id
+	FROM osf_contributor
+	LEFT JOIN osf_abstractnode
+	ON osf_contributor.node_id = osf_abstractnode.id
+	WHERE (type LIKE 'osf.node' OR type LIKE 'osf.registration') AND title NOT LIKE 'Bookmarks';

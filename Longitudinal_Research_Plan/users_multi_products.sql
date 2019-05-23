@@ -100,6 +100,12 @@ SELECT *
 SELECT action, user_id, COUNT(id)
 							FROM osf_nodelog
 							GROUP BY user_id, action;
+
+/* counts of preprintlogs for each user grouped by log action */							
+SELECT action, user_id, COUNT(id) AS number_preprint_logs
+							FROM osf_preprintlog
+							GROUP BY user_id, action;
+
 /* all the project and registration nodes each user is a contributor on, excluding bookmarks */							
 SELECT osf_contributor.node_id, osf_contributor.user_id, root_id, is_deleted, is_public, is_fork, spam_status, created, modified, type, deleted_date, title, embargo_id, retraction_id, registered_from_id
 	FROM osf_contributor

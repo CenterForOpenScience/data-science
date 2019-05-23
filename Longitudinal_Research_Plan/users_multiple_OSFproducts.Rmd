@@ -145,6 +145,12 @@ The graphs below shows when the different types of users were confirmed. For the
 SELECT action, user_id, COUNT(id)
 							FROM osf_nodelog
 							GROUP BY user_id, action;
+							
+/* counts of preprintlogs for each user grouped by log action */							
+SELECT action, user_id, COUNT(id) AS number_preprint_logs
+							FROM osf_preprintlog
+							GROUP BY user_id, action;
+							
 /* all the project and registration nodes each user is a contributor on, excluding bookmarks */							
 SELECT osf_contributor.node_id, osf_contributor.user_id, root_id, is_deleted, is_public, is_fork, spam_status, created, modified, type, deleted_date, title, embargo_id, retraction_id, registered_from_id
 	FROM osf_contributor
@@ -154,9 +160,13 @@ SELECT osf_contributor.node_id, osf_contributor.user_id, root_id, is_deleted, is
 ```
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
-user_logs <- read_csv('/Users/courtneysoderberg/Downloads/user_logs.csv')
+user_node_logs <- read_csv('/Users/courtneysoderberg/Downloads/user_logs.csv')
+
+user_preprint_logs <- read_csv('/Users/courtneysoderberg/Downloads/preprint_logs.csv')
 
 contributor_nodes <- read_csv('/Users/courtneysoderberg/Downloads/contributor_nodes.csv')
+
+user_logs <- rbind(user_node_logs, user_preprint_logs)
 ```
 
 ```{r echo=FALSE}
@@ -197,9 +207,9 @@ When all users were given a 'Bookmarks' node, this created a log for all users. 
 
 The number of users with 1 or fewer logs is: `r sum(logs_per_user$total_logs <= 1)`
 
-The mean number of logs is: `r round(mean(logs_per_user$total_logs),2)` 
-The mediam number of logs is: `r median(logs_per_user$total_logs)` 
-The modal number of logs is: `r Mode(logs_per_user$total_logs)`
+* The mean number of logs is: `r round(mean(logs_per_user$total_logs),2)` 
+* The mediam number of logs is: `r median(logs_per_user$total_logs)` 
+* The modal number of logs is: `r Mode(logs_per_user$total_logs)`
 
 
 #### Nodes (registrations or project nodes)?
@@ -207,13 +217,13 @@ The modal number of logs is: `r Mode(logs_per_user$total_logs)`
 The number of users on no nodes is: `r sum(nodes_per_user$total_nodes == 0)`
 The number of users on no *non-deleted nodes* is: `r sum(nodes_per_user$total_nondeleted_nodes == 0)`
 
-The mean number of nodes is: `r round(mean(nodes_per_user$total_nodes),2)` 
-The mediam number of nodes is: `r median(nodes_per_user$total_nodes)` 
-The modal number of nodes is: `r Mode(nodes_per_user$total_nodes)`
+* The mean number of nodes is: `r round(mean(nodes_per_user$total_nodes),2)` 
+* The mediam number of nodes is: `r median(nodes_per_user$total_nodes)` 
+* The modal number of nodes is: `r Mode(nodes_per_user$total_nodes)`
 
-The mean number of *non-deleted* nodes is: `r round(mean(nodes_per_user$total_nondeleted_nodes),2)` 
-The mediam number of *non-deleted* nodes is: `r median(nodes_per_user$total_nondeleted_nodes)` 
-The modal number of *non-deleted* nodes is: `r Mode(nodes_per_user$total_nondeleted_nodes)`
+* The mean number of *non-deleted* nodes is: `r round(mean(nodes_per_user$total_nondeleted_nodes),2)` 
+* The mediam number of *non-deleted* nodes is: `r median(nodes_per_user$total_nondeleted_nodes)` 
+* The modal number of *non-deleted* nodes is: `r Mode(nodes_per_user$total_nondeleted_nodes)`
 
 ```{r echo = FALSE}
 logs_and_nodes <- full_join(logs_per_user, nodes_per_user, by = 'user_id')

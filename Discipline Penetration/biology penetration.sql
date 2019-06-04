@@ -7,7 +7,7 @@ SELECT osf_abstractnode.id, root_id, osf_abstractnode.title, description, osf_ab
 	ON osf_abstractnode.id = addons_wiki_wikipage.node_id
 	LEFT JOIN addons_wiki_wikiversion
 	ON addons_wiki_wikipage.id = addons_wiki_wikiversion.wiki_page_id
-	WHERE (spam_status = 4 OR spam_status IS NULL) and (type LIKE 'osf.node' OR type LIKE 'osf.registration');
+	WHERE (spam_status = 4 OR spam_status IS NULL) and (type LIKE 'osf.node' OR type LIKE 'osf.registration') and title NOT LIKE 'Bookmarks';
 
 
 /* collect project files and file tags */
@@ -23,7 +23,7 @@ SELECT osf_abstractnode.id AS node_id, root_id, osf_abstractnode.is_deleted, is_
 	ON osf_basefilenode.id = osf_basefilenode_tags.basefilenode_id
 	LEFT JOIN osf_tag
 	ON osf_basefilenode_tags.tag_id = osf_tag.id
-	WHERE target_content_type_id = 30 and (spam_status = 4 OR spam_status IS NULL) and (osf_abstractnode.type LIKE 'osf.node' OR osf_abstractnode.type LIKE 'osf.registration');
+	WHERE target_content_type_id = 30 and (spam_status = 4 OR spam_status IS NULL) and (osf_abstractnode.type LIKE 'osf.node' OR osf_abstractnode.type LIKE 'osf.registration') and title NOT LIKE 'Bookmarks';
 
 /* collecting project tags */
 SELECT osf_abstractnode.id, root_id, type, osf_abstractnode.is_public, osf_abstractnode.is_deleted, osf_tag.name AS tag_name
@@ -32,7 +32,7 @@ SELECT osf_abstractnode.id, root_id, type, osf_abstractnode.is_public, osf_abstr
 	ON osf_abstractnode.id = osf_abstractnode_tags.abstractnode_id
 	LEFT JOIN osf_tag
 	ON osf_abstractnode_tags.tag_id = osf_tag.id
-	WHERE (spam_status = 4 OR spam_status IS NULL) and (type LIKE 'osf.node' OR type LIKE 'osf.registration');
+	WHERE (spam_status = 4 OR spam_status IS NULL) and (type LIKE 'osf.node' OR type LIKE 'osf.registration') and title NOT LIKE 'Bookmarks';
 
 /* nodes and contributor information, excluding spam and bookmarks */
 SELECT osf_abstractnode.id, root_id, type, fullname, username, is_invited, osf_osfuser.date_confirmed AS user_confirmed, jobs, schools, social, osf_osfuser.id AS user_id

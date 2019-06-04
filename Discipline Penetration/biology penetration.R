@@ -34,9 +34,11 @@ file_pattern <- c('\\.gz$', '\\.sds$', '\\.czi$', '\\.pzf$', '\\.fcs$', '\\.pzfx
 
 word_pattern <- c('\\<biol', '\\<onco', '\\<PCR\\>', '\\<lipid', '\\<protein', '\\<proteo', 'omnic\\>', 'omnics\\>', '\\<genom', 'eome\\>', 
                   'eomes\\>', '\\<RNA\\>', 'RNA\\>','\\<RNA', '\\<DNA\\>', '\\<cellu', '\\<biomed', '\\<nucelo', '\\<immuno', '\\<metab', '\\<microb', 
-                  '\\<neuro','\\<biochem', '\\<molec', '\\<pharma', '\\<CRISPR\\>', '\\<chemi', '\\<enzy', '\\<histol',
+                  '([^social ]|[^cognitive ]|\\<)neuro([^ticism]|\\>)', '\\<biochem', '\\<molec', '\\<pharma', '\\<CRISPR\\>', '\\<chemi', '\\<enzy', '\\<histol',
                   '\\<embryo', '\\<gene\\>', '\\<patho', '\\<virus\\>', '\\<viro', '\\<bioinf', '\\<lipo', '\\<cancer\\>', 'plasma\\>', 'scopy\\>',
                   '\\<antibod', '\\<cyto', '\\<plasma', '\\<xeno', '\\<fluor', '\\<spect', 'PCR\\>', '\\<transfect', '\\<drosophilia\\>')
+
+excluded_patterns <- c('\\<social neuroscience\\>', '\\<cognitive neuroscience\\>')
 
 
 
@@ -169,22 +171,6 @@ number_bio_contributors <- bionode_contributors %>%
                               nrow()
 
 number_bio_contributors/142931
-
-
-
-
-
-processed_file_data %>% 
-  filter(file_tags == TRUE | file_ending == TRUE | file_name_match == TRUE) %>% 
-  filter(is.na(deleted_on)) %>%
-  filter(spam_status == 4 | is.na(spam_status)) %>%
-  group_by(node_id, file_id, file_name) %>% 
-  tally() %>% 
-  select(node_id, file_id, file_name) %>%
-  write_csv('file_matches.csv')
-
-
-
 
 
 

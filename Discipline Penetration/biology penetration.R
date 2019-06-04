@@ -1,4 +1,6 @@
 library(tidyverse)
+library(lubridate)
+library(ggplot)
 
 
 
@@ -22,7 +24,7 @@ word_pattern <- c('\\<biol', '\\<onco', '\\<PCR\\>', '\\<lipid', '\\<protein', '
                   'eomes\\>', '\\<RNA\\>', 'RNA\\>','\\<RNA', '\\<DNA\\>', '\\<cellu', '\\<biomed', '\\<nucelo', '\\<immuno', '\\<metab', '\\<microb', 
                   '\\<neuro','\\<biochem', '\\<molec', '\\<pharma', '\\<CRISPR\\>', '\\<chemi', '\\<enzy', '\\<histol',
                   '\\<embryo', '\\<gene\\>', '\\<patho', 'virus', '\\<viro', '\\<bioinf', '\\<lipo', 'cancer', 'plasma\\>', 'scopy\\>',
-                  '\\<antibod', '\\<cyto', '\\<plasma', '\\<xeno', '\\<fluor', '\\<spect', 'PCR\\>', '\\<transfect', 'drosophilia')
+                  '\\<antibod', '\\<cyto', '\\<plasma', '\\<xeno', '\\<fluor', '\\<spect', 'PCR\\>', '\\<transfect', '\\<drosophilia\\>')
 
 processed_file_data <- file_data %>%
                           mutate(file_ending = grepl(paste(file_pattern, collapse="|"),file_name)) %>%
@@ -132,30 +134,10 @@ bionode_contributors %>%
   tally() %>%
   nrow()
 
-processed_node_data %>% 
-  filter(node_title == TRUE | node_description == TRUE | node_wikiname == TRUE | node_wiki == TRUE) %>% 
-  filter(is_deleted == FALSE) %>%
-  write_csv('node_matches.csv')
 
-processed_file_data %>% 
-  filter(file_ending == TRUE) %>% 
-  filter(is.na(deleted_on)) %>%
-  group_by(node_id, file_id, file_name) %>% 
-  tally()
+####Graph of bio projects overtime
 
-processed_file_data %>% 
-  filter(file_ending == TRUE) %>% 
-  filter(is.na(deleted_on)) %>%
-  group_by(root_id) %>% 
-  tally()
-
-
-processed_file_data %>%
-    filter(file_ending == FALSE) %>%
-    filter(file_tags == TRUE)
-
-
-
+##getting project creation dates
 project_creation_dates <- overall_categorization %>%
   filter(type == 'osf.node') %>%
   group_by(root_id) %>%
@@ -164,4 +146,100 @@ project_creation_dates <- overall_categorization %>%
   select(root_id, bio_categorization, is_deleted, project_created) %>%
   filter(is_deleted == FALSE & bio_categorization == 1)
 
+monthly_projects <- project_creation_dates %>%
+                        group_by(month = floor_date(project_created, 'month')) %>%
+                        summarize(total = sum(bio_categorization))
 
+halfyear_projects <- project_creation_dates %>%
+  mutate(month = month(project_created), year = year(project_created)) %>%
+  mutate(half_year = case_when(month >= 1 & month <= 6 ~ '1st Half',
+                            month >= 7 & month <= 12 ~ '2nd Half')) %>%
+  mutate(labels = paste0(half_year, ' ', year)) %>%
+  group_by(labels) %>%
+  summarize(num_projects = sum(bio_categorization)) %>%
+  mutate(labels = as.factor(labels)) %>%
+  mutate(labels = fct_relevel(labels, c('1st Half 2012', '2nd Half 2012', 
+                                        '1st Half 2013', '2nd Half 2013',
+                                        '1st Half 2014', '2nd Half 2014',
+                                        '1st Half 2015', '2nd Half 2015',
+                                        '1st Half 2016', '2nd Half 2016',
+                                        '1st Half 2017', '2nd Half 2017',
+                                        '1st Half 2018', '2nd Half 2018',
+                                        '1st Half 2019'))) %>%
+  arrange(labels) %>%
+  mutate(cumulative_projects = cumsum(num_projects))
+
+
+ggplot(halfyear_projects, aes(x = labels, y = cumulative_projects, group = 1)) + 
+  geom_line() + 
+  geom_point() + 
+  xlab('Date') +
+  scale_y_continuous('Number of Projects', breaks = round(seq(0, 15000, by = 2500),1)) +
+  ggtitle('Cumulative Number of Biology Projects') +
+  theme(axis.text.x  = element_text(angle=45,hjust = 1,vjust = 1),
+        plot.title = element_text(hjust = 0.5, face = 'bold'))
+
+#quarterly_projects <- project_creation_dates %>%
+#                          mutate(month = month(project_created), year = year(project_created)) %>%
+#                          mutate(quater = case_when(month >= 1 & month <= 3 ~ 'Q1',
+#                                                    month >= 4 & month <= 6 ~ 'Q2',
+#                                                    month >= 7 & month <= 9 ~ 'Q3',
+#                                                    month >= 10 & month <= 12 ~ 'Q4')) %>%
+#                          mutate(labels = paste0(quater, ' ', year)) %>%
+#                          group_by(labels) %>%
+#                          summarize(num_projects = sum(bio_categorization)) %>%
+#                          mutate(labels = as.factor(labels)) %>%
+#                          mutate(labels = fct_relevel(labels, c('Q2 2012', 'Q3 2012', 'Q4 2012', 
+#                                                               'Q1 2013', 'Q2 2013', 'Q3 2013', 'Q4 2013',
+#                                                                'Q1 2014', 'Q2 2014', 'Q3 2014', 'Q4 2014',
+#                                                                'Q1 2015', 'Q2 2015', 'Q3 2015', 'Q4 2015',
+#                                                                'Q1 2016', 'Q2 2016', 'Q3 2016', 'Q4 2016',
+#                                                                'Q1 2017', 'Q2 2017', 'Q3 2017', 'Q4 2017',
+#                                                                'Q1 2018', 'Q2 2018', 'Q3 2018', 'Q4 2018',
+#                                                                'Q1 2019', 'Q2 2019'))) %>%
+#                          arrange(labels) %>%
+#                          mutate(cumulative_projects = cumsum(num_projects))
+
+#ggplot(quarterly_projects, aes(x = labels, y = cumulative_projects, group = 1)) + 
+#  geom_line() + 
+#  geom_point() + 
+#  theme(axis.text.x  = element_text(angle=45,hjust = 1,vjust = 1)) +
+#  xlab('Date') +
+#  scale_y_continuous('Number of Projects', breaks = round(seq(0, 15000, by = 2500),1))
+
+
+
+monthly_users <- bionode_contributors %>%
+  filter(!is.na(user_confirmed)) %>%
+  group_by(by_month = floor_date(user_confirmed, 'month')) %>%
+  distinct(user_id) %>%
+  group_by(by_month) %>%
+  summarize(monthly_total = n())
+
+halfyear_users <- monthly_users %>%
+  mutate(month = month(by_month), year = year(by_month)) %>%
+  mutate(half_year = case_when(month >= 1 & month <= 6 ~ '1st Half',
+                               month >= 7 & month <= 12 ~ '2nd Half')) %>%
+  mutate(labels = paste0(half_year, ' ', year)) %>%
+  group_by(labels) %>%
+  summarize(num_users = sum(monthly_total)) %>%
+  mutate(labels = as.factor(labels)) %>%
+  mutate(labels = fct_relevel(labels, c('1st Half 2012', '2nd Half 2012', 
+                                        '1st Half 2013', '2nd Half 2013',
+                                        '1st Half 2014', '2nd Half 2014',
+                                        '1st Half 2015', '2nd Half 2015',
+                                        '1st Half 2016', '2nd Half 2016',
+                                        '1st Half 2017', '2nd Half 2017',
+                                        '1st Half 2018', '2nd Half 2018',
+                                        '1st Half 2019'))) %>%
+  arrange(labels) %>%
+  mutate(cumulative_users = cumsum(num_users))
+
+ggplot(halfyear_users, aes(x = labels, y = cumulative_users, group = 1)) + 
+  geom_line() + 
+  geom_point() + 
+  xlab('Date') +
+  scale_y_continuous('Number of Users', breaks = round(seq(0, 25000, by = 2500),1)) +
+  ggtitle('Cumulative Number of Biology Users') +
+  theme(axis.text.x  = element_text(angle=45,hjust = 1,vjust = 1),
+        plot.title = element_text(hjust = 0.5, face = 'bold'))

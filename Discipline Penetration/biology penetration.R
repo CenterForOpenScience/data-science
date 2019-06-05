@@ -1,7 +1,7 @@
 ## required libraries
 library(tidyverse)
 library(lubridate)
-library(ggplot)
+library(ggplot2)
 library(osfr)
 library(here)
 
@@ -36,11 +36,7 @@ word_pattern <- c('\\<biol', '\\<onco', '\\<PCR\\>', '\\<lipid', '\\<protein', '
                   'eomes\\>', '\\<RNA\\>', 'RNA\\>','\\<RNA', '\\<DNA\\>', '\\<cellu', '\\<biomed', '\\<nucelo', '\\<immuno', '\\<metab', '\\<microb', 
                   '([^social ]|[^cognitive ]|\\<)neuro([^ticism]|\\>)', '\\<biochem', '\\<molec', '\\<pharma', '\\<CRISPR\\>', '\\<chemi', '\\<enzy', '\\<histol',
                   '\\<embryo', '\\<gene\\>', '\\<patho', '\\<virus\\>', '\\<viro', '\\<bioinf', '\\<lipo', '\\<cancer\\>', 'plasma\\>', 'scopy\\>',
-                  '\\<antibod', '\\<cyto', '\\<plasma', '\\<xeno', '\\<fluor', '\\<spect', 'PCR\\>', '\\<transfect', '\\<drosophilia\\>')
-
-excluded_patterns <- c('\\<social neuroscience\\>', '\\<cognitive neuroscience\\>')
-
-
+                  '\\<antibod', '\\<cyto', '\\<plasma', '\\<xeno([^phobia]|\\>)', '\\<fluor', '\\<spect[^rum disorder]', 'PCR\\>', '\\<transfect', '\\<drosophilia\\>')
 
 ### running regex on to classify files and projects
 
@@ -117,7 +113,8 @@ total_files <- processed_file_data %>%
                     distinct(file_id) %>%
                     nrow()
 
-number_bio_files/total_files
+number_bio_files
+round((number_bio_files/total_files)*100,2)
 
 # number of non-deleted, non-spam top level projects that have at least 1 node categorized as biology (even if that particular node was deleted but the toplevel project still exists)
 number_bio_projects <- overall_categorization %>%
@@ -135,7 +132,8 @@ total_projects <- processed_node_data %>%
                       distinct(root_id) %>%
                       nrow()
 
-number_bio_projects/total_projects
+number_bio_projects
+round((number_bio_projects/total_projects)*100, 2)
 
 
 # number of non-deleted, non-spam top level registrations that have at least 1 node categorized as biology (even if that particular node was deleted but the toplevel project still exists)
@@ -148,13 +146,14 @@ number_bio_registrations <- overall_categorization %>%
                                 nrow()
 
 # number of top-level, non-deleted registrations
-total_projects <- processed_node_data %>%
+total_registrations <- processed_node_data %>%
                       filter(type == 'osf.registration') %>%
                       filter(is_deleted == FALSE) %>%
                       distinct(root_id) %>%
                       nrow()
 
-number_bio_registrations/total_projects
+number_bio_registrations
+round((number_bio_registrations/total_registrations)*100, 2)
 
 
 ## bio categorized nodes and their contributors
@@ -170,7 +169,8 @@ number_bio_contributors <- bionode_contributors %>%
                               tally() %>%
                               nrow()
 
-number_bio_contributors/142931
+number_bio_contributors
+round((number_bio_contributors/142931)*100, 2)
 
 
 
@@ -191,62 +191,37 @@ monthly_projects <- project_creation_dates %>%
 
 halfyear_projects <- project_creation_dates %>%
   mutate(month = month(project_created), year = year(project_created)) %>%
-  mutate(half_year = case_when(month >= 1 & month <= 6 ~ '1st Half',
-                            month >= 7 & month <= 12 ~ '2nd Half')) %>%
+  mutate(half_year = case_when(month >= 1 & month <= 6 ~ '1H',
+                            month >= 7 & month <= 12 ~ '2H')) %>%
   mutate(labels = paste0(half_year, ' ', year)) %>%
   group_by(labels) %>%
   summarize(num_projects = sum(bio_categorization)) %>%
   mutate(labels = as.factor(labels)) %>%
-  mutate(labels = fct_relevel(labels, c('1st Half 2012', '2nd Half 2012', 
-                                        '1st Half 2013', '2nd Half 2013',
-                                        '1st Half 2014', '2nd Half 2014',
-                                        '1st Half 2015', '2nd Half 2015',
-                                        '1st Half 2016', '2nd Half 2016',
-                                        '1st Half 2017', '2nd Half 2017',
-                                        '1st Half 2018', '2nd Half 2018',
-                                        '1st Half 2019'))) %>%
+  mutate(labels = fct_relevel(labels, c('1H 2012', '2H 2012', 
+                                        '1H 2013', '2H 2013',
+                                        '1H 2014', '2H 2014',
+                                        '1H 2015', '2H 2015',
+                                        '1H 2016', '2H 2016',
+                                        '1H 2017', '2H 2017',
+                                        '1H 2018', '2H 2018',
+                                        '1H 2019'))) %>%
   arrange(labels) %>%
   mutate(cumulative_projects = cumsum(num_projects))
 
 
 ggplot(halfyear_projects, aes(x = labels, y = cumulative_projects, group = 1)) + 
-  geom_line() + 
-  geom_point() + 
-  xlab('Date') +
+  geom_line(size = 1.5) + 
+  geom_point(size = 3) + 
   scale_y_continuous('Number of Projects', breaks = round(seq(0, 15000, by = 2500),1)) +
-  ggtitle('Cumulative Number of Biology Projects') +
+  ggtitle('Cumulative Number of Biology Projects on OSF') +
   theme(axis.text.x  = element_text(angle=45,hjust = 1,vjust = 1),
-        plot.title = element_text(hjust = 0.5, face = 'bold'))
-
-#quarterly_projects <- project_creation_dates %>%
-#                          mutate(month = month(project_created), year = year(project_created)) %>%
-#                          mutate(quater = case_when(month >= 1 & month <= 3 ~ 'Q1',
-#                                                    month >= 4 & month <= 6 ~ 'Q2',
-#                                                    month >= 7 & month <= 9 ~ 'Q3',
-#                                                    month >= 10 & month <= 12 ~ 'Q4')) %>%
-#                          mutate(labels = paste0(quater, ' ', year)) %>%
-#                          group_by(labels) %>%
-#                          summarize(num_projects = sum(bio_categorization)) %>%
-#                          mutate(labels = as.factor(labels)) %>%
-#                          mutate(labels = fct_relevel(labels, c('Q2 2012', 'Q3 2012', 'Q4 2012', 
-#                                                               'Q1 2013', 'Q2 2013', 'Q3 2013', 'Q4 2013',
-#                                                                'Q1 2014', 'Q2 2014', 'Q3 2014', 'Q4 2014',
-#                                                                'Q1 2015', 'Q2 2015', 'Q3 2015', 'Q4 2015',
-#                                                                'Q1 2016', 'Q2 2016', 'Q3 2016', 'Q4 2016',
-#                                                                'Q1 2017', 'Q2 2017', 'Q3 2017', 'Q4 2017',
-#                                                                'Q1 2018', 'Q2 2018', 'Q3 2018', 'Q4 2018',
-#                                                                'Q1 2019', 'Q2 2019'))) %>%
-#                          arrange(labels) %>%
-#                          mutate(cumulative_projects = cumsum(num_projects))
-
-#ggplot(quarterly_projects, aes(x = labels, y = cumulative_projects, group = 1)) + 
-#  geom_line() + 
-#  geom_point() + 
-#  theme(axis.text.x  = element_text(angle=45,hjust = 1,vjust = 1)) +
-#  xlab('Date') +
-#  scale_y_continuous('Number of Projects', breaks = round(seq(0, 15000, by = 2500),1))
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(margin = margin(0, 15, 0, 0), size = 22),
+        axis.text = element_text(size = 18),
+        plot.title = element_text(size = 22, hjust = 0.5, face = 'bold', margin=margin(0,0,15,0)))
 
 
+### Graph of bio users overtime
 
 monthly_users <- bionode_contributors %>%
   filter(!is.na(user_confirmed)) %>%
@@ -257,28 +232,30 @@ monthly_users <- bionode_contributors %>%
 
 halfyear_users <- monthly_users %>%
   mutate(month = month(by_month), year = year(by_month)) %>%
-  mutate(half_year = case_when(month >= 1 & month <= 6 ~ '1st Half',
-                               month >= 7 & month <= 12 ~ '2nd Half')) %>%
+  mutate(half_year = case_when(month >= 1 & month <= 6 ~ '1H',
+                               month >= 7 & month <= 12 ~ '2H')) %>%
   mutate(labels = paste0(half_year, ' ', year)) %>%
   group_by(labels) %>%
   summarize(num_users = sum(monthly_total)) %>%
   mutate(labels = as.factor(labels)) %>%
-  mutate(labels = fct_relevel(labels, c('1st Half 2012', '2nd Half 2012', 
-                                        '1st Half 2013', '2nd Half 2013',
-                                        '1st Half 2014', '2nd Half 2014',
-                                        '1st Half 2015', '2nd Half 2015',
-                                        '1st Half 2016', '2nd Half 2016',
-                                        '1st Half 2017', '2nd Half 2017',
-                                        '1st Half 2018', '2nd Half 2018',
-                                        '1st Half 2019'))) %>%
+  mutate(labels = fct_relevel(labels, c('1H 2012', '2H 2012', 
+                                        '1H 2013', '2H 2013',
+                                        '1H 2014', '2H 2014',
+                                        '1H 2015', '2H 2015',
+                                        '1H 2016', '2H 2016',
+                                        '1H 2017', '2H 2017',
+                                        '1H 2018', '2H 2018',
+                                        '1H 2019'))) %>%
   arrange(labels) %>%
   mutate(cumulative_users = cumsum(num_users))
 
 ggplot(halfyear_users, aes(x = labels, y = cumulative_users, group = 1)) + 
-  geom_line() + 
-  geom_point() + 
-  xlab('Date') +
+  geom_line(size = 1.5) + 
+  geom_point(size = 3) + 
   scale_y_continuous('Number of Users', breaks = round(seq(0, 25000, by = 2500),1)) +
-  ggtitle('Cumulative Number of Biology Users') +
+  ggtitle('Cumulative Number of Biology Users on OSF') +
   theme(axis.text.x  = element_text(angle=45,hjust = 1,vjust = 1),
-        plot.title = element_text(hjust = 0.5, face = 'bold'))
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(margin = margin(0, 15, 0, 0), size = 22),
+        axis.text = element_text(size = 18),
+        plot.title = element_text(size = 22, hjust = 0.5, face = 'bold', margin=margin(0,0,15,0)))

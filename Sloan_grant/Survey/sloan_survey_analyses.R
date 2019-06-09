@@ -21,6 +21,8 @@ survey_data_numeric <- read_csv('/Users/courtneysoderberg/Downloads/Sloan+Prepri
 survey_data <- left_join(survey_data_numeric, survey_data_choices, by = 'ResponseId') %>%
                    mutate(familiar = fct_rev(familiar), 
                           favor_use = fct_relevel(favor_use, c('Very much oppose', 'Moderately oppose', 'Slightly oppose', 'Neither oppose nor favor', 'Slightly favor', 'Moderately favor', 'Very much favor')),
+                          preprints_used = fct_relevel(preprints_used, c('No', 'Yes, once', 'Yes, a few times', 'Yes, many times', 'Not sure')),
+                          preprints_submitted = fct_relevel(preprints_submitted, c('No', 'Yes, once', 'Yes, a few times', 'Yes, many times', 'Not sure')),
                           favor_use_collapsed = fct_collapse(favor_use,
                                                              opposed = c('Very much oppose', 'Moderately oppose', 'Slightly oppose'),
                                                              neutral = 'Neither oppose nor favor',
@@ -45,6 +47,15 @@ hdi_data <- hdi_data %>%
 
 survey_data <- left_join(survey_data, hdi_data, by = 'country')
 
+
+xtabs(~ preprints_used + preprints_submitted, survey_data)
+xtabs(~ favor_use + preprints_used, survey_data)
+xtabs(~ favor_use + hdi_level, survey_data)
+xtabs(~ favor_use + discipline_collapsed, survey_data)
+xtabs(~ favor_use + position, survey_data)
+
+
+
 overall_mean <- survey_data %>%
   select(-c(Progress, Status, Finished, `Duration (in seconds)`, consent, HDI_2017)) %>%
   skim_to_wide() %>%
@@ -53,6 +64,7 @@ overall_mean <- survey_data %>%
   mutate(mean = as.numeric(mean),
          sd = as.numeric(sd),
          complete = as.numeric(complete))
+
 
 # overall descriptive for Preprint Credibility
 overall_mean_preprint_cred <- overall_mean %>%
@@ -689,7 +701,7 @@ servicecred_means_by_preprints_submitted <-survey_data %>%
   select(-c(Progress, Status, Finished, `Duration (in seconds)`, consent, HDI_2017)) %>%
   group_by(preprints_submitted) %>%
   skim_to_wide() %>%
-  rename(question = variable)
+  rename(question = variable) %>%
   select(preprints_submitted, question, complete, mean, sd) %>%
   filter(grepl('service', question)) %>%
   filter(!is.na(mean)) %>%
@@ -718,81 +730,189 @@ servicecred_means_by_preprints_submitted <-survey_data %>%
                               question == 'service_credible4_4' ~ "Service controls removal/withdrawl of preprints",
                               question == 'service_credible4_5' ~ "Can submit new versions of preprints",
                               TRUE ~ 'Courtney missed a variable')) %>%
-  select(var_name, `Not sure`, No, `Yes, once`, `Yes, a few times`, `Yes, many times`,`<NA>`)
+    select(var_name, starts_with('No'), starts_with('Yes'))
 
 
+servicecred_means_by_preprints_submitted %>% 
+    gt() %>%
+    tab_header(title = 'Credibility of Services by Preprint Submitted') %>%
+    tab_source_note(source_note = 'Response Scale: -3 - Decrease a lot, -2 - Moderately decrease, -1 - Slightly decrease, 0 - Neither decrease nor increase, 1 - Slightly increase, 2 - Moderately increase, 3 - Increase a lot') %>%
+    tab_source_note(source_note = 'Missing Date: 7 - 9 participants who responded to icon questions did not respond to preprint submission questions and are not included in the table') %>%
+    cols_hide(columns = ends_with('complete')) %>%
+    data_color(
+      columns = ends_with('mean'),
+      colors = scales::col_numeric(
+        palette = paletteer::paletteer_d(
+          package = "Redmonder",
+          palette = "dPBIRdGn"
+        ),
+        domain = c(-2, 3))
+    ) %>%
+    cols_merge(col_1 = vars(No_mean), col_2 = vars(No_sd), pattern = '{1} ({2})') %>%
+    cols_merge(col_1 = vars(`Not sure_mean`), col_2 = vars(`Not sure_sd`), pattern = '{1} ({2})') %>%
+    cols_merge(col_1 = vars(`Yes, a few times_mean`), col_2 = vars(`Yes, a few times_sd`), pattern = '{1} ({2})') %>%
+    cols_merge(col_1 = vars(`Yes, many times_mean`), col_2 = vars(`Yes, many times_sd`), pattern = '{1} ({2})') %>%
+    cols_merge(col_1 = vars(`Yes, once_mean`), col_2 = vars(`Yes, once_sd`), pattern = '{1} ({2})') %>%
+    cols_move(columns = vars(`Not sure_mean`), after = vars(`Yes, once_mean`)) %>%
+    cols_move(columns = vars(`Yes, a few times_mean`, `Yes, many times_mean`), after = vars(`Yes, once_mean`)) %>%
+    tab_spanner(label = 'No', columns = 'No_mean') %>%
+    tab_spanner(label = 'Yes, once', columns = 'Yes, once_mean') %>%
+    tab_spanner(label = 'Yes, a few times', columns = 'Yes, a few times_mean') %>%
+    tab_spanner(label = 'Yes, many times', columns = 'Yes, many times_mean') %>%
+    tab_spanner(label = 'Not sure', columns = 'Not sure_mean') %>%
+    cols_align(align = 'center', columns = ends_with('mean')) %>%
+    cols_label(var_name = 'Potential Icon',
+               No_mean = paste0('n = ', max(preprintcred_means_by_preprints_submitted$No_complete),'-', min(preprintcred_means_by_preprints_submitted$No_complete)),
+               `Yes, once_mean` = paste0('n = ',max(preprintcred_means_by_preprints_submitted$`Yes, once_complete`),'-', min(preprintcred_means_by_preprints_submitted$`Yes, once_complete`)),
+               `Yes, a few times_mean` = paste0('n = ',max(preprintcred_means_by_preprints_submitted$`Yes, a few times_complete`),'-', min(preprintcred_means_by_preprints_submitted$`Yes, a few times_complete`)),
+               `Yes, many times_mean` = paste0('n = ',max(preprintcred_means_by_preprints_submitted$`Yes, many times_complete`),'-', min(preprintcred_means_by_preprints_submitted$`Yes, many times_complete`)),
+               `Not sure_mean` = paste0('n = ',max(preprintcred_means_by_preprints_submitted$`Not sure_complete`),'-', min(preprintcred_means_by_preprints_submitted$`Not sure_complete`)))
+  
+  
+  
+  
 # Group by preprint used 
 preprintcred_means_by_preprints_used <-survey_data %>%
   select(-c(Progress, Status, Finished, `Duration (in seconds)`, consent, HDI_2017)) %>%
   group_by(preprints_used) %>%
   skim_to_wide() %>%
-  select(preprints_used, variable, complete, mean, sd, hist) %>%
-  filter(grepl('preprint', variable)) %>%
+  rename(question = variable) %>%
+  select(preprints_used, question, complete, mean, sd) %>%
+  filter(grepl('preprint', question)) %>%
   filter(!is.na(mean)) %>%
   mutate(mean = as.numeric(mean),
          sd = as.numeric(sd),
          complete = as.numeric(complete)) %>%
-  select(preprints_used, variable, mean) %>%
-  spread(key = preprints_used, value = mean, drop = F) %>%
-  mutate(var_name = case_when(variable == 'preprint_cred1_1' ~ "Author's previous work",
-                              variable == 'preprint_cred1_2' ~ "Author's institution",
-                              variable == 'preprint_cred1_3' ~ "Professional identity links",
-                              variable == 'preprint_cred1_4' ~ "COI disclosures",
-                              variable == 'preprint_cred1_5' ~ "Author's level of open scholarship",
-                              variable == 'preprint_cred2_1' ~ "Funders of research",
-                              variable == 'preprint_cred2_2' ~ "Preprint submitted to a journal",
-                              variable == 'preprint_cred2_3' ~ "Usage metrics",
-                              variable == 'preprint_cred2_4' ~ "Citations of preprints",
-                              variable == 'preprintcred3_1' ~ "Anonymouse comments",
-                              variable == 'preprintcred3_2' ~ "Identified comments",
-                              variable == 'preprintcred3_3' ~ "Simplified endorsements",
-                              variable == 'preprint_cred4_1' ~ "Link to study data",
-                              variable == 'preprint_cred4_2' ~ "Link to study analysis scripts",
-                              variable == 'preprint_cred4_3' ~ "Link to materials",
-                              variable == 'preprint_cred4_4' ~ "Link to pre-reg",
-                              variable == 'preprint_cred5_1' ~ "Info about independent groups accessing linked info",
-                              variable == 'preprint_cred5_2' ~ "Info about independent group reproductions",
-                              variable == 'preprint_cred5_3' ~ "Infor about independent robustness checks",
+  gather(variable, value, -(question:preprints_used)) %>% 
+  unite(temp, preprints_used, variable) %>% 
+  spread(temp, value) %>%
+  mutate(var_name = case_when(question == 'preprint_cred1_1' ~ "Author's previous work",
+                              question == 'preprint_cred1_2' ~ "Author's institution",
+                              question == 'preprint_cred1_3' ~ "Professional identity links",
+                              question == 'preprint_cred1_4' ~ "COI disclosures",
+                              question == 'preprint_cred1_5' ~ "Author's level of open scholarship",
+                              question == 'preprint_cred2_1' ~ "Funders of research",
+                              question == 'preprint_cred2_2' ~ "Preprint submitted to a journal",
+                              question == 'preprint_cred2_3' ~ "Usage metrics",
+                              question == 'preprint_cred2_4' ~ "Citations of preprints",
+                              question == 'preprintcred3_1' ~ "Anonymouse comments",
+                              question == 'preprintcred3_2' ~ "Identified comments",
+                              question == 'preprintcred3_3' ~ "Simplified endorsements",
+                              question == 'preprint_cred4_1' ~ "Link to study data",
+                              question == 'preprint_cred4_2' ~ "Link to study analysis scripts",
+                              question == 'preprint_cred4_3' ~ "Link to materials",
+                              question == 'preprint_cred4_4' ~ "Link to pre-reg",
+                              question == 'preprint_cred5_1' ~ "Info about independent groups accessing linked info",
+                              question == 'preprint_cred5_2' ~ "Info about independent group reproductions",
+                              question == 'preprint_cred5_3' ~ "Infor about independent robustness checks",
                               TRUE ~ 'Courtney missed a variable')) %>%
-  select(var_name, `Not sure`, No, `Yes, once`, `Yes, a few times`, `Yes, many times`,`<NA>`)
+  select(var_name, starts_with('No'), starts_with('Yes'))
+
+preprintcred_means_by_preprints_used %>% 
+  gt() %>%
+  tab_header(title = 'Credibility of Preprints by Preprint Used') %>%
+  tab_source_note(source_note = 'Response Scale: 1 - Not at all important, 2 - Slightly important, 3 - Moderately important, 4 - Very Important, 5 - Extremely Important') %>%
+  tab_source_note(source_note = 'Missing Date: 5 - 7 participants who responded to icon questions did not respond to preprint submission questions and are not included in the table') %>%
+  cols_hide(columns = ends_with('complete')) %>%
+  data_color(
+    columns = ends_with('mean'),
+    colors = scales::col_numeric(
+      palette = paletteer::paletteer_d(
+        package = "Redmonder",
+        palette = "dPBIRdGn"
+      ),
+      domain = c(1, 5))
+  ) %>%
+  cols_merge(col_1 = vars(No_mean), col_2 = vars(No_sd), pattern = '{1} ({2})') %>%
+  cols_merge(col_1 = vars(`Not sure_mean`), col_2 = vars(`Not sure_sd`), pattern = '{1} ({2})') %>%
+  cols_merge(col_1 = vars(`Yes, a few times_mean`), col_2 = vars(`Yes, a few times_sd`), pattern = '{1} ({2})') %>%
+  cols_merge(col_1 = vars(`Yes, many times_mean`), col_2 = vars(`Yes, many times_sd`), pattern = '{1} ({2})') %>%
+  cols_merge(col_1 = vars(`Yes, once_mean`), col_2 = vars(`Yes, once_sd`), pattern = '{1} ({2})') %>%
+  cols_move(columns = vars(`Not sure_mean`), after = vars(`Yes, once_mean`)) %>%
+  cols_move(columns = vars(`Yes, a few times_mean`, `Yes, many times_mean`), after = vars(`Yes, once_mean`)) %>%
+  tab_spanner(label = 'No', columns = 'No_mean') %>%
+  tab_spanner(label = 'Yes, once', columns = 'Yes, once_mean') %>%
+  tab_spanner(label = 'Yes, a few times', columns = 'Yes, a few times_mean') %>%
+  tab_spanner(label = 'Yes, many times', columns = 'Yes, many times_mean') %>%
+  tab_spanner(label = 'Not sure', columns = 'Not sure_mean') %>%
+  cols_align(align = 'center', columns = ends_with('mean')) %>%
+  cols_label(var_name = 'Potential Icon',
+             No_mean = paste0('n = ', max(preprintcred_means_by_preprints_used$No_complete),'-', min(preprintcred_means_by_preprints_used$No_complete)),
+             `Yes, once_mean` = paste0('n = ',max(preprintcred_means_by_preprints_used$`Yes, once_complete`),'-', min(preprintcred_means_by_preprints_used$`Yes, once_complete`)),
+             `Yes, a few times_mean` = paste0('n = ',max(preprintcred_means_by_preprints_used$`Yes, a few times_complete`),'-', min(preprintcred_means_by_preprints_used$`Yes, a few times_complete`)),
+             `Yes, many times_mean` = paste0('n = ',max(preprintcred_means_by_preprints_used$`Yes, many times_complete`),'-', min(preprintcred_means_by_preprints_used$`Yes, many times_complete`)),
+             `Not sure_mean` = paste0('n = ',max(preprintcred_means_by_preprints_used$`Not sure_complete`),'-', min(preprintcred_means_by_preprints_used$`Not sure_complete`)))
+
+
+
 
 
 servicecred_means_by_preprints_used <- survey_data %>%
   select(-c(Progress, Status, Finished, `Duration (in seconds)`, consent, HDI_2017)) %>%
   group_by(preprints_used) %>%
   skim_to_wide() %>%
-  select(preprints_used, variable, complete, mean, sd, hist) %>%
-  filter(grepl('service', variable)) %>%
+  rename(question = variable) %>%
+  select(preprints_used, question, complete, mean, sd) %>%
+  filter(grepl('service', question)) %>%
   filter(!is.na(mean)) %>%
   mutate(mean = as.numeric(mean),
          sd = as.numeric(sd),
          complete = as.numeric(complete)) %>%
-  select(preprints_used, variable, mean) %>%
-  spread(key = preprints_used, value = mean, drop = F) %>%
-  mutate(var_name = case_when(variable == 'services_cred1_1' ~ "Moderators the screen for spam",
-                              variable == 'services_cred1_2' ~ "Scholars involved in operation",
-                              variable == 'services_cred1_3' ~ "Clear policies for plagiarism/misconduct",
-                              variable == 'services_cred1_4' ~ "Assesment of reproducibility",
-                              variable == 'service_cred2_1' ~ "Software open source",
-                              variable == 'service_cred2_2' ~ "Business moderal transparent and sustainable",
-                              variable == 'service_cred2_3' ~ "Mechanism for long-term content preservation",
-                              variable == 'service_cred2_4' ~ "Free for submitters and readers",
-                              variable == 'service_cred3_1' ~ "Submit to journal from service",
-                              variable == 'service_cred3_2' ~ "Indicates publication status",
-                              variable == 'service_cred3_3' ~ "Allows endorsement of prerints",
-                              variable == 'service_cred3_4' ~ "Indexed by search/discovery services",
-                              variable == 'service_cred3_5' ~ "Popular in my discipline",
-                              variable == 'service_credible4_1' ~ "Assign DOI to preprint",
-                              variable == 'service_credible4_2' ~ "Allows anonymous posting of preprints",
-                              variable == 'service_credible4_3' ~ "Authos can remove preprint for any reason",
-                              variable == 'service_credible4_4' ~ "Service controls removal/withdrawl of preprints",
-                              variable == 'service_credible4_5' ~ "Can submit new versions of preprints",
+  gather(variable, value, -(question:preprints_used)) %>% 
+  unite(temp, preprints_used, variable) %>% 
+  spread(temp, value) %>%
+  mutate(var_name = case_when(question == 'services_cred1_1' ~ "Moderators the screen for spam",
+                              question == 'services_cred1_2' ~ "Scholars involved in operation",
+                              question == 'services_cred1_3' ~ "Clear policies for plagiarism/misconduct",
+                              question == 'services_cred1_4' ~ "Assesment of reproducibility",
+                              question == 'service_cred2_1' ~ "Software open source",
+                              question == 'service_cred2_2' ~ "Business moderal transparent and sustainable",
+                              question == 'service_cred2_3' ~ "Mechanism for long-term content preservation",
+                              question == 'service_cred2_4' ~ "Free for submitters and readers",
+                              question == 'service_cred3_1' ~ "Submit to journal from service",
+                              question == 'service_cred3_2' ~ "Indicates publication status",
+                              question == 'service_cred3_3' ~ "Allows endorsement of prerints",
+                              question == 'service_cred3_4' ~ "Indexed by search/discovery services",
+                              question == 'service_cred3_5' ~ "Popular in my discipline",
+                              question == 'service_credible4_1' ~ "Assign DOI to preprint",
+                              question == 'service_credible4_2' ~ "Allows anonymous posting of preprints",
+                              question == 'service_credible4_3' ~ "Authos can remove preprint for any reason",
+                              question == 'service_credible4_4' ~ "Service controls removal/withdrawl of preprints",
+                              question == 'service_credible4_5' ~ "Can submit new versions of preprints",
                               TRUE ~ 'Courtney missed a variable')) %>%
-  select(var_name, `Not sure`, No, `Yes, once`, `Yes, a few times`, `Yes, many times`,`<NA>`)
+  select(var_name, starts_with('No'), starts_with('Yes'))
 
-
-
-
-kable(servicecred_means_by_preprints_used,
-      col.names = c('Question', 'Not sure', 'No', 'Yes, once', 'Yes, a few times', 'Yes, many times', 'Missing data')) %>%
-  kable_styling(bootstrap_options = c("striped", "hover"))
+servicecred_means_by_preprints_used %>% 
+  gt() %>%
+  tab_header(title = 'Credibility of Services by Preprint Submitted') %>%
+  tab_source_note(source_note = 'Response Scale: -3 - Decrease a lot, -2 - Moderately decrease, -1 - Slightly decrease, 0 - Neither decrease nor increase, 1 - Slightly increase, 2 - Moderately increase, 3 - Increase a lot') %>%
+  tab_source_note(source_note = 'Missing Date: 4 - 6 participants who responded to icon questions did not respond to preprint submission questions and are not included in the table') %>%
+  cols_hide(columns = ends_with('complete')) %>%
+  data_color(
+    columns = ends_with('mean'),
+    colors = scales::col_numeric(
+      palette = paletteer::paletteer_d(
+        package = "Redmonder",
+        palette = "dPBIRdGn"
+      ),
+      domain = c(-2, 3))
+  ) %>%
+  cols_merge(col_1 = vars(No_mean), col_2 = vars(No_sd), pattern = '{1} ({2})') %>%
+  cols_merge(col_1 = vars(`Not sure_mean`), col_2 = vars(`Not sure_sd`), pattern = '{1} ({2})') %>%
+  cols_merge(col_1 = vars(`Yes, a few times_mean`), col_2 = vars(`Yes, a few times_sd`), pattern = '{1} ({2})') %>%
+  cols_merge(col_1 = vars(`Yes, many times_mean`), col_2 = vars(`Yes, many times_sd`), pattern = '{1} ({2})') %>%
+  cols_merge(col_1 = vars(`Yes, once_mean`), col_2 = vars(`Yes, once_sd`), pattern = '{1} ({2})') %>%
+  cols_move(columns = vars(`Not sure_mean`), after = vars(`Yes, once_mean`)) %>%
+  cols_move(columns = vars(`Yes, a few times_mean`, `Yes, many times_mean`), after = vars(`Yes, once_mean`)) %>%
+  tab_spanner(label = 'No', columns = 'No_mean') %>%
+  tab_spanner(label = 'Yes, once', columns = 'Yes, once_mean') %>%
+  tab_spanner(label = 'Yes, a few times', columns = 'Yes, a few times_mean') %>%
+  tab_spanner(label = 'Yes, many times', columns = 'Yes, many times_mean') %>%
+  tab_spanner(label = 'Not sure', columns = 'Not sure_mean') %>%
+  cols_align(align = 'center', columns = ends_with('mean')) %>%
+  cols_label(var_name = 'Potential Icon',
+             No_mean = paste0('n = ', max(preprintcred_means_by_preprints_submitted$No_complete),'-', min(preprintcred_means_by_preprints_submitted$No_complete)),
+             `Yes, once_mean` = paste0('n = ',max(preprintcred_means_by_preprints_submitted$`Yes, once_complete`),'-', min(preprintcred_means_by_preprints_submitted$`Yes, once_complete`)),
+             `Yes, a few times_mean` = paste0('n = ',max(preprintcred_means_by_preprints_submitted$`Yes, a few times_complete`),'-', min(preprintcred_means_by_preprints_submitted$`Yes, a few times_complete`)),
+             `Yes, many times_mean` = paste0('n = ',max(preprintcred_means_by_preprints_submitted$`Yes, many times_complete`),'-', min(preprintcred_means_by_preprints_submitted$`Yes, many times_complete`)),
+             `Not sure_mean` = paste0('n = ',max(preprintcred_means_by_preprints_submitted$`Not sure_complete`),'-', min(preprintcred_means_by_preprints_submitted$`Not sure_complete`)))

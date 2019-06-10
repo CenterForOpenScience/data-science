@@ -3,18 +3,18 @@ library(lubridate)
 library(skimr)
 library(kableExtra)
 
-remotes::install_github("rstudio/gt")
+#remotes::install_github("rstudio/gt")
 library(gt)
 options(digits = 2)
 
-survey_data_choices <- read_csv('/Users/courtneysoderberg/Downloads/Sloan+Preprints+Grant_May+28%2C+2019_09.21.csv', col_types = cols(.default = col_factor(),
+survey_data_choices <- read_csv('/Users/courtneysoderberg/Downloads/Sloan+Preprints+Grant_June+10%2C+2019_09.54.csv', col_types = cols(.default = col_factor(),
                                                                                                                                 ResponseId = col_character(),
                                                                                                                                 position_7_TEXT = col_character(), 
                                                                                                                                 discipline_specific = col_character(),
                                                                                                                                 discipline_other = col_character(),
                                                                                                                                 how_heard = col_character())) %>%
                           select(ResponseId, familiar, favor_use, preprints_submitted, preprints_used, position, discipline, country)
-survey_data_numeric <- read_csv('/Users/courtneysoderberg/Downloads/Sloan+Preprints+Grant_May+29%2C+2019_16.12.csv') %>%
+survey_data_numeric <- read_csv('/Users/courtneysoderberg/Downloads/Sloan+Preprints+Grant_June+10%2C+2019_09.54-2.csv') %>%
                           select(-c(familiar, favor_use, preprints_submitted, preprints_used, position, discipline, country))
 
 
@@ -56,6 +56,11 @@ xtabs(~ favor_use + position, survey_data)
 
 
 
+
+
+
+# overall descriptive for Preprint Credibility
+
 overall_mean <- survey_data %>%
   select(-c(Progress, Status, Finished, `Duration (in seconds)`, consent, HDI_2017)) %>%
   skim_to_wide() %>%
@@ -65,8 +70,6 @@ overall_mean <- survey_data %>%
          sd = as.numeric(sd),
          complete = as.numeric(complete))
 
-
-# overall descriptive for Preprint Credibility
 overall_mean_preprint_cred <- overall_mean %>%
                                   filter(grepl('preprint', variable)) %>%
                                   mutate(var_name = case_when(variable == 'preprint_cred1_1' ~ "Author's previous work",
@@ -155,7 +158,7 @@ overall_mean_service_cred %>%
   ) %>%
   cols_merge(col_1 = vars(mean), col_2 = vars(sd), pattern = '{1} ({2})') %>%
   cols_align(align = 'center', columns = vars(mean, complete, hist)) %>%
-  cols_label(var_name = 'Potential Icon',
+  cols_label(var_name = 'Service Characteristics',
              mean = 'Mean (SD)',
              complete = 'N',
              hist = 'Responses Histograms')
@@ -293,7 +296,7 @@ servicecred_means_by_favor %>%
   tab_spanner(label = 'Neutral', columns = 'neutral_mean') %>%
   tab_spanner(label = 'Favor', columns = 'favor_mean') %>%
   cols_align(align = 'center', columns = vars(opposed_mean, neutral_mean, favor_mean)) %>%
-  cols_label(var_name = 'Potential Icon',
+  cols_label(var_name = 'Service Characteristics',
              opposed_mean = paste0('n = ', max(servicecred_means_by_favor$opposed_complete),'-', min(servicecred_means_by_favor$opposed_complete)),
              neutral_mean = paste0('n = ',max(servicecred_means_by_favor$neutral_complete),'-', min(servicecred_means_by_favor$neutral_complete)),
              favor_mean = paste0('n = ',max(servicecred_means_by_favor$favor_complete),'-', min(servicecred_means_by_favor$favor_complete)))
@@ -440,7 +443,7 @@ servicecred_means_by_discipline  %>%
         package = "Redmonder",
         palette = "dPBIRdGn"
       ),
-      domain = c(-1.02, 3))
+      domain = c(-2, 3))
   ) %>%
   cols_move(columns = vars(`Other Life Sciences_mean`, Other_mean), after = vars(Biology_mean)) %>%
   cols_move(columns = vars(`Humanities/Law_mean`), after = vars(NA_mean)) %>%
@@ -461,7 +464,7 @@ servicecred_means_by_discipline  %>%
   tab_spanner(label = 'Physical Sci & Math', columns = 'Physical Science & Math_mean') %>%
   tab_spanner(label = 'Hum & Law', columns = 'Humanities/Law_mean') %>%
   cols_align(align = 'center', columns = ends_with('mean')) %>%
-  cols_label(var_name = 'Potential Icon',
+  cols_label(var_name = 'Service Characteristics',
              Psychology_mean = paste0('n = ', max(servicecred_means_by_discipline$Psychology_complete),'-', min(servicecred_means_by_discipline$Psychology_complete)),
              Biology_mean = paste0('n = ',max(servicecred_means_by_discipline$Biology_complete),'-', min(servicecred_means_by_discipline$Biology_complete)),
              Other_mean = paste0('n = ',max(servicecred_means_by_discipline$Other_complete),'-', min(servicecred_means_by_discipline$Other_complete)),
@@ -597,7 +600,7 @@ servicecred_means_by_hdilevel  %>%
         package = "Redmonder",
         palette = "dPBIRdGn"
       ),
-      domain = c(-1.01, 3))
+      domain = c(-2, 3))
   ) %>%
   cols_merge(col_1 = vars(`very high_mean`), col_2 = vars(`very high_sd`), pattern = '{1} ({2})') %>%
   cols_merge(col_1 = vars(high_mean), col_2 = vars(high_sd), pattern = '{1} ({2})') %>%
@@ -610,7 +613,7 @@ servicecred_means_by_hdilevel  %>%
   tab_spanner(label = 'Low', columns = 'low_mean') %>%
   tab_spanner(label = 'Missing', columns = 'NA_mean') %>%
   cols_align(align = 'center', columns = ends_with('mean')) %>%
-  cols_label(var_name = 'Potential Icon',
+  cols_label(var_name = 'Service Characteristics',
              `very high_mean` = paste0('n = ', max(servicecred_means_by_hdilevel$`very high_complete`),'-', min(servicecred_means_by_hdilevel$`very high_complete`)),
              high_mean = paste0('n = ',max(servicecred_means_by_hdilevel$high_complete),'-', min(servicecred_means_by_hdilevel$high_complete)),
              medium_mean = paste0('n = ',max(servicecred_means_by_hdilevel$medium_complete),'-', min(servicecred_means_by_hdilevel$medium_complete)),
@@ -761,12 +764,12 @@ servicecred_means_by_preprints_submitted %>%
     tab_spanner(label = 'Yes, many times', columns = 'Yes, many times_mean') %>%
     tab_spanner(label = 'Not sure', columns = 'Not sure_mean') %>%
     cols_align(align = 'center', columns = ends_with('mean')) %>%
-    cols_label(var_name = 'Potential Icon',
-               No_mean = paste0('n = ', max(preprintcred_means_by_preprints_submitted$No_complete),'-', min(preprintcred_means_by_preprints_submitted$No_complete)),
-               `Yes, once_mean` = paste0('n = ',max(preprintcred_means_by_preprints_submitted$`Yes, once_complete`),'-', min(preprintcred_means_by_preprints_submitted$`Yes, once_complete`)),
-               `Yes, a few times_mean` = paste0('n = ',max(preprintcred_means_by_preprints_submitted$`Yes, a few times_complete`),'-', min(preprintcred_means_by_preprints_submitted$`Yes, a few times_complete`)),
-               `Yes, many times_mean` = paste0('n = ',max(preprintcred_means_by_preprints_submitted$`Yes, many times_complete`),'-', min(preprintcred_means_by_preprints_submitted$`Yes, many times_complete`)),
-               `Not sure_mean` = paste0('n = ',max(preprintcred_means_by_preprints_submitted$`Not sure_complete`),'-', min(preprintcred_means_by_preprints_submitted$`Not sure_complete`)))
+    cols_label(var_name = 'Service Characteristics',
+               No_mean = paste0('n = ', max(servicecred_means_by_preprints_submitted$No_complete),'-', min(servicecred_means_by_preprints_submitted$No_complete)),
+               `Yes, once_mean` = paste0('n = ',max(servicecred_means_by_preprints_submitted$`Yes, once_complete`),'-', min(servicecred_means_by_preprints_submitted$`Yes, once_complete`)),
+               `Yes, a few times_mean` = paste0('n = ',max(servicecred_means_by_preprints_submitted$`Yes, a few times_complete`),'-', min(servicecred_means_by_preprints_submitted$`Yes, a few times_complete`)),
+               `Yes, many times_mean` = paste0('n = ',max(servicecred_means_by_preprints_submitted$`Yes, many times_complete`),'-', min(servicecred_means_by_preprints_submitted$`Yes, many times_complete`)),
+               `Not sure_mean` = paste0('n = ',max(servicecred_means_by_preprints_submitted$`Not sure_complete`),'-', min(servicecred_means_by_preprints_submitted$`Not sure_complete`)))
   
   
   
@@ -884,7 +887,7 @@ servicecred_means_by_preprints_used <- survey_data %>%
 
 servicecred_means_by_preprints_used %>% 
   gt() %>%
-  tab_header(title = 'Credibility of Services by Preprint Submitted') %>%
+  tab_header(title = 'Credibility of Services by Preprint Used') %>%
   tab_source_note(source_note = 'Response Scale: -3 - Decrease a lot, -2 - Moderately decrease, -1 - Slightly decrease, 0 - Neither decrease nor increase, 1 - Slightly increase, 2 - Moderately increase, 3 - Increase a lot') %>%
   tab_source_note(source_note = 'Missing Date: 4 - 6 participants who responded to icon questions did not respond to preprint submission questions and are not included in the table') %>%
   cols_hide(columns = ends_with('complete')) %>%
@@ -910,9 +913,9 @@ servicecred_means_by_preprints_used %>%
   tab_spanner(label = 'Yes, many times', columns = 'Yes, many times_mean') %>%
   tab_spanner(label = 'Not sure', columns = 'Not sure_mean') %>%
   cols_align(align = 'center', columns = ends_with('mean')) %>%
-  cols_label(var_name = 'Potential Icon',
-             No_mean = paste0('n = ', max(preprintcred_means_by_preprints_submitted$No_complete),'-', min(preprintcred_means_by_preprints_submitted$No_complete)),
-             `Yes, once_mean` = paste0('n = ',max(preprintcred_means_by_preprints_submitted$`Yes, once_complete`),'-', min(preprintcred_means_by_preprints_submitted$`Yes, once_complete`)),
-             `Yes, a few times_mean` = paste0('n = ',max(preprintcred_means_by_preprints_submitted$`Yes, a few times_complete`),'-', min(preprintcred_means_by_preprints_submitted$`Yes, a few times_complete`)),
-             `Yes, many times_mean` = paste0('n = ',max(preprintcred_means_by_preprints_submitted$`Yes, many times_complete`),'-', min(preprintcred_means_by_preprints_submitted$`Yes, many times_complete`)),
-             `Not sure_mean` = paste0('n = ',max(preprintcred_means_by_preprints_submitted$`Not sure_complete`),'-', min(preprintcred_means_by_preprints_submitted$`Not sure_complete`)))
+  cols_label(var_name = 'Service Characteristics',
+             No_mean = paste0('n = ', max(servicecred_means_by_preprints_used$No_complete),'-', min(servicecred_means_by_preprints_used$No_complete)),
+             `Yes, once_mean` = paste0('n = ',max(servicecred_means_by_preprints_used$`Yes, once_complete`),'-', min(servicecred_means_by_preprints_used$`Yes, once_complete`)),
+             `Yes, a few times_mean` = paste0('n = ',max(servicecred_means_by_preprints_used$`Yes, a few times_complete`),'-', min(servicecred_means_by_preprints_used$`Yes, a few times_complete`)),
+             `Yes, many times_mean` = paste0('n = ',max(servicecred_means_by_preprints_used$`Yes, many times_complete`),'-', min(servicecred_means_by_preprints_used$`Yes, many times_complete`)),
+             `Not sure_mean` = paste0('n = ',max(servicecred_means_by_preprints_used$`Not sure_complete`),'-', min(servicecred_means_by_preprints_used$`Not sure_complete`)))

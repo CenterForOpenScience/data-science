@@ -258,7 +258,13 @@ survey_data <- survey_data %>%
                                    grepl('cult', discipline_specific, ignore.case = T) & discipline == 'Sociology' ~ 'Sociology of Culture',
                                    grepl('law', discipline_specific, ignore.case = T) & discipline == 'Sociology' ~ 'Social Control, Law, Crime, and Deviance',
                                    (grepl('political socio', discipline_specific, ignore.case = T) | grepl('social movement', discipline_specific, ignore.case = T)) &
-                                      discipline == 'Sociology' ~ 'Politics and Social Change'
+                                      discipline == 'Sociology' ~ 'Politics and Social Change',
+                                   grepl('collection', discipline_specific, ignore.case = T) & discipline == 'Library/Information Science' ~ 'Collection Development and Management',
+                                   grepl('literacy', discipline_specific, ignore.case = T) & discipline == 'Library/Information Science'~ 'Information Literacy',
+                                   (grepl('nursing', discipline_specific, ignore.case = T) | grepl('medical', discipline_specific, ignore.case = T)) &
+                                     discipline == 'Library/Information Science' ~ 'Health Sciences and Medical Librarianship',
+                                   grepl('scholarly communication', discipline_specific, ignore.case = T) & discipline == 'Library/Information Science' ~ 'Scholarly Communication',
+                                   grepl('archival', discipline_specific, ignore.case = T) & discipline == 'Library/Information Science' ~ 'Archival Science'
                                    ))
 
 
@@ -295,7 +301,9 @@ survey_data <- survey_data %>%
                                      bepress_tier3 == 'Other Genetics and Genomics' ~ 'Genetics and Genomics',
                                    bepress_tier3 == 'Parasitology' ~ 'Immunology and Infectious Disease',
                                    bepress_tier3 == 'Exercise Science' | bepress_tier3 == 'Psychology of Movement' ~ 'Kinesiology',
-                                   bepress_tier3 == 'Health Sciences and Medical Librarianship' ~ 'Library and Information Science',
+                                   bepress_tier3 == 'Health Sciences and Medical Librarianship' | bepress_tier3 == 'Archival Science' |
+                                     bepress_tier3 == 'Collection Development and Management' | bepress_tier3 == 'Information Literacy' |
+                                     bepress_tier3 == 'Scholarly Communication' ~ 'Library and Information Science',
                                    bepress_tier3 == 'Applied Linguistics' | bepress_tier3 == 'Computational Linguistics' | bepress_tier3 == 'First and Second Language Acquisition' |
                                      bepress_tier3 == 'Psycholinguistics and Neurolinguistics' ~ 'Linguistics',
                                    bepress_tier3 == 'Algebra' | bepress_tier3 == 'Geometry and Topology' ~ 'Mathematics',
@@ -354,7 +362,8 @@ survey_data <- survey_data %>%
                                    grepl('educational technol', discipline_other, ignore.case = TRUE) ~ 'Educational Technology',
                                    grepl('^communication', discipline_other, ignore.case = TRUE) ~ 'Communication',
                                    grepl('Astronomy', discipline_other, ignore.case = TRUE) | grepl('astrophysics', discipline_other, ignore.case = TRUE) ~ 'Astrophysics and Astronomy',
-                                   grepl('^linguistic$', discipline_other, ignore.case = TRUE) | grepl('applied linguistics', discipline_specific, ignore.case = TRUE) ~ 'Linguistics',
+                                   grepl('^linguistic$', discipline_other, ignore.case = TRUE) | grepl('applied linguistics', discipline_specific, ignore.case = TRUE) |
+                                     grepl('^linguistics$', discipline_other, ignore.case = TRUE)~ 'Linguistics',
                                    grepl('^Anthropology$', discipline_other, ignore.case = TRUE) |  grepl('archaeology', discipline_other, ignore.case = TRUE) ~ 'Anthropology',
                                    grepl('^marine biology$', discipline_specific, ignore.case = T) & discipline == 'Ecology/Evolutionary Science' ~ 'Marine Biology',
                                    grepl('biochemistry', discipline_other, ignore.case = TRUE) & grepl('biophysics', discipline_other) ~ 'Biochemistry, Biophysics, and Structural Biology',
@@ -395,10 +404,11 @@ survey_data <- survey_data %>%
                                      (grepl('^physiology$', discipline_specific, ignore.case = TRUE) & discipline == 'biology') ~ 'Physiology',
                                    grepl('arabic education', discipline_other, ignore.case = TRUE) | 
                                      grepl('english education', discipline_other, ignore.case = TRUE) ~ 'Language and Literacy Education',
-                                   grepl('Information Science', discipline_other)~ 'Library and Information Science',
+                                   grepl('Information Science', discipline_other) ~ 'Library and Information Science',
                                    discipline == 'Chemistry' ~ 'Chemistry',
                                    discipline == 'Economics' ~ 'Economics',
                                    discipline == 'Kinesiology' ~ 'Kinesiology',
+                                   discipline == 'Library/Information Science	' ~ 'Library and Information Science',
                                    discipline == 'Sociology' ~ 'Sociology'
                                    ))
           

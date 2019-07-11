@@ -163,7 +163,9 @@ survey_data <- survey_data %>%
                                    grepl('fluid', discipline_specific, ignore.case = T) & discipline == 'Physics' ~ 'Fluid Dynamics',
                                    grepl('plasma', discipline_specific, ignore.case = T) & discipline == 'Physics' ~ 'Plasma and Beam Physics',
                                    grepl('^american politics$', discipline_specific, ignore.case = T) & discipline == 'Political Science' ~ 'American Politics',
-                                   grepl('^comparative politics$', discipline_specific, ignore.case = T) & discipline == 'Political Science' ~ 'Comparative Politics',
+                                   grepl('comparative', discipline_specific, ignore.case = T) & discipline == 'Political Science' ~ 'Comparative Politics',
+                                   grepl('theory', discipline_specific, ignore.case = T) & discipline == 'Political Science' ~ 'Political Theory',
+                                   grepl('method', discipline_specific, ignore.case = T) & discipline == 'Political Science' ~ 'Models and Methods',
                                    grepl('^international relations', discipline_specific, ignore.case = T) & discipline == 'Political Science' ~ 'International Relations',
                                    (grepl('^clinical psychology', discipline_specific, ignore.case = T) | grepl('^clinical$', discipline_specific, ignore.case = T) |
                                       grepl('^clinical neuropsychology$', discipline_specific, ignore.case = T)) & discipline == 'Psychology' ~ 'Clinical Psychology',
@@ -332,7 +334,8 @@ survey_data <- survey_data %>%
                                      bepress_tier3 == 'Atomic, Molecular and Optical Physics' | bepress_tier3 == 'Condensed Matter Physics' |
                                      bepress_tier3 == 'Biological and Chemical Physics' | bepress_tier3 == 'Fluid Dynamics' | bepress_tier3 == 'Plasma and Beam Physics' ~ 'Physics',
                                    bepress_tier3 == 'Plant Biology' | bepress_tier3 == 'Plant Breeding and Genetics' | bepress_tier3 == 'Plant Pathology' ~ 'Plant Sciences',
-                                   bepress_tier3 == 'American Politics' | bepress_tier3 == 'Comparative Politics' | bepress_tier3 == 'International Relations' ~ 'Political Science',
+                                   bepress_tier3 == 'American Politics' | bepress_tier3 == 'Comparative Politics' | bepress_tier3 == 'International Relations' |
+                                     bepress_tier3 == 'Models and Methods' | bepress_tier3 == 'Political Theory' ~ 'Political Science',
                                    bepress_tier3 == 'Biological Psychology' | bepress_tier3 == 'Clinical Psychology' | bepress_tier3 == 'Cognition and Perception' |
                                      bepress_tier3 == 'Cognitive Psychology' | bepress_tier3 == 'Comparative Psychology' | bepress_tier3 == 'Counseling Psychology' |
                                      bepress_tier3 == 'Developmental Psychology' | bepress_tier3 == 'Experimental Analysis of Behavior' | bepress_tier3 == 'Health Psychology' |
@@ -419,7 +422,8 @@ survey_data <- survey_data %>%
                                    discipline == 'Kinesiology' ~ 'Kinesiology',
                                    discipline == 'Library/Information Science' ~ 'Library and Information Science',
                                    discipline == 'Physics' ~ 'Physics',
-                                   discipline == 'Sociology' ~ 'Sociology'
+                                   discipline == 'Sociology' ~ 'Sociology',
+                                   discipline == 'Political Science' ~ 'Political Science'
                                    ))
           
 

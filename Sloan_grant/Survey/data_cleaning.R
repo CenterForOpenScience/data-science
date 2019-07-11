@@ -154,9 +154,14 @@ survey_data <- survey_data %>%
                                    grepl('biochemistrye', discipline_specific, ignore.case = T) & discipline == 'Nutritional Science' ~ 'Biochemical Phenomena, Metabolism, and Nutrition',
                                    grepl('epidemiology', discipline_specific, ignore.case = T) & discipline == 'Nutrional Science' ~ 'Nutrition Epidemiology',
                                    discipline == 'Paleontology' ~ 'Paleontology',
-                                   grepl('^statistical', discipline_specific, ignore.case = T) & discipline == 'Physics' ~ 'Statistical, Nonlinear, and Soft Matter Physics',
+                                   (grepl('^statistical', discipline_specific, ignore.case = T) | grepl('nonlinear', discipline_specific, ignore.case = T)) & discipline == 'Physics' ~ 'Statistical, Nonlinear, and Soft Matter Physics',
                                    grepl('quantum', discipline_specific, ignore.case = T) & discipline == 'Physics' ~ 'Quantum Physics',
                                    grepl('optics', discipline_specific, ignore.case = T) & discipline == 'Physics' ~ 'Optics',
+                                   grepl('atomics', discipline_specific, ignore.case = T) & discipline == 'Physics' ~ 'Atomic, Molecular and Optical Physics',
+                                   grepl('condensed', discipline_specific, ignore.case = T) & discipline == 'Physics' ~ 'Condensed Matter',
+                                   grepl('bio', discipline_specific, ignore.case = T) & discipline == 'Physics' ~ 'Biological and Chemical Physics',
+                                   grepl('fluid', discipline_specific, ignore.case = T) & discipline == 'Physics' ~ 'Fluid Dynamics',
+                                   grepl('plasma', discipline_specific, ignore.case = T) & discipline == 'Physics' ~ 'Plasma and Beam Physics',
                                    grepl('^american politics$', discipline_specific, ignore.case = T) & discipline == 'Political Science' ~ 'American Politics',
                                    grepl('^comparative politics$', discipline_specific, ignore.case = T) & discipline == 'Political Science' ~ 'Comparative Politics',
                                    grepl('^international relations', discipline_specific, ignore.case = T) & discipline == 'Political Science' ~ 'International Relations',
@@ -323,7 +328,9 @@ survey_data <- survey_data %>%
                                    bepress_tier3 == 'Atmospheric Sciences' | bepress_tier3 == 'Meteorology' | bepress_tier3 == 'Oceanography' ~ 'Oceanography and Atmospheric Sciences and Meteorology',
                                    bepress_tier3 == 'Industrial Engineering' ~ 'Operations Research, Systems Engineering and Industrial Engineering',
                                    bepress_tier3 == 'Pharmacology' ~ 'Pharmacology, Toxicology and Environmental Health',
-                                   bepress_tier3 == 'Optics' | bepress_tier3 == 'Quantum Physics' | bepress_tier3 == 'Statistical, Nonlinear, and Soft Matter Physics' ~ 'Physics',
+                                   bepress_tier3 == 'Optics' | bepress_tier3 == 'Quantum Physics' | bepress_tier3 == 'Statistical, Nonlinear, and Soft Matter Physics' |
+                                     bepress_tier3 == 'Atomic, Molecular and Optical Physics' | bepress_tier3 == 'Condensed Matter Physics' |
+                                     bepress_tier3 == 'Biological and Chemical Physics' | bepress_tier3 == 'Fluid Dynamics' | bepress_tier3 == 'Plasma and Beam Physics' ~ 'Physics',
                                    bepress_tier3 == 'Plant Biology' | bepress_tier3 == 'Plant Breeding and Genetics' | bepress_tier3 == 'Plant Pathology' ~ 'Plant Sciences',
                                    bepress_tier3 == 'American Politics' | bepress_tier3 == 'Comparative Politics' | bepress_tier3 == 'International Relations' ~ 'Political Science',
                                    bepress_tier3 == 'Biological Psychology' | bepress_tier3 == 'Clinical Psychology' | bepress_tier3 == 'Cognition and Perception' |
@@ -346,7 +353,7 @@ survey_data <- survey_data %>%
                                    bepress_tier3 == 'Veterinary Preventive Medicine, Epidemiology, and Public Health' | bepress_tier3 == 'Veterinary Microbiology and Immunobiology' |
                                      bepress_tier3 == 'Veterinary Pathology and Pathobiology' ~ 'Veterinary Medicine',
                                    grepl('administrative', discipline_specific, ignore.case = T) & discipline == 'Law' ~ 'Administrative Law',
-                                   grepl('constitution', discipline_specific, ignore.case = T) & discipline == 'Law' ~ 'Constitutional Law',
+                                   grepl('constitu', discipline_specific, ignore.case = T) & discipline == 'Law' ~ 'Constitutional Law',
                                    grepl('technology', discipline_specific, ignore.case = T) & discipline == 'Law' ~ 'Science and Technology Law',
                                    grepl('education', discipline_specific, ignore.case = T) & discipline == 'Law' ~ 'Education Law',
                                    grepl('philosophy', discipline_specific, ignore.case = T) & discipline == 'Law' ~ 'Law and Philosophy',
@@ -361,7 +368,8 @@ survey_data <- survey_data %>%
                                    grepl('^social work$', discipline_other, ignore.case = TRUE) ~ 'Social Work',
                                    grepl('educational technol', discipline_other, ignore.case = TRUE) ~ 'Educational Technology',
                                    grepl('^communication', discipline_other, ignore.case = TRUE) ~ 'Communication',
-                                   grepl('Astronomy', discipline_other, ignore.case = TRUE) | grepl('astrophysics', discipline_other, ignore.case = TRUE) ~ 'Astrophysics and Astronomy',
+                                   grepl('Astronomy', discipline_other, ignore.case = TRUE) | grepl('astrophysics', discipline_other, ignore.case = TRUE) |
+                                     grepl('Astronomy', discipline_specific, ignore.case = TRUE) | grepl('astrophysic', discipline_specific, ignore.case = TRUE) ~ 'Astrophysics and Astronomy',
                                    grepl('^linguistic$', discipline_other, ignore.case = TRUE) | grepl('applied linguistics', discipline_specific, ignore.case = TRUE) |
                                      grepl('^linguistics$', discipline_other, ignore.case = TRUE)~ 'Linguistics',
                                    grepl('^Anthropology$', discipline_other, ignore.case = TRUE) |  grepl('archaeology', discipline_other, ignore.case = TRUE) ~ 'Anthropology',
@@ -405,13 +413,18 @@ survey_data <- survey_data %>%
                                    grepl('arabic education', discipline_other, ignore.case = TRUE) | 
                                      grepl('english education', discipline_other, ignore.case = TRUE) ~ 'Language and Literacy Education',
                                    grepl('Information Science', discipline_other) ~ 'Library and Information Science',
+                                   grepl('library', discipline_specific, ignore.case = T) & discipline == 'Physics' ~ 'Library and Information Science',
                                    discipline == 'Chemistry' ~ 'Chemistry',
                                    discipline == 'Economics' ~ 'Economics',
                                    discipline == 'Kinesiology' ~ 'Kinesiology',
-                                   discipline == 'Library/Information Science	' ~ 'Library and Information Science',
+                                   discipline == 'Library/Information Science' ~ 'Library and Information Science',
+                                   discipline == 'Physics' ~ 'Physics',
                                    discipline == 'Sociology' ~ 'Sociology'
                                    ))
           
+
+
+
 
 
 ## bepress tier 1 recoding

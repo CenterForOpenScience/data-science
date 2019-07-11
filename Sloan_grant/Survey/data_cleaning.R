@@ -249,7 +249,16 @@ survey_data <- survey_data %>%
                                    grepl('preventive medicine', discipline_other) ~ 'Preventive Medicine',
                                    grepl('surgery', discipline_other) | grepl('surgery', discipline_specific) ~ 'Surgery',
                                    grepl('pediatric', discipline_other, ignore.case = T) |
-                                     (grepl('pediatric', discipline_specific, ignore.case = T) & discipline != 'Psychology') ~ 'Pediatrics'
+                                     (grepl('pediatric', discipline_specific, ignore.case = T) & discipline != 'Psychology') ~ 'Pediatrics',
+                                   (grepl('comparative', discipline_specific, ignore.case = T) | grepl('qualitative', discipline_specific, ignore.case = T) |
+                                      grepl('quantitative', discipline_specific, ignore.case = T)) & 
+                                      discipline == 'Sociology' ~ 'Quantitative, Qualitative, Comparative, and Historical Methodologies',
+                                   grepl('psychology', discipline_specific, ignore.case =  T) & !grepl('counceling', discipline_specific, ignore.case = T) &
+                                      discipline == 'Sociology' ~ 'Social Psychology and Interaction',
+                                   grepl('cult', discipline_specific, ignore.case = T) & discipline == 'Sociology' ~ 'Sociology of Culture',
+                                   grepl('law', discipline_specific, ignore.case = T) & discipline == 'Sociology' ~ 'Social Control, Law, Crime, and Deviance',
+                                   (grepl('political socio', discipline_specific, ignore.case = T) | grepl('social movement', discipline_specific, ignore.case = T)) &
+                                      discipline == 'Sociology' ~ 'Politics and Social Change'
                                    ))
 
 
@@ -320,7 +329,10 @@ survey_data <- survey_data %>%
                                    bepress_tier3 == 'Islamic Studies' ~ 'Religion',
                                    bepress_tier3 == 'Criminology' | bepress_tier3 == 'Demography, Population, and Ecology' | bepress_tier3 == 'Educational Sociology' |
                                      bepress_tier3 == 'Gender and Sexuality' | bepress_tier3 == 'Inequality and Stratification' |
-                                     bepress_tier3 == 'Medicine and Health' | bepress_tier3 == 'Sociology of Religion' ~ 'Sociology',
+                                     bepress_tier3 == 'Medicine and Health' | bepress_tier3 == 'Sociology of Religion' | 
+                                     bepress_tier3 == 'Quantitative, Qualitative, Comparative, and Historical Methodologies' |
+                                     bepress_tier3 == 'Social Psychology and Interaction' | bepress_tier3 == 'Sociology of Culture' |
+                                     bepress_tier3 == 'Politics and Social Change' | bepress_tier3 == 'Social Control, Law, Crime, and Deviance' ~ 'Sociology',
                                    bepress_tier3 == 'Applied Statistics' | bepress_tier3 == 'Biostatistics' | bepress_tier3 == 'Clinical Trials' | 
                                      bepress_tier3 == 'Design of Experiments and Sample Surveys' | bepress_tier3 == 'Probability' ~ 'Statistics and Probability',
                                    bepress_tier3 == 'Veterinary Preventive Medicine, Epidemiology, and Public Health' | bepress_tier3 == 'Veterinary Microbiology and Immunobiology' |
@@ -386,7 +398,8 @@ survey_data <- survey_data %>%
                                    grepl('Information Science', discipline_other)~ 'Library and Information Science',
                                    discipline == 'Chemistry' ~ 'Chemistry',
                                    discipline == 'Economics' ~ 'Economics',
-                                   discipline == 'Kinesiology' ~ 'Kinesiology'
+                                   discipline == 'Kinesiology' ~ 'Kinesiology',
+                                   discipline == 'Sociology' ~ 'Sociology'
                                    ))
           
 

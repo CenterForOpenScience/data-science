@@ -273,15 +273,19 @@ survey_data <- survey_data %>%
                                      discipline == 'Library/Information Science' ~ 'Health Sciences and Medical Librarianship',
                                    grepl('scholarly communication', discipline_specific, ignore.case = T) & discipline == 'Library/Information Science' ~ 'Scholarly Communication',
                                    grepl('archival', discipline_specific, ignore.case = T) & discipline == 'Library/Information Science' ~ 'Archival Science',
-                                   grepl('toxicology', discipline_specific, ignore.case = T) & discipline == 'Marine Science' ~ 'Toxicology'
-                                   ))
+                                   grepl('toxicology', discipline_specific, ignore.case = T) & discipline == 'Marine Science' ~ 'Toxicology',
+                                   grepl('oral', discipline_specific, ignore.case = T) & discipline == 'Medicine' ~ 'Oral Biology and Oral Pathology',
+                                   grepl('physiology', discipline_specific, ignore.case = T) & discipline == 'Medicine' ~ 'Medical Physiology',
+                                   grepl('immunology', discipline_specific, ignore.case = T) & discipline == 'Medicine' ~ 'Medical Immunology',
+                                   grepl('hepatology', discipline_specific, ignore.case = T) & discipline == 'Medicine' ~ 'Hepatology',
+                                   grepl('cell bio', discipline_specific, ignore.case = T) & discipline == 'Medicine' ~ 'Medical Cell Biology'))
 
 
 ## bepress tier 2 recoding
 survey_data <- survey_data %>% 
   mutate(bepress_tier2 = case_when(bepress_tier3 == 'Agricultural Economics' ~ 'Agriculture',
                                    bepress_tier3 == 'Food Security' ~ 'Agricultural and Resource Economics',
-                                   bepress_tier3 == 'Aquaculture and Fisheries' | bepress_tier3 == 'Zoology' ~ 'Animal Science',
+                                   bepress_tier3 == 'Aquaculture and Fisheries' | bepress_tier3 == 'Zoology' ~ 'Animal Sciences',
                                    bepress_tier3 == 'Partial Differential Equations' ~ 'Applied Mathematics',
                                    bepress_tier3 == 'Cosmology, Relativity, and Gravity' ~ 'Astrophysics and Astronomy',
                                    bepress_tier3 == 'Biochemistry' | bepress_tier3 == 'Biophysics' | bepress_tier3 == 'Molecular Biology' | 
@@ -295,7 +299,7 @@ survey_data <- survey_data %>%
                                      bepress_tier3 == 'Physical Chemistry' | bepress_tier3 == 'Environmental Chemistry' ~ 'Chemistry',
                                    bepress_tier3 == 'Structural Engineering' | bepress_tier3 == 'Transportation Engineering' | bepress_tier3 == 'Environmental Engineering' ~ 'Civil and Environmental Engineering',
                                    bepress_tier3 == 'Robotics' ~ 'Computer Engineering',
-                                   bepress_tier3 == 'Orthodontics and Orthodontology' ~ 'Dentistry',
+                                   bepress_tier3 == 'Orthodontics and Orthodontology' | bepress_tier3 == 'Oral Biology and Oral Pathology' ~ 'Dentistry',
                                    bepress_tier3 == 'Biogeochemistry' | bepress_tier3 == 'Geochemistry' | bepress_tier3 == 'Geology' | bepress_tier3 == 'Geomorphology' |
                                      bepress_tier3 == 'Geophysics and Seismology' | bepress_tier3 == 'Hydrology' | bepress_tier3 == 'Paleontology' |
                                      bepress_tier3 == 'Sedimentology' | bepress_tier3 == 'Soil Science' ~ 'Earth Sciences',
@@ -317,12 +321,13 @@ survey_data <- survey_data %>%
                                      bepress_tier3 == 'Psycholinguistics and Neurolinguistics' ~ 'Linguistics',
                                    bepress_tier3 == 'Algebra' | bepress_tier3 == 'Geometry and Topology' ~ 'Mathematics',
                                    bepress_tier3 == 'Heat Transfer, Combustion' | bepress_tier3 == 'Ocean Engineering' ~ 'Mechanical Engineering',
-                                   bepress_tier3 == 'Medical Microbiology' | bepress_tier3 == 'Sports Medicine' | bepress_tier3 == 'Medical Physiology' ~ 'Medical Sciences',
+                                   bepress_tier3 == 'Medical Microbiology' | bepress_tier3 == 'Sports Medicine' | bepress_tier3 == 'Medical Physiology' |
+                                     bepress_tier3 == 'Medical Physiology' | bepress_tier3 == 'Medical Immunology' | bepress_tier3 == 'Medical Cell Biology' ~ 'Medical Sciences',
                                    bepress_tier3 == 'Marriage and Family Therapy and Counseling' ~ 'Mental and Social Health',
                                    bepress_tier3 == 'Neurology' | bepress_tier3 == 'Neurosciences' | bepress_tier3 == 'Obstetrics and Gynecology' | bepress_tier3 == 'Oncology' |
                                      bepress_tier3 == 'Ophthalmology' | bepress_tier3 == 'Psychiatry' | bepress_tier3 == 'Radiology' | bepress_tier3 == 'Urology' |
                                      bepress_tier3 == 'Geriatrics' | bepress_tier3 == 'Family Medicine' | bepress_tier3 == 'Plastic Surgery' |
-                                     bepress_tier3 == 'Preventive Medicine' | bepress_tier3 == 'Surgery' | bepress_tier3 == 'Pediatrics' ~ 'Medical Specialties',
+                                     bepress_tier3 == 'Preventive Medicine' | bepress_tier3 == 'Surgery' | bepress_tier3 == 'Pediatrics' | bepress_tier3 == 'Hepatology' ~ 'Medical Specialties',
                                    bepress_tier3 == 'Virology' ~ 'Microbiology',
                                    bepress_tier3 == 'Musicology' ~ 'Music',
                                    bepress_tier3 == 'Cognitive Neuroscience' | bepress_tier3 == 'Computational Neuroscience' | 
@@ -408,19 +413,21 @@ survey_data <- survey_data %>%
                                    grepl('Philosophy', discipline_other) ~ 'Philosophy',
                                    grepl('^immunology$', discipline_other, ignore.case = TRUE) |
                                      (grepl('^immunology$', discipline_specific, ignore.case = TRUE) & discipline == 'Biology')~ 'Immunology and Infectious Disease',
-                                   grepl('^public health$', discipline_other, ignore.case = TRUE) | grepl('^Publi health$', discipline_other) ~ 'Public Health',
+                                   grepl('^public health$', discipline_other, ignore.case = TRUE) | grepl('^Publi health$', discipline_other) |
+                                     (grepl('^public health$', discipline_specific, ignore.case = TRUE) & discipline == 'Medicine') ~ 'Public Health',
                                    grepl('^nursing', discipline_other, ignore.case = TRUE) | 
                                      (grepl('^nursing', discipline_specific, ignore.case = TRUE) & discipline == 'Medicine') ~ 'Nursing',
                                    grepl('sport management', discipline_other, ignore.case = TRUE) ~ 'Sports Management',
                                    grepl('marketing', discipline_other, ignore.case = TRUE) ~ 'Marketing',
                                    grepl('rehabilition', discipline_other, ignore.case = TRUE) ~ 'Rehabilitation and Therapy',
-                                   grepl('^public health$', discipline_other, ignore.case = TRUE) ~ 'Public Health',
                                    grepl('^physiology$', discipline_other, ignore.case = TRUE) |
                                      (grepl('^physiology$', discipline_specific, ignore.case = TRUE) & discipline == 'biology') ~ 'Physiology',
                                    grepl('arabic education', discipline_other, ignore.case = TRUE) | 
                                      grepl('english education', discipline_other, ignore.case = TRUE) ~ 'Language and Literacy Education',
                                    grepl('Information Science', discipline_other) ~ 'Library and Information Science',
                                    grepl('library', discipline_specific, ignore.case = T) & discipline == 'Physics' ~ 'Library and Information Science',
+                                   grepl('psychology', discipline_specific, ignore.case = T) & discipline == 'Medicine' ~ 'Psychiatry and Psychology',
+                                   grepl('translational', discipline_specific, ignore.case = T) & discipline == 'Medicine' ~ 'Translational Medical Research',
                                    discipline == 'Chemistry' ~ 'Chemistry',
                                    discipline == 'Economics' ~ 'Economics',
                                    discipline == 'Kinesiology' ~ 'Kinesiology',
@@ -438,7 +445,48 @@ survey_data <- survey_data %>%
 
 ## bepress tier 1 recoding
 survey_data <- survey_data %>%
-    mutate(bepress_tier1 = case_when(grepl('My example is not typical', discipline_other, ignore.case = TRUE) | grepl('Digital Humanities, Editing', discipline_other, ignore.case = TRUE) ~ NA_character_,
+    mutate(bepress_tier1 = case_when(bepress_tier2 == 'Classics' | bepress_tier2 == 'History' | bepress_tier2 == 'Philosophy' |
+                                       bepress_tier2 == 'Music' | bepress_tier2 == 'Religion' ~ 'Arts and Humanities',
+                                     bepress_tier2 == 'Accounting' | bepress_tier2 == 'Marketing' | bepress_tier2 == 'Sports Management' ~ 'Business',
+                                     bepress_tier2 == 'Educational Technology' | bepress_tier2 == 'Health and Physical Education' |
+                                       bepress_tier2 == 'Language and Literacy Education' | bepress_tier2 == 'Science and Mathematics Education' |
+                                       bepress_tier2 == 'Special Education and Teaching' ~ 'Education',
+                                     bepress_tier2 == 'Biomedical Engineering and Bioengineering' | bepress_tier2 == 'Chemical Engineering' |
+                                       bepress_tier2 == 'Civil and Environmental Engineering' | bepress_tier2 == 'Computer Engineering' |
+                                       bepress_tier2 == 'Electrical and Computer Engineering' | bepress_tier2 == 'Operations Research, Systems Engineering and Industrial Engineering' |
+                                       bepress_tier2 == 'Mechanical Engineering' ~ 'Engineering',
+                                     bepress_tier2 == 'Administrative Law' | bepress_tier2 == 'Constitutional Law' | bepress_tier2 == 'Education Law' ~ 'Law',
+                                     bepress_tier2 == 'Agriculture' | bepress_tier2 == 'Animal Sciences' | bepress_tier2 == 'Biochemistry, Biophysics, and Structural Biology' |
+                                       bepress_tier2 == 'Bioinformatics' | bepress_tier2 == 'Biotechnology' | bepress_tier2 == 'Cell and Developmental Biology' |
+                                       bepress_tier2 == 'Ecology and Evolutionary Biology' | bepress_tier2 == 'Genetics and Genomics' |
+                                       bepress_tier2 == 'Immunology and Infectious Disease' | bepress_tier2 == 'Kinesiology' |
+                                       bepress_tier2 == 'Systems Biology' | bepress_tier2 == 'Pharmacology, Toxicology and Environmental Health' |
+                                       bepress_tier2 == 'Nutrition' | bepress_tier2 == 'Neuroscience and Neurobiology' | bepress_tier2 == 'Microbiology' |
+                                       bepress_tier2 == 'Animal Sciences' | bepress_tier2 == 'Marine Biology' | bepress_tier2 == 'Physiology' |
+                                       bepress_tier2 == 'Plant Sciences' ~ 'Life Sciences',
+                                     bepress_tier2 == 'Anatomy' | bepress_tier2 == 'Bioethics and Medical Ethics' | bepress_tier2 == 'Dentistry' | bepress_tier2 == 'Veterinary Medicine' |
+                                       bepress_tier2 == 'Nursing' | bepress_tier2 == 'Mental and Social Health' | bepress_tier2 == 'Medical Specialties' |
+                                       bepress_tier2 == 'Medical Sciences' | bepress_tier2 == 'Medical Education' | bepress_tier2 == 'Public Health' |
+                                       bepress_tier2 == 'Rehabilitation and Therapy' | bepress_tier2 == 'Sports Sciences' ~ 'Medicine and Health Sciences',
+                                     bepress_tier2 == 'Applied Mathematics' | bepress_tier2 == 'Astrophysics and Astronomy' | bepress_tier2 == 'Chemistry' |
+                                       bepress_tier2 == 'Computer Sciences' | bepress_tier2 == 'Earth Sciences' | bepress_tier2 == 'Environmental Sciences' |
+                                       bepress_tier2 == 'Physics' | bepress_tier2 == 'Oceanography and Atmospheric Sciences and Meteorology' |
+                                       bepress_tier2 == 'Mathematics' | bepress_tier2 == 'Statistics and Probability' ~ 'Physical Sciences and Mathematics',
+                                     bepress_tier2 == 'Agricultural and Resource Economics' | bepress_tier2 == 'Anthropology' | bepress_tier2 == 'Communication' |
+                                       bepress_tier2 == 'Economics' | bepress_tier2 == 'Geography' | bepress_tier2 == 'Psychology' | bepress_tier2 == 'Sociology' |
+                                       bepress_tier2 == 'Library and Information Science' | bepress_tier2 == 'Linguistics' | bepress_tier2 == 'Political Science' |
+                                       bepress_tier2 == 'Public Affairs, Public Policy and Public Administration' | bepress_tier2 == 'Social Work' |
+                                       bepress_tier2 == 'Urban Studies and Planning' | bepress_tier2 == 'Science and Technology Studies' ~ 'Social and Behavioral Sciences',
+                                     
+      discipline == 'Medicine' ~ 'Medicine and Health Sciences',
+      discipline == 'Law' ~ 'Law',
+    ))
+      
+      
+      
+      
+      
+      grepl('My example is not typical', discipline_other, ignore.case = TRUE) | grepl('Digital Humanities, Editing', discipline_other, ignore.case = TRUE) ~ NA_character_,
                                      grepl('computational social science', discipline_other, ignore.case = TRUE) ~ 'Social and Behavioral Sciences',
                                      grepl('humanities', discipline_other, ignore.case = TRUE) | bepress_tier2 == 'History' | bepress_tier2 == 'Classics' |
                                         bepress_tier2 == 'Religion' | bepress_tier2 == 'Music' | bepress_tier2 == 'Philosophy' | grepl('literature', discipline_other, ignore.case = TRUE) ~ 'Arts and Humanities',

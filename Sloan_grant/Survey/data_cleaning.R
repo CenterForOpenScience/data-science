@@ -68,7 +68,7 @@ survey_data <- survey_data %>%
                                    grepl('^developmental biology$', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Developmental Biology',
                                    (grepl('^genetics$', discipline_specific, ignore.case = T) | grepl('^human genetics$', discipline_specific, ignore.case = TRUE)) & discipline == 'Biology' ~ 'Genetics',
                                    grepl('^genomics$', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Genomics',
-                                   grepl('^molecular biology$', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Molecular Biology',
+                                   grepl('^molecular biology$', discipline_specific, ignore.case = T) & (discipline == 'Biology' | discipline == 'Agriculural Science') ~ 'Molecular Biology',
                                    grepl('^molecular genetics$', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Molecular Genetics',
                                    grepl('molecular neuroscience', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Molecular and Cellular Neuroscience',
                                    grepl('^parasitology$', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Parasitology',
@@ -288,7 +288,8 @@ survey_data <- survey_data %>%
                                    grepl('pharmacology', discipline_other, ignore.case = T) & grepl('medicine', discipline_other, ignore.case = T) ~ 'Medical Pharmacology',
                                    discipline_other == 'AI & Robotics' ~ 'Artificial Intelligence and Robotics',
                                    discipline_other == 'Hearing Science' ~ 'Speech and Hearing Science',
-                                   discipline == 'Electrochemistry' ~ 'Other Chemistry'))
+                                   discipline == 'Electrochemistry' ~ 'Other Chemistry',
+                                   discipline_specific == 'Molecular Physiology' ~ 'Cellular and Molecular Physiology'))
 
 
 ## bepress tier 2 recoding
@@ -355,6 +356,7 @@ survey_data <- survey_data %>%
                                    bepress_tier3 == 'Optics' | bepress_tier3 == 'Quantum Physics' | bepress_tier3 == 'Statistical, Nonlinear, and Soft Matter Physics' |
                                      bepress_tier3 == 'Atomic, Molecular and Optical Physics' | bepress_tier3 == 'Condensed Matter Physics' |
                                      bepress_tier3 == 'Biological and Chemical Physics' | bepress_tier3 == 'Fluid Dynamics' | bepress_tier3 == 'Plasma and Beam Physics' ~ 'Physics',
+                                   bepress_tier3 == 'Cellular and Molecular Physiology' ~ 'Physiology',
                                    bepress_tier3 == 'Plant Biology' | bepress_tier3 == 'Plant Breeding and Genetics' | bepress_tier3 == 'Plant Pathology' ~ 'Plant Sciences',
                                    bepress_tier3 == 'American Politics' | bepress_tier3 == 'Comparative Politics' | bepress_tier3 == 'International Relations' |
                                      bepress_tier3 == 'Models and Methods' | bepress_tier3 == 'Political Theory' ~ 'Political Science',
@@ -426,7 +428,8 @@ survey_data <- survey_data %>%
                                    discipline_other == 'Medical Education' | discipline_specific == 'Medical Education' ~ 'Medical Education',
                                    grepl('physical education', discipline_other, ignore.case = TRUE) ~ 'Health and Physical Education',
                                    grepl('^geography$', discipline_other, ignore.case = TRUE) ~ 'Geography',
-                                   grepl('Plant Science', discipline_other) | grepl('Plant Science', discipline_specific) ~ 'Plant Sciences',
+                                   grepl('Plant Science', discipline_other) | grepl('Plant Science', discipline_specific) | 
+                                     (grepl('plant', discipline_other, ignore.case = T) & discipline == 'Agricultural Science') ~ 'Plant Sciences',
                                    grepl('theology', discipline_other, ignore.case = TRUE) | grepl('Religio', discipline_other, ignore.case = TRUE) ~ 'Religion',
                                    grepl('Philosophy', discipline_other) ~ 'Philosophy',
                                    grepl('^immunology$', discipline_other, ignore.case = TRUE) |
@@ -454,6 +457,9 @@ survey_data <- survey_data %>%
                                      discipline == 'Engineering' ~ 'Computer Sciences',
                                    grepl('mechanical engineering', discipline_specific, ignore.case = T) & discipline == 'Engineering' ~ 'Mechanical Engineering',
                                    grepl('materials', discipline_specific, ignore.case = T) & discipline == 'Engineering' ~ 'Materials Science and Engineering',
+                                   grepl('entomology', discipline_specific, ignore.case = T) ~ 'Entomology',
+                                   grepl('agriculture', discipline_specific, ignore.case = T) ~ 'Agriculture',
+                                   grepl('animal science', discipline_specific, ignore.case = T) ~ 'Animal Sciences',
                                    discipline == 'Chemistry' ~ 'Chemistry',
                                    discipline == 'Economics' ~ 'Economics',
                                    discipline == 'Kinesiology' ~ 'Kinesiology',
@@ -490,7 +496,7 @@ survey_data <- survey_data %>%
                                        bepress_tier2 == 'Systems Biology' | bepress_tier2 == 'Pharmacology, Toxicology and Environmental Health' |
                                        bepress_tier2 == 'Nutrition' | bepress_tier2 == 'Neuroscience and Neurobiology' | bepress_tier2 == 'Microbiology' |
                                        bepress_tier2 == 'Animal Sciences' | bepress_tier2 == 'Marine Biology' | bepress_tier2 == 'Physiology' |
-                                       bepress_tier2 == 'Plant Sciences' ~ 'Life Sciences',
+                                       bepress_tier2 == 'Plant Sciences' | bepress_tier2 == 'Entomology' ~ 'Life Sciences',
                                      bepress_tier2 == 'Anatomy' | bepress_tier2 == 'Bioethics and Medical Ethics' | bepress_tier2 == 'Dentistry' | bepress_tier2 == 'Veterinary Medicine' |
                                        bepress_tier2 == 'Nursing' | bepress_tier2 == 'Mental and Social Health' | bepress_tier2 == 'Medical Specialties' |
                                        bepress_tier2 == 'Medical Sciences' | bepress_tier2 == 'Medical Education' | bepress_tier2 == 'Public Health' |
@@ -525,6 +531,7 @@ survey_data <- survey_data %>%
                                      discipline_other == 'optical engineering' ~ 'Engineering',
                                      
                                      
+      discipline == 'Agricultural Science' ~ 'Life Science',
       discipline == 'Engineering' ~ 'Engineering',
       discipline == 'Medicine' ~ 'Medicine and Health Sciences',
       discipline == 'Law' ~ 'Law',

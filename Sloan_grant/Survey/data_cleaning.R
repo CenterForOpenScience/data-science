@@ -285,7 +285,8 @@ survey_data <- survey_data %>%
                                    discipline_other == 'Otorhinolarygology' ~ 'Otolaryngology',
                                    grepl('pharmacology', discipline_other, ignore.case = T) & grepl('medicine', discipline_other, ignore.case = T) ~ 'Medical Pharmacology',
                                    discipline_other == 'AI & Robotics' ~ 'Artificial Intelligence and Robotics',
-                                   discipline_other == 'Hearing Science' ~ 'Speech and Hearing Science'))
+                                   discipline_other == 'Hearing Science' ~ 'Speech and Hearing Science',
+                                   discipline == 'Electrochemistry' ~ 'Other Chemistry'))
 
 
 ## bepress tier 2 recoding
@@ -459,7 +460,6 @@ survey_data <- survey_data %>%
                                    discipline == 'Sociology' ~ 'Sociology',
                                    discipline == 'Political Science' ~ 'Political Science',
                                    discipline == 'Mathematics' ~ 'Mathematics',
-                                   
                                    ))
           
 

@@ -104,8 +104,10 @@ survey_data <- survey_data %>%
                                    grepl('^sedimentology$', discipline_specific, ignore.case = T) & discipline == 'Earth Science' ~ 'Sedimentology',
                                    grepl('^behavioral ecology$', discipline_specific, ignore.case = T) & discipline == 'Ecology/Evolutionary Science' |
                                      (grepl('behavioural', discipline_specific, ignore.case = T) & grepl('ecology', discipline_specific, ignore.case = T)) ~ 'Behavior and Ethology',
-                                   ((grepl('marine', discipline_specific, ignore.case = T) | grepl('freshwater', discipline_specific, ignore.case = T) | grepl('forest', discipline_specific, ignore.case = T)) &
-                                     grepl('ecology', discipline_specific, ignore.case = T)) | (grepl('ecology', discipline_specific, ignore.case = T) & discipline == 'Marine Science') ~ 'Terrestrial and Aquatic Ecology',
+                                   ((grepl('marine', discipline_specific, ignore.case = T) | grepl('freshwater', discipline_specific, ignore.case = T) | grepl('forest', discipline_specific, ignore.case = T) |
+                                       grepl('aquatic', discipline_specific, ignore.case = T) | grepl('grassland', discipline_specific, ignore.case = T) |
+                                       grepl('freswhater', discipline_specific, ignore.case = T) | grepl('terrestrial', discipline_specific, ignore.case = T)) & grepl('ecology', discipline_specific, ignore.case = T)) | 
+                                     (grepl('ecology', discipline_specific, ignore.case = T) & discipline == 'Marine Science') ~ 'Terrestrial and Aquatic Ecology',
                                    grepl('^public economics', discipline_specific, ignore.case = T) & discipline == 'Economics' ~ 'Public Economics',
                                    grepl('behavioral', discipline_specific, ignore.case = T) & grepl('economics', discipline_specific, ignore.case = T) & discipline == 'Economics' ~ 'Behavioral Economics',
                                    grepl('^development', discipline_specific, ignore.case = T) & discipline == 'Economics' ~ 'Growth and Development',
@@ -460,6 +462,7 @@ survey_data <- survey_data %>%
                                    discipline == 'Sociology' ~ 'Sociology',
                                    discipline == 'Political Science' ~ 'Political Science',
                                    discipline == 'Mathematics' ~ 'Mathematics',
+                                   discipline == 'Ecology/Evolutionary Science' ~ 'Ecology and Evolutionary Biology'
                                    ))
           
 

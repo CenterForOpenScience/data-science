@@ -150,7 +150,7 @@ survey_data <- survey_data %>%
                                    grepl('oncology', discipline_specific, ignore.case = T) & discipline == 'Medicine' ~ 'Oncology',
                                    (grepl('neurology', discipline_specific, ignore.case = T) & discipline == 'Medicine') | grepl('neurology', discipline_other, ignore.case = T) ~ 'Neurology',
                                    grepl('^psychiatry$', discipline_specific, ignore.case = T) & discipline == 'Medicine' ~ 'Psychiatry',
-                                   grepl('neuroscience', discipline_specific, ignore.case = T) & discipline == 'Medicine' ~ 'Neurosciences',
+                                   (grepl('neuroscience', discipline_specific, ignore.case = T) & discipline == 'Medicine') |  (grepl('neuroscience', discipline_specific, ignore.case = T) & discipline == 'Media Studies')~ 'Neurosciences',
                                    grepl('microbiology', discipline_specific, ignore.case = T) & discipline == 'Medicine' ~ 'Medical Microbiology',
                                    grepl('radiology', discipline_specific, ignore.case = T) & discipline == 'Medicine' ~ 'Radiology',
                                    grepl('\\<urology$', discipline_specific, ignore.case = T) & discipline == 'Medicine' ~ 'Urology',
@@ -301,7 +301,9 @@ survey_data <- survey_data %>%
                                    discipline_other == 'AI & Robotics' ~ 'Artificial Intelligence and Robotics',
                                    discipline_other == 'Hearing Science' ~ 'Speech and Hearing Science',
                                    discipline == 'Electrochemistry' ~ 'Other Chemistry',
-                                   discipline_specific == 'Molecular Physiology' ~ 'Cellular and Molecular Physiology'))
+                                   discipline_specific == 'Molecular Physiology' ~ 'Cellular and Molecular Physiology',
+                                   discipline_specific == 'orthopaedics' ~ 'Orthopedics',
+                                   grepl('film history', discipline_specific, ignore.case = T) & discipline == 'Media Studies' ~ 'Other Film and Media Studies'))
 
 
 ## bepress tier 2 recoding
@@ -347,6 +349,7 @@ survey_data <- survey_data %>%
                                      bepress_tier3 == 'Psycholinguistics and Neurolinguistics' ~ 'Linguistics',
                                    bepress_tier3 == 'Algebra' | bepress_tier3 == 'Geometry and Topology' ~ 'Mathematics',
                                    bepress_tier3 == 'Heat Transfer, Combustion' | bepress_tier3 == 'Ocean Engineering' ~ 'Mechanical Engineering',
+                                   bepress_tier3 == 'Other Film and Media Studies' ~ 'Film and Media Studies',
                                    bepress_tier3 == 'Medical Microbiology' | bepress_tier3 == 'Sports Medicine' | bepress_tier3 == 'Medical Physiology' |
                                      bepress_tier3 == 'Medical Physiology' | bepress_tier3 == 'Medical Immunology' | bepress_tier3 == 'Medical Cell Biology' |
                                      bepress_tier3 == 'Medical Pharmacology' ~ 'Medical Sciences',
@@ -355,7 +358,7 @@ survey_data <- survey_data %>%
                                      bepress_tier3 == 'Ophthalmology' | bepress_tier3 == 'Psychiatry' | bepress_tier3 == 'Radiology' | bepress_tier3 == 'Urology' |
                                      bepress_tier3 == 'Geriatrics' | bepress_tier3 == 'Family Medicine' | bepress_tier3 == 'Plastic Surgery' |
                                      bepress_tier3 == 'Preventive Medicine' | bepress_tier3 == 'Surgery' | bepress_tier3 == 'Pediatrics' | bepress_tier3 == 'Hepatology' |
-                                     bepress_tier3 == 'Pathology' | bepress_tier3 == 'Otolaryngology' ~ 'Medical Specialties',
+                                     bepress_tier3 == 'Pathology' | bepress_tier3 == 'Otolaryngology' | bepress_tier3 == 'Orthopedics' ~ 'Medical Specialties',
                                    bepress_tier3 == 'Virology' ~ 'Microbiology',
                                    bepress_tier3 == 'Musicology' ~ 'Music',
                                    bepress_tier3 == 'Cognitive Neuroscience' | bepress_tier3 == 'Computational Neuroscience' | 
@@ -478,7 +481,10 @@ survey_data <- survey_data %>%
                                    grepl('climate', discipline_specific, ignore.case = T) & !grepl('glaciology', discipline_specific, ignore.case = T) & 
                                      !grepl('geochem', discipline_specific, ignore.case = T) & discipline == 'Earth Science' ~ 'Oceanography and Atmospheric Sciences and Meteorology',
                                    grepl('public health', discipline_specific, ignore.case = T) & discipline == 'Nutritional Science' ~ 'Public Health',
-                                   discipline == 'Chemistry' ~ 'Chemistry',
+                                   grepl('media studies', discipline_specific, ignore.case = T) & discipline == 'Media Studies' ~ 'Film and Media Studies',
+                                   (grepl('communication', discipline_specific, ignore.case = T) & discipline == 'Media Studies') | discipline_specific == 'Jurnalistik' ~ 'Communication',
+                                   discipline_specific == 'Linguistic' & discipline == 'Media Studies' ~ 'Linguistics',
+                                   discipline == 'Chemistry' ~ 'Chemistry', 
                                    discipline == 'Economics' ~ 'Economics',
                                    discipline == 'Kinesiology' ~ 'Kinesiology',
                                    discipline == 'Library/Information Science' ~ 'Library and Information Science',
@@ -486,10 +492,11 @@ survey_data <- survey_data %>%
                                    discipline == 'Sociology' ~ 'Sociology',
                                    discipline == 'Political Science' ~ 'Political Science',
                                    discipline == 'Mathematics' ~ 'Mathematics',
+                                   discipline == 'Media Studies' ~ 'Film and Media Studies'
                                    discipline == 'Ecology/Evolutionary Science' ~ 'Ecology and Evolutionary Biology',
                                    discipline == 'Statistics' ~ 'Statistics and Probability',
                                    discipline == 'Psychology' ~ 'Psychology',
-                                   discipline == 'Nutritional Science' & !grepl('psych', discipline_specific, ignore.case = T) ~ 'Nutrition',
+                                   discipline == 'Nutritional Science' & !grepl('psych', discipline_specific, ignore.case = T) ~ 'Nutrition'
                                    ))
           
 
@@ -500,7 +507,7 @@ survey_data <- survey_data %>%
 ## bepress tier 1 recoding
 survey_data <- survey_data %>%
     mutate(bepress_tier1 = case_when(bepress_tier2 == 'Classics' | bepress_tier2 == 'History' | bepress_tier2 == 'Philosophy' |
-                                       bepress_tier2 == 'Music' | bepress_tier2 == 'Religion' ~ 'Arts and Humanities',
+                                       bepress_tier2 == 'Music' | bepress_tier2 == 'Religion' | bepress_tier2 == 'Film and Media Studies' ~ 'Arts and Humanities',
                                      bepress_tier2 == 'Accounting' | bepress_tier2 == 'Marketing' | bepress_tier2 == 'Sports Management' ~ 'Business',
                                      bepress_tier2 == 'Educational Technology' | bepress_tier2 == 'Health and Physical Education' |
                                        bepress_tier2 == 'Language and Literacy Education' | bepress_tier2 == 'Science and Mathematics Education' |

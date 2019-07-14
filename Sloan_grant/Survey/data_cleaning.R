@@ -79,6 +79,7 @@ survey_data <- survey_data %>%
                                    (grepl('^virology$', discipline_specific, ignore.case = T) | discipline_specific == 'Virology and Transcription') & discipline == 'Biology' |
                                      grepl('^virology$', discipline_other, ignore.case = T) | discipline_specific == 'microbiology, virology' ~ 'Virology',
                                    grepl('^zoology$', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Zoology',
+                                   grepl('civil engineering', discipline_specific, ignore.case = T) & discipline == 'Engineering' ~ 'Civil Engineering',
                                    (grepl('^analytical chemistry$', discipline_specific, ignore.case = T) | discipline_specific == 'clinical analytical chemistry' |
                                       discipline_specific == 'Analytical biochemistry') & discipline == 'Chemistry' ~ 'Analytical Chemistry',
                                    (grepl('bio', discipline_specific, ignore.case = T) | grepl('computational', discipline_specific, ignore.case = T)) & discipline == 'Chemistry' ~ 'Other Chemistry',
@@ -132,7 +133,7 @@ survey_data <- survey_data %>%
                                    grepl('nano', discipline_specific, ignore.case = T) & discipline == 'Engineering' ~ 'Nanotechnology Fabrication',
                                    grepl('industrial', discipline_specific, ignore.case = T) & discipline == 'Engineering' ~ 'Industrial Engineering',
                                    grepl('environment', discipline_specific, ignore.case = T) & discipline == 'Engineering' ~ 'Environmental Engineering',
-                                   (grepl('electrical', discipline_specific, ignore.case = T) | grepl('electrical', discipline_specific, ignore.case = T)) & discipline == 'Engineering' ~ 'Electrical and Electronics',
+                                   (grepl('electrical', discipline_specific, ignore.case = T) | grepl('electronic', discipline_specific, ignore.case = T)) & discipline == 'Engineering' ~ 'Electrical and Electronics',
                                    grepl('psychology', discipline_specific, ignore.case = T) & discipline == 'Kinesiology' ~ 'Psychology of Movement',
                                    grepl('exercise science', discipline_specific, ignore.case = T) & discipline == 'Kinesiology' ~ 'Exercise Science',
                                    grepl('scholarly communication', discipline_specific, ignore.case = T) & discipline == 'Library/Information Science' ~ 'Health Sciences and Medical Librarianship',
@@ -303,7 +304,8 @@ survey_data <- survey_data %>%
                                    bepress_tier3 == 'Analytical Chemistry' | bepress_tier3 == 'Inorganic Chemistry' | bepress_tier3 == 'Materials Chemistry' |
                                      bepress_tier3 == 'Medicinal-Pharmaceutical Chemistry' | bepress_tier3 == 'Organic Chemistry' | bepress_tier3 == 'Other Chemistry' |
                                      bepress_tier3 == 'Physical Chemistry' | bepress_tier3 == 'Environmental Chemistry' ~ 'Chemistry',
-                                   bepress_tier3 == 'Structural Engineering' | bepress_tier3 == 'Transportation Engineering' | bepress_tier3 == 'Environmental Engineering' ~ 'Civil and Environmental Engineering',
+                                   bepress_tier3 == 'Structural Engineering' | bepress_tier3 == 'Transportation Engineering' | bepress_tier3 == 'Environmental Engineering' |
+                                     bepress_tier3 == 'Civil Engineering' ~ 'Civil and Environmental Engineering',
                                    bepress_tier3 == 'Speech and Hearing Science' ~ 'Communication Sciences and Disorders',
                                    bepress_tier3 == 'Robotics' ~ 'Computer Engineering',
                                    bepress_tier3 == 'Artificial Intelligence and Robotics' ~ 'Computer Sciences',
@@ -381,7 +383,8 @@ survey_data <- survey_data %>%
                                    grepl('science', discipline_other, ignore.case = T) & grepl('education', discipline_other, ignore.case = T) ~ 'Science and Mathematics Education',
                                    grepl('Science and Technology Studies', discipline_other, ignore.case = T) ~ 'Science and Technology Studies',
                                    grepl('sport', discipline_other, ignore.case = T) & grepl('science', discipline_other, ignore.case = T) ~ 'Sports Sciences',
-                                   grepl('^chemical engineering$', discipline_specific, ignore.case = T) ~ 'Chemical Engineering',
+                                   grepl('^chemical engineering$', discipline_specific, ignore.case = T) | 
+                                     (grepl('chemi', discipline_specific, ignore.case = T) & discipline == 'Engineering') ~ 'Chemical Engineering',
                                    (grepl('copyright', discipline_specific, ignore.case = T) | grepl('intellectual', discipline_specific, ignore.case = T)) & discipline == 'Law' ~ 'Law and Philosophy',
                                    grepl('^microbiology$', discipline_specific, ignore.case = T) | grepl('^microbiology$', discipline_other, ignore.case = T) |
                                      (grepl('microbiology', discipline_specific, ignore.case = T) & discipline == 'Marine Science') ~ 'Microbiology',
@@ -441,6 +444,13 @@ survey_data <- survey_data %>%
                                    grepl('library', discipline_specific, ignore.case = T) & discipline == 'Physics' ~ 'Library and Information Science',
                                    grepl('psychology', discipline_specific, ignore.case = T) & discipline == 'Medicine' ~ 'Psychiatry and Psychology',
                                    grepl('translational', discipline_specific, ignore.case = T) & discipline == 'Medicine' ~ 'Translational Medical Research',
+                                   discipline_specific == 'Aerospace Engineering' ~ 'Aerospace Engineering',
+                                   grepl('bio', discipline_specific, ignore.case =  T) & discipline == 'Engineering' ~ 'Biomedical Engineering and Bioengineering',
+                                   grepl('computer engineering', discipline_specific, ignore.case = T) & discipline == 'Engineering' ~ 'Computer Engineering',
+                                   grepl('computer science', discipline_specific, ignore.case = T) & !grepl('engineering', discipline_specific, ignore.case = T) & 
+                                     discipline == 'Engineering' ~ 'Computer Sciences',
+                                   grepl('mechanical engineering', discipline_specific, ignore.case = T) & discipline == 'Engineering' ~ 'Mechanical Engineering',
+                                   grepl('materials', discipline_specific, ignore.case = T) & discipline == 'Engineering' ~ 'Materials Science and Engineering',
                                    discipline == 'Chemistry' ~ 'Chemistry',
                                    discipline == 'Economics' ~ 'Economics',
                                    discipline == 'Kinesiology' ~ 'Kinesiology',
@@ -448,7 +458,8 @@ survey_data <- survey_data %>%
                                    discipline == 'Physics' ~ 'Physics',
                                    discipline == 'Sociology' ~ 'Sociology',
                                    discipline == 'Political Science' ~ 'Political Science',
-                                   discipline == 'Mathematics' ~ 'Mathematics'
+                                   discipline == 'Mathematics' ~ 'Mathematics',
+                                   
                                    ))
           
 
@@ -467,7 +478,7 @@ survey_data <- survey_data %>%
                                      bepress_tier2 == 'Biomedical Engineering and Bioengineering' | bepress_tier2 == 'Chemical Engineering' |
                                        bepress_tier2 == 'Civil and Environmental Engineering' | bepress_tier2 == 'Computer Engineering' |
                                        bepress_tier2 == 'Electrical and Computer Engineering' | bepress_tier2 == 'Operations Research, Systems Engineering and Industrial Engineering' |
-                                       bepress_tier2 == 'Mechanical Engineering' ~ 'Engineering',
+                                       bepress_tier2 == 'Mechanical Engineering' | bepress_tier2 == 'Aerospace Engineering' | bepress_tier2 == 'Materials Science and Engineering' ~ 'Engineering',
                                      bepress_tier2 == 'Administrative Law' | bepress_tier2 == 'Constitutional Law' | bepress_tier2 == 'Education Law' ~ 'Law',
                                      bepress_tier2 == 'Agriculture' | bepress_tier2 == 'Animal Sciences' | bepress_tier2 == 'Biochemistry, Biophysics, and Structural Biology' |
                                        bepress_tier2 == 'Bioinformatics' | bepress_tier2 == 'Biotechnology' | bepress_tier2 == 'Cell and Developmental Biology' |
@@ -511,6 +522,7 @@ survey_data <- survey_data %>%
                                      discipline_other == 'optical engineering' ~ 'Engineering',
                                      
                                      
+      discipline == 'Engineering' ~ 'Engineering',
       discipline == 'Medicine' ~ 'Medicine and Health Sciences',
       discipline == 'Law' ~ 'Law',
     ))

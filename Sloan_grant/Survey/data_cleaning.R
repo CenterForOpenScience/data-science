@@ -172,34 +172,43 @@ survey_data <- survey_data %>%
                                    grepl('method', discipline_specific, ignore.case = T) & discipline == 'Political Science' ~ 'Models and Methods',
                                    grepl('^international relations', discipline_specific, ignore.case = T) & discipline == 'Political Science' ~ 'International Relations',
                                    (grepl('^clinical psychology', discipline_specific, ignore.case = T) | grepl('^clinical$', discipline_specific, ignore.case = T) |
-                                      grepl('^clinical neuropsychology$', discipline_specific, ignore.case = T)) & discipline == 'Psychology' ~ 'Clinical Psychology',
-                                   grepl('^cognition$', discipline_specific, ignore.case = T) & discipline == 'Psychology' ~ 'Cognition and Perception',
-                                   (grepl('^cognitive psychology', discipline_specific, ignore.case = T) | grepl('^cognitive$', discipline_specific, ignore.case = T) |
+                                      grepl('^clinical neuropsychology$', discipline_specific, ignore.case = T) | discipline_specific == 'Experimental Clinical Psychology'|
+                                      discipline_specific == 'Clinical Pschology' | discipline_specific == '	Clinical psychologist') & discipline == 'Psychology' ~ 'Clinical Psychology',
+                                   (grepl('^cognition$', discipline_specific, ignore.case = T) | grepl('vision', discipline_specific, ignore.case = T) |
+                                      grepl('auditory', discipline_specific, ignore.case = T)) & discipline == 'Psychology' ~ 'Cognition and Perception',
+                                   (grepl('^cognitive psychology', discipline_specific, ignore.case = T) | grepl('^cognitive$', discipline_specific, ignore.case = T) | grepl('^cognitive science$', discipline_specific, ignore.case = T) |
+                                      grepl('applied cognitive psychology', discipline_specific, ignore.case = T) |
                                       (grepl('cognitive neuroscience', discipline_specific, ignore.case = T)  & !grepl('social', discipline_specific, ignore.case = T) & !grepl('development', discipline_specific, ignore.case = T))) 
                                       & discipline == 'Psychology' ~ 'Cognitive Psychology',
                                    grepl('comparative psychology', discipline_specific, ignore.case = T) & discipline == 'Psychology' ~ 'Comparative Psychology',
                                    grepl('counseling psych', discipline_specific, ignore.case = T) & discipline == 'Psychology' ~ 'Counseling Psychology',
                                    grepl('I-O psychology', discipline_specific, ignore.case = T) | grepl('I/O psychology', discipline_specific, ignore.case = T) |
-                                     grepl('^Organizational', discipline_specific, ignore.case = T) ~ 'Industrial and Organizational Psychology',
-                                   (grepl('forensic psychology', discipline_specific, ignore.case = T) | grepl('^political psychology$', discipline_specific, ignore.case = T))
+                                     grepl('^Organizational', discipline_specific, ignore.case = T) | grepl('IO Psychology', discipline_specific, ignore.case = T) |
+                                     (grepl('work', discipline_specific, ignore.case = T) | grepl('^industrial', discipline_specific, ignore.case = T) & discipline == 'Psychology') ~ 'Industrial and Organizational Psychology',
+                                   (grepl('forensic psychology', discipline_specific, ignore.case = T) | grepl('^psycholinguistics', discipline_specific, ignore.case = T) |
+                                      grepl('traffic', discipline_specific, ignore.case = T) | grepl('sport', discipline_specific, ignore.case = T) |
+                                      grepl('law', discipline_specific, ignore.case = T) | grepl('^legal', discipline_specific, ignore.case = T) | 
+                                      grepl('^educational psychology$', discipline_specific, ignore.case = T) | grepl('consumer', discipline_specific, ignore.case = T))
                                       & discipline == 'Psychology' ~ 'Other Psychology',
-                                   grepl('^biological psychology$', discipline_specific, ignore.case = T) & discipline == 'Psychology' ~ 'Biological Psychology',
+                                   (grepl('^biological psychology$', discipline_specific, ignore.case = T) | grepl('psychobio', discipline_specific, ignore.case = T) | grepl('biopsychology', discipline_specific, ignore.case = T)) & 
+                                     discipline == 'Psychology' ~ 'Biological Psychology',
                                    (grepl('^social psychology$', discipline_specific, ignore.case = T) | grepl('^social$', discipline_specific, ignore.case = T) |
                                       grepl('^social cognition$', discipline_specific, ignore.case = T) | grepl('^social psych$', discipline_specific, ignore.case = T) |
                                       grepl('^social neuroscience$', discipline_specific, ignore.case = T) | grepl('JDM', discipline_specific, ignore.case = T) |
                                       grepl('judgement and decision', discipline_specific, ignore.case = T) | grepl('behavioral econ', discipline_specific, ignore.case = T) |
-                                      grepl('^behavioural economics$', discipline_specific, ignore.case = T)) & discipline == 'Psychology' ~ 'Social Psychology',
-                                   (grepl('^developmental psychology$', discipline_specific, ignore.case = T) | grepl('^developmental$', discipline_specific, ignore.case = T)) 
-                                      & discipline == 'Psychology' ~ 'Developmental Psychology',
+                                      grepl('^behavioural economics$', discipline_specific, ignore.case = T) | grepl('social cogniti', discipline_specific, ignore.case = T) |
+                                      grepl('creativity', discipline_specific, ignore.case = T) | grepl('political', discipline_specific, ignore.case = T) |
+                                      grepl('judgment', discipline_specific, ignore.case = T) | grepl('socual', discipline_specific, ignore.case = T) |
+                                      grepl('Applied social psycholgoy', discipline_specific, ignore.case = T)) & discipline == 'Psychology' ~ 'Social Psychology',
+                                   (grepl('^developmental psychology$', discipline_specific, ignore.case = T) | grepl('^developmental$', discipline_specific, ignore.case = T)) & discipline == 'Psychology' ~ 'Developmental Psychology',
                                    grepl('experimental analysis of behavior', discipline_specific, ignore.case = T) ~ 'Experimental Analysis of Behavior',
                                    (grepl('^quantitative psychology$', discipline_specific, ignore.case = T) | grepl('^quantitative', discipline_specific, ignore.case = T) |
                                       grepl('^psychometrics$', discipline_specific, ignore.case = T)) & discipline == 'Psychology' ~ 'Quantitative Psychology',
                                    grepl('^health psychology$', discipline_specific, ignore.case = T) & discipline == 'Psychology' ~ 'Health Psychology',
-                                   (grepl('^personality psychology$', discipline_specific, ignore.case = T) | grepl('^personality$', discipline_specific, ignore.case = T)) 
+                                   (grepl('^personality psychology$', discipline_specific, ignore.case = T) | grepl('^personality$', discipline_specific, ignore.case = T) | grepl('individual differences', discipline_specific, ignore.case = T)) 
                                       & discipline == 'Psychology' ~ 'Personality and Social Contexts',
                                    grepl('^experimental psychology$', discipline_specific, ignore.case = T) & discipline == 'Psychology' ~ 'Experimental Analysis of Behavior',
-                                   grepl('^industrial', discipline_specific, ignore.case = T) & discipline == 'Psychology' ~ 'Industrial and Organizational Psychology',
-                                   grepl('^counseling psychology', discipline_specific, ignore.case = T) & discipline == 'Psychology' ~ 'Counseling Psychology',
+                                   (grepl('^counseling psychology', discipline_specific, ignore.case = T) | grepl('^counseling', discipline_specific, ignore.case = T)) & discipline == 'Psychology' ~ 'Counseling Psychology',
                                    (grepl('stratification', discipline_specific, ignore.case = T) | grepl('inequalit', discipline_specific, ignore.case = T)) & discipline == 'Sociology' ~ 'Inequality and Stratification',
                                    grepl('religion', discipline_specific, ignore.case = T) & discipline == 'Sociology' ~ 'Sociology of Religion',
                                    grepl('education', discipline_specific, ignore.case = T) & discipline == 'Sociology' ~ 'Educational Sociology',
@@ -473,7 +482,8 @@ survey_data <- survey_data %>%
                                    discipline == 'Political Science' ~ 'Political Science',
                                    discipline == 'Mathematics' ~ 'Mathematics',
                                    discipline == 'Ecology/Evolutionary Science' ~ 'Ecology and Evolutionary Biology',
-                                   discipline == 'Statistics' ~ 'Statistics and Probability'
+                                   discipline == 'Statistics' ~ 'Statistics and Probability',
+                                   discipline == 'Psychology' ~ 'Psychology'
                                    ))
           
 

@@ -61,14 +61,16 @@ survey_data <- survey_data %>%
                                    grepl('soil', discipline_specific, ignore.case = T) & discipline == 'Agricultural Science' ~ 'Soil Science',
                                    grepl('^behavioral genetics$', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Other Genetics and Genomics',
                                    (grepl('^biochemistry$', discipline_specific, ignore.case = T) | discipline_specific == 'Biochemisty') & discipline == 'Biology' ~ 'Biochemistry',
-                                   grepl('^biophysics$', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Biophysics',
+                                   (grepl('^biophysics$', discipline_specific, ignore.case = T) & discipline == 'Biology') |
+                                     discipline_specific == 'ion channel biophysics' ~ 'Biophysics',
                                    grepl('^cancer biology$', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Cancer Biology',
                                    grepl('^cell biology$', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Cell Biology',
                                    grepl('^computational biology$', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Computational Biology',
                                    grepl('^developmental biology$', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Developmental Biology',
                                    (grepl('^genetics$', discipline_specific, ignore.case = T) | grepl('^human genetics$', discipline_specific, ignore.case = TRUE) |
                                       grepl('population genetics', discipline_specific, ignore.case = T)) & discipline == 'Biology' ~ 'Genetics',
-                                   grepl('^genomics$', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Genomics',
+                                   (grepl('^genomics$', discipline_specific, ignore.case = T) & discipline == 'Biology') |
+                                     discipline_specific == 'Genomics' & is.na(discipline) ~ 'Genomics',
                                    grepl('^molecular biology$', discipline_specific, ignore.case = T) & (discipline == 'Biology' | discipline == 'Agriculural Science') ~ 'Molecular Biology',
                                    grepl('^molecular genetics$', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Molecular Genetics',
                                    grepl('molecular neuroscience', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Molecular and Cellular Neuroscience',
@@ -503,6 +505,8 @@ survey_data <- survey_data %>%
                                    grepl('cell', discipline_specific, ignore.case = T) & grepl('developmental', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Cell and Developmental Biology',
                                    grepl('public health', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Public Health',
                                    grepl('^neurobiology$', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Neuroscience and Neurobiology',
+                                   discipline_specific == 'economics' & is.na(discipline) ~ 'Economics',
+                                   discipline_specific == 'Bioinformatics' & is.na(discipline) ~ 'Bioinformatics',
                                    discipline == 'Chemistry' ~ 'Chemistry', 
                                    discipline == 'Economics' ~ 'Economics',
                                    discipline == 'Kinesiology' ~ 'Kinesiology',
@@ -518,11 +522,6 @@ survey_data <- survey_data %>%
                                    discipline == 'Nutritional Science' & !grepl('psych', discipline_specific, ignore.case = T) ~ 'Nutrition'
                                    ))
           
-
-
-
-
-
 ## bepress tier 1 recoding
 survey_data <- survey_data %>%
     mutate(bepress_tier1 = case_when(bepress_tier2 == 'Classics' | bepress_tier2 == 'History' | bepress_tier2 == 'Philosophy' |

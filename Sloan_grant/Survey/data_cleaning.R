@@ -295,6 +295,9 @@ survey_data <- survey_data %>%
                                    grepl('pathologist', discipline_other, ignore.case = T) ~ 'Pathology',
                                    discipline_other == 'Otorhinolarygology' ~ 'Otolaryngology',
                                    grepl('pharmacology', discipline_other, ignore.case = T) & grepl('medicine', discipline_other, ignore.case = T) ~ 'Medical Pharmacology',
+                                   grepl('nutritional epidemiology', discipline_specific, ignore.case = T) ~ 'Nutritional Epidemiology',
+                                   grepl('gen', discipline_specific, ignore.case = T) & discipline == 'Nutritional Science' ~ 'Molecular, Genetic, and Biochemical Nutrition',
+                                   (grepl('dietary', discipline_specific, ignore.case = T) | grepl('obesity', discipline_specific, ignore.case = T)) & discipline == 'Nutritional Science' ~ 'Human and Clinical Nutrion',
                                    discipline_other == 'AI & Robotics' ~ 'Artificial Intelligence and Robotics',
                                    discipline_other == 'Hearing Science' ~ 'Speech and Hearing Science',
                                    discipline == 'Electrochemistry' ~ 'Other Chemistry',
@@ -358,7 +361,8 @@ survey_data <- survey_data %>%
                                    bepress_tier3 == 'Cognitive Neuroscience' | bepress_tier3 == 'Computational Neuroscience' | 
                                      bepress_tier3 == 'Molecular and Cellular Neuroscience' ~ 'Neuroscience and Neurobiology',
                                    bepress_tier3 == 'Nursing Midwifery' ~ 'Nursing',
-                                   bepress_tier3 == 'Molecular, Genetic, and Biochemical Nutrition' ~ 'Nutrition',
+                                   bepress_tier3 == 'Molecular, Genetic, and Biochemical Nutrition' | bepress_tier3 == 'Nutritional Epidemiology' | 
+                                     bepress_tier3 == 'Molecular, Genetic, and Biochemical Nutrition' | bepress_tier3 == 'Human and Clinical Nutrion' ~ 'Nutrition',
                                    bepress_tier3 == 'Atmospheric Sciences' | bepress_tier3 == 'Meteorology' | bepress_tier3 == 'Oceanography' ~ 'Oceanography and Atmospheric Sciences and Meteorology',
                                    bepress_tier3 == 'Industrial Engineering' ~ 'Operations Research, Systems Engineering and Industrial Engineering',
                                    bepress_tier3 == 'Pharmacology' | bepress_tier3 == 'Toxicology' ~ 'Pharmacology, Toxicology and Environmental Health',
@@ -473,6 +477,7 @@ survey_data <- survey_data %>%
                                      discipline == 'Earth Science' ~ 'Environmental Science',
                                    grepl('climate', discipline_specific, ignore.case = T) & !grepl('glaciology', discipline_specific, ignore.case = T) & 
                                      !grepl('geochem', discipline_specific, ignore.case = T) & discipline == 'Earth Science' ~ 'Oceanography and Atmospheric Sciences and Meteorology',
+                                   grepl('public health', discipline_specific, ignore.case = T) & discipline == 'Nutritional Science' ~ 'Public Health',
                                    discipline == 'Chemistry' ~ 'Chemistry',
                                    discipline == 'Economics' ~ 'Economics',
                                    discipline == 'Kinesiology' ~ 'Kinesiology',
@@ -483,7 +488,8 @@ survey_data <- survey_data %>%
                                    discipline == 'Mathematics' ~ 'Mathematics',
                                    discipline == 'Ecology/Evolutionary Science' ~ 'Ecology and Evolutionary Biology',
                                    discipline == 'Statistics' ~ 'Statistics and Probability',
-                                   discipline == 'Psychology' ~ 'Psychology'
+                                   discipline == 'Psychology' ~ 'Psychology',
+                                   discipline == 'Nutritional Science' & !grepl('psych', discipline_specific, ignore.case = T) ~ 'Nutrition',
                                    ))
           
 

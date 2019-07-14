@@ -421,7 +421,7 @@ survey_data <- survey_data %>%
                                    grepl('^history$', discipline_other, ignore.case = TRUE) ~ 'History',
                                    grepl('^dentistry$', discipline_other, ignore.case = TRUE) ~ 'Dentistry',
                                    grepl('^environmental science', discipline_other, ignore.case = TRUE) | grepl('^environmental science$', discipline_specific, ignore.case = TRUE) |
-                                     grepl('^enviromental science', discipline_other, ignore.case = TRUE)~ 'Environmental Sciences',
+                                     grepl('^enviromental science', discipline_other, ignore.case = TRUE) ~ 'Environmental Sciences',
                                    grepl('^neuroscience$', discipline_other, ignore.case = TRUE) | 
                                      (grepl('^neuroscience$', discipline_specific, ignore.case = TRUE) & discipline == 'Biology') ~ 'Neuroscience and Neurobiology',
                                    grepl('Veterinary', discipline_other, ignore.case = TRUE) | grepl('Veterinary', discipline_specific, ignore.case = TRUE) ~ 'Veterinary Medicine',
@@ -460,6 +460,10 @@ survey_data <- survey_data %>%
                                    grepl('entomology', discipline_specific, ignore.case = T) ~ 'Entomology',
                                    grepl('agriculture', discipline_specific, ignore.case = T) ~ 'Agriculture',
                                    grepl('animal science', discipline_specific, ignore.case = T) ~ 'Animal Sciences',
+                                   grepl('environmental', discipline_specific, ignore.case = T) & !grepl('law', discipline_specific, ignore.case = T) & 
+                                     discipline == 'Earth Science' ~ 'Environmental Science',
+                                   grepl('climate', discipline_specific, ignore.case = T) & !grepl('glaciology', discipline_specific, ignore.case = T) & 
+                                     !grepl('geochem', discipline_specific, ignore.case = T) & discipline == 'Earth Science' ~ 'Oceanography and Atmospheric Sciences and Meteorology',
                                    discipline == 'Chemistry' ~ 'Chemistry',
                                    discipline == 'Economics' ~ 'Economics',
                                    discipline == 'Kinesiology' ~ 'Kinesiology',
@@ -469,6 +473,7 @@ survey_data <- survey_data %>%
                                    discipline == 'Political Science' ~ 'Political Science',
                                    discipline == 'Mathematics' ~ 'Mathematics',
                                    discipline == 'Ecology/Evolutionary Science' ~ 'Ecology and Evolutionary Biology'
+                                   
                                    ))
           
 
@@ -505,7 +510,7 @@ survey_data <- survey_data %>%
                                      bepress_tier2 == 'Applied Mathematics' | bepress_tier2 == 'Astrophysics and Astronomy' | bepress_tier2 == 'Chemistry' |
                                        bepress_tier2 == 'Computer Sciences' | bepress_tier2 == 'Earth Sciences' | bepress_tier2 == 'Environmental Sciences' |
                                        bepress_tier2 == 'Physics' | bepress_tier2 == 'Oceanography and Atmospheric Sciences and Meteorology' |
-                                       bepress_tier2 == 'Mathematics' | bepress_tier2 == 'Statistics and Probability' ~ 'Physical Sciences and Mathematics',
+                                       bepress_tier2 == 'Mathematics' | bepress_tier2 == 'Statistics and Probability' | bepress_tier2 == 'Environmental Science	' ~ 'Physical Sciences and Mathematics',
                                      bepress_tier2 == 'Agricultural and Resource Economics' | bepress_tier2 == 'Anthropology' | bepress_tier2 == 'Communication' |
                                        bepress_tier2 == 'Economics' | bepress_tier2 == 'Geography' | bepress_tier2 == 'Psychology' | bepress_tier2 == 'Sociology' |
                                        bepress_tier2 == 'Library and Information Science' | bepress_tier2 == 'Linguistics' | bepress_tier2 == 'Political Science' |
@@ -532,6 +537,7 @@ survey_data <- survey_data %>%
                                      
                                      
       discipline == 'Agricultural Science' ~ 'Life Science',
+      discipline == 'Earth Science' & grepl('law', discipline_other, ignore.case = T) ~ 'Physical Sciences and Mathematics'
       discipline == 'Engineering' ~ 'Engineering',
       discipline == 'Medicine' ~ 'Medicine and Health Sciences',
       discipline == 'Law' ~ 'Law',

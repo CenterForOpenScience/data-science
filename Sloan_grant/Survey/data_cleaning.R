@@ -577,12 +577,12 @@ survey_data <- survey_data %>%
                                      discipline_other == 'optical engineering' ~ 'Engineering',
                                      grepl('medicine', discipline_specific ,ignore.case = T) & discipline == 'Biology' ~ 'Medicine and Health Sciences',
                                      grepl('health science', discipline_specific, ignore.case = T) & discipline == 'Biology' ~ 'Medicine and Health Sciences',
-                                     discipline == 'Agricultural Science' | discipline == 'Biology' ~ 'Life Science',
+                                     discipline == 'Agricultural Science' | discipline == 'Biology' ~ 'Life Sciences',
                                      discipline == 'Earth Science' & !grepl('law', discipline_other, ignore.case = T) ~ 'Physical Sciences and Mathematics',
                                      discipline == 'Engineering' ~ 'Engineering',
                                      discipline == 'Medicine' ~ 'Medicine and Health Sciences',
                                      discipline == 'Law' ~ 'Law'))
       
-    
+write_csv(survey_data, 'cleaned_data.csv')    
 
 

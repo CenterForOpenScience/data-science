@@ -1,0 +1,225 @@
+---
+title: "Monthly Storage Report"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r, warning=FALSE, include=FALSE}
+#loading libraries
+library(tidyverse)
+library(gt)
+library(osfr)
+library(lubridate)
+library(here)
+library(plotly)
+
+options(digits=10)
+
+# creating additional variables
+storage_data <- read_csv(here::here("/Monthly_Reports/Data_Usage",'osf_storage_metrics.csv')) %>%
+                    mutate(month = month(date, label = T),
+                           year = year(date)) %>%
+                    filter(year == year(as.Date(Sys.time()) - 5)) %>%
+                    mutate(total_tib = round(total/(1024^4),2),
+                           deleted_tib = round(deleted/(1024^4),2),
+                           regs_tib = round(registrations/(1024^4),2),
+                           quickfiles_tib = round(nd_quick_files/(1024^4),2),
+                           pubnode_tib = round(nd_public_nodes/(1024^4),2),
+                           privatenode_tib = round(nd_private_nodes/(1024^4),2),
+                           node_tib = round((nd_public_nodes + nd_private_nodes)/(1024^4),2),
+                           preprint_tib = round(nd_preprints/(1024^4),2),
+                           suppnode_tib = round(nd_supp_nodes/(1024^4),2),
+                           prct_del = 100*(deleted/total),
+                           prct_regs = 100*(registrations/total),
+                           prct_quickfiles = 100*(nd_quick_files/total),
+                           prct_preprints = 100*(nd_preprints/total),
+                           prct_pub_nodes = 100*(nd_public_nodes/total),
+                           prct_pri_nodes = 100*(nd_private_nodes/total))
+```
+
+#### Total storage increased by `r round(100 * (storage_data$total[nrow(storage_data)]/storage_data$total[nrow(storage_data) - 1]) - 100,2)`% this month.
+
+The data used to generate this report can be found [here](https://osf.io/a7w36/). 
+
+```{r, warning=FALSE, include=FALSE}
+# creating data formatted for tables
+raw_storage <- storage_data %>%
+  select(month, total_tib, pubnode_tib, privatenode_tib, deleted_tib) %>%
+  gather(total_tib:deleted_tib, key = 'storage_type', value = 'storage', factor_key = T) %>%
+  group_by(storage_type, month) %>%
+  slice(1L) %>%
+  ungroup() %>%
+  spread(month, storage) %>%
+  rename(Type = storage_type)
+
+raw_storage$Type <- fct_recode(raw_storage$Type, Total = 'total_tib',
+                                    Deleted = 'deleted_tib',
+                                    `Public Nodes` = 'pubnode_tib',
+                                    `Private Nodes` = 'privatenode_tib')
+
+raw_storage$Type <- fct_relevel(raw_storage$Type, c('Total', 'Deleted', 'Public Nodes', 'Private Nodes'))
+                            
+
+diff_storage <- storage_data %>%
+  select(month, total_tib, pubnode_tib, privatenode_tib, deleted_tib) %>%
+  gather(total_tib:deleted_tib, key = 'storage_type', value = 'storage', factor_key = T) %>%
+  group_by(storage_type, month) %>%
+  slice(1L) %>%
+  ungroup() %>%
+  group_by(storage_type) %>%
+  mutate(storage_diff = storage - lag(storage)) %>%
+  ungroup() %>%
+  select(-storage) %>%
+  spread(month, storage_diff) %>%
+  rename(Type = storage_type)
+
+
+diff_storage$Type <- fct_recode(diff_storage$Type, Total = 'total_tib',
+                                    Deleted = 'deleted_tib',
+                                    `Public Nodes` = 'pubnode_tib',
+                                    `Private Nodes` = 'privatenode_tib')
+
+diff_storage$Type <- fct_relevel(diff_storage$Type, c('Total', 'Deleted', 'Public Nodes', 'Private Nodes'))
+
+raw_product_storage <- storage_data %>%
+  select(month, node_tib, preprint_tib, quickfiles_tib, regs_tib) %>%
+  gather(regs_tib:node_tib, key = 'product_type', value = 'storage', factor_key = T) %>%
+  group_by(product_type, month) %>%
+  slice(1L) %>%
+  ungroup() %>%
+  spread(month, storage) %>%
+  rename(Type = product_type)
+
+raw_product_storage$Type <- fct_recode(raw_product_storage$Type, Nodes = 'node_tib',
+                                    Registrations = 'regs_tib',
+                                    Preprints = 'preprint_tib',
+                                    Quickfiles = 'quickfiles_tib')
+
+raw_product_storage$Type <- fct_relevel(raw_product_storage$Type, c('Nodes', 'Registrations', 'Preprints', 'Quickfiles'))
+
+diff_product_storage <- storage_data %>%
+  select(month, node_tib, preprint_tib, quickfiles_tib, regs_tib) %>%
+  gather(regs_tib:node_tib, key = 'product_type', value = 'storage', factor_key = T) %>%
+  group_by(product_type, month) %>%
+  slice(1L) %>%
+  ungroup() %>%
+  group_by(product_type) %>%
+  mutate(storage_diff = storage - lag(storage)) %>%
+  ungroup() %>%
+  select(-storage) %>%
+  spread(month, storage_diff) %>%
+  rename(Type = product_type)
+
+diff_product_storage$Type <- fct_recode(diff_product_storage$Type, Nodes = 'node_tib',
+                                    Registrations = 'regs_tib',
+                                    Preprints = 'preprint_tib',
+                                    Quickfiles = 'quickfiles_tib')
+
+diff_product_storage$Type <- fct_relevel(diff_product_storage$Type, c('Nodes', 'Registrations', 'Preprints', 'Quickfiles'))
+```
+
+\
+\
+
+```{r, warning=FALSE, echo=FALSE}
+# overall storage
+rbind(raw_storage %>% arrange(Type), diff_storage %>% arrange(Type)) %>%
+  gt() %>%
+  tab_header(
+    title = 'Overall Storage'
+  ) %>%
+  tab_row_group(
+    group = 'Monthly Total',
+    rows = 1:4
+  ) %>%
+  tab_row_group(
+    group = 'Monthly Increase',
+    rows = 5:8
+  ) %>%
+  tab_source_note(
+    source_note = "Storage displayed in Terabytes"
+  ) %>%
+  tab_footnote(
+    footnote = 'Includes preprint supp nodes',
+    locations = cells_data(
+      columns = vars(Type),
+      rows = c(3, 7)
+    )
+  )
+
+```
+\
+\
+
+```{r, warning=FALSE, echo=FALSE}
+# monthly storage
+rbind(raw_product_storage %>% arrange(Type), diff_product_storage %>% arrange(Type)) %>%
+  gt() %>%
+  tab_header(
+    title = 'Storage by Product'
+  ) %>%
+  tab_row_group(
+    group = 'Monthly Total',
+    rows = 1:4
+  ) %>%
+  tab_row_group(
+    group = 'Monthly Increase',
+    rows = 5:8
+  ) %>%
+  tab_source_note(
+    source_note = "Storage displayed in Terabytes"
+  ) %>%
+  tab_footnote(
+      footnote = 'Includes preprint supp nodes',
+      locations = cells_data(
+        columns = vars(Type),
+        rows = c(1, 5)
+      )
+    ) %>%
+   tab_footnote(
+        footnote = 'Excludes preprint supp nodes',
+        locations = cells_data(
+          columns = vars(Type),
+          rows = c(3, 7)
+        )
+      )
+```
+
+
+```{r, warning=FALSE, echo=FALSE}
+# formatting data for graph
+data_graph <- storage_data %>%
+  select(date, starts_with('prct')) %>%
+  gather(prct_del:prct_pri_nodes, key = 'storage_type', value = 'perc_of_total', factor_key = T) %>%
+  mutate(perc_of_total = round(perc_of_total, 2))
+  
+
+data_graph$storage_type <- fct_recode(data_graph$storage_type, Quickfiles = 'prct_quickfiles',
+                                    Registrations = 'prct_regs',
+                                    `Public Nodes` = 'prct_pub_nodes',
+                                    `Private Nodes` = 'prct_pri_nodes',
+                                    `Deleted Content` = 'prct_del',
+                                    Preprints = 'prct_preprints')
+data_graph$storage_type <- fct_relevel(data_graph$storage_type, c('Public Nodes', 'Private Nodes', 'Preprints', 'Quickfiles', 'Registrations', 'Deleted Content'))
+```
+
+
+```{r, warning=FALSE, echo=FALSE}
+# graph of monthly storage by percent
+graph  <- plot_ly(data_graph, x = ~date, y = ~ perc_of_total, color =  ~storage_type, colors='Spectral',
+                       type = 'scatter', mode = 'line') %>%
+                layout(xaxis = list(title = "",
+                                    tickformat = '%b %y'),
+                       yaxis = list(title = "Percentage of Total Storage"))
+
+graph
+
+
+```
+
+
+

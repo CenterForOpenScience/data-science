@@ -1,20 +1,19 @@
 /* identifying empty supp_nodes created b/c of NPD */
 
-WITH RECURSIVE children_links AS (SELECT id, _id, is_node_link, child_id, parent_id, parent_id AS linked_top_node
-																		FROM osf_noderelation
-																		WHERE is_node_link IS TRUE
+WITH RECURSIVE children_nodes AS (SELECT osf_noderelation.id, osf_noderelation._id, is_node_link, child_id, parent_id, parent_id AS suppnode_id
+																		FROM osf_preprint
+																		LEFT JOIN osf_noderelation
+																		ON osf_preprint.node_id = osf_noderelation.parent_id
+																		WHERE is_node_link IS FALSE
 																	UNION
-																		SELECT cl.id, cl._id, cl.is_node_link, rl.child_id, rl.parent_id, linked_top_node
+																		SELECT cl.id, cl._id, cl.is_node_link, rl.child_id, rl.parent_id, suppnode_id
 																			FROM osf_noderelation rl
-																			INNER JOIN children_links cl
-																			ON cl.child_id = rl.parent_id),
+																			INNER JOIN children_nodes cl
+																			ON cl.child_id = rl.parent_id)
 
 
 
-
-
-
-WITH supp_nodes AS (SELECT osf_preprint.node_id, 
+WITH supp_nodes AS (SELECT DISTINCT ON (osf_preprint.node_id)  /* same node could be suppnode on multiple preprints */ 
 							osf_abstractnode.title AS node_title, 
 							is_deleted,
 							osf_abstractnode.is_public AS is_public, 
@@ -63,8 +62,6 @@ WITH supp_nodes AS (SELECT osf_preprint.node_id,
 			LEFT JOIN osf_abstractnode
 			ON osf_preprint.node_id = osf_abstractnode.id
 			WHERE osf_preprint.node_id IS NOT NULL AND osf_preprint.created < '2018-12-15')
-	
-	/* retain only supp nodes with 0 content addition actions */
-SELECT node_id, total_actions, is_deleted, is_public
-	FROM supp_nodes
-	WHERE total_actions = 0;
+
+SELECT *
+	FROM supp_nodes;

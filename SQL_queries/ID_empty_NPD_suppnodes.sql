@@ -10,7 +10,8 @@ WITH RECURSIVE children_nodes AS (SELECT osf_noderelation.id, osf_noderelation._
 																			FROM osf_noderelation rl
 																			INNER JOIN children_nodes cl
 																			ON cl.child_id = rl.parent_id),
-	 supp_nodes AS (SELECT DISTINCT ON (osf_preprint.node_id) AS suppnode_id /* same node could be suppnode on multiple preprints */ 
+	 supp_nodes AS (SELECT DISTINCT ON (osf_preprint.node_id) 
+	 						osf_preprint.node_id AS suppnode_id, /* same node could be suppnode on multiple preprints */ 
 							osf_abstractnode.title AS node_title, 
 							is_deleted,
 							osf_abstractnode.is_public AS is_public, 
@@ -20,7 +21,8 @@ WITH RECURSIVE children_nodes AS (SELECT osf_noderelation.id, osf_noderelation._
 					 		num_addons, 
 					 		num_regs,
 					 		num_components,
-					 		COALESCE(num_files,0) + COALESCE(num_wiki_edits,0) + COALESCE(num_addons,0) + COALESCE(num_regs,0) + COALESCE(num_components, 0) AS total_actions,
+					 		num_links,
+					 		COALESCE(num_files,0) + COALESCE(num_wiki_edits,0) + COALESCE(num_addons,0) + COALESCE(num_regs,0) + COALESCE(num_components, 0) + COALESCE(num_links, 0) AS total_actions,
 					 		osf_preprint.created AS preprint_created, 
 					 		osf_abstractnode.created AS node_created,
 					 		osf_abstractnode.last_logged AS last_log
@@ -43,9 +45,10 @@ WITH RECURSIVE children_nodes AS (SELECT osf_noderelation.id, osf_noderelation._
 			/* calculate the number of non-file based information additions per supp node and when those happened */
 			LEFT JOIN (SELECT node_id, SUM(CASE WHEN osf_nodelog.action LIKE 'wiki_updated' THEN 1 ELSE 0 END) num_wiki_edits,
 									   SUM(CASE WHEN osf_nodelog.action LIKE 'addon_added' THEN 1 ELSE 0 END) num_addons,
-									   SUM(CASE WHEN osf_nodelog.action LIKE 'registration_approved' THEN 1 ELSE 0 END) num_regs
+									   SUM(CASE WHEN osf_nodelog.action LIKE 'registration_approved' THEN 1 ELSE 0 END) num_regs,
+									   SUM(CASE WHEN osf_nodelog.action LIKE 'pointer_created' THEN 1 ELSE 0 END) - SUM(CASE WHEN osf_nodelog.action LIKE 'pointer_removed' THEN 1 ELSE 0 END) num_links
 							FROM osf_nodelog
-							WHERE action = 'node_created' OR action = 'wiki_updated' OR action = 'addon_added' OR action = 'registration_approved'
+							WHERE action = 'node_created' OR action = 'wiki_updated' OR action = 'addon_added' OR action = 'registration_approved' OR action = 'pointer_created' OR action = 'pointer_removed'
 							GROUP BY node_id) AS node_actions
 			ON osf_preprint.node_id = node_actions.node_id
 			
@@ -54,5 +57,6 @@ WITH RECURSIVE children_nodes AS (SELECT osf_noderelation.id, osf_noderelation._
 			ON osf_preprint.node_id = osf_abstractnode.id
 			WHERE osf_preprint.node_id IS NOT NULL AND osf_preprint.created < '2018-12-14 04:45:00' AND osf_abstractnode.created < '2018-12-14 04:45:00')
 
-SELECT *
-	FROM supp_nodes;
+SELECT suppnode_id
+	FROM supp_nodes
+	WHERE total_actions = 0;

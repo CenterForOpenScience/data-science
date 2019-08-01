@@ -129,9 +129,39 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 								  title NOT LIKE 'Bookmarks' 
 								  AND (spam_status IS NULL OR spam_status = 4))
 
-SELECT osf_abstractnode.id AS node_id, type, created, deleted_date, is_fork, is_deleted, 
-			is_public, registered_date, creator_id, embargo_id, registered_from_id, 
-			retraction_id, root_id, tag_id, preprint_id, preprint_created, supp_node
+SELECT osf_abstractnode.id AS node_id, 
+	   type, created, 
+	   deleted_date, 
+	   is_fork, 
+	   is_deleted, 
+	   is_public, 
+	   registered_date, 
+	   creator_id, 
+	   embargo_id, 
+	   registered_from_id, 
+	   retraction_id, 
+	   root_id, 
+	   tag_id, 
+	   preprint_id, 
+	   preprint_created, 
+	   supp_node,
+	   num_files,
+	   first_osf_file_created,
+	   last_osf_file_created,
+	   num_addons,
+	   first_addon_added,
+	   last_addon_added,
+	   bitbucket_added,
+	   box_added,
+	   dataverse_added,
+	   dropbox_added,
+	   figshare_added,
+	   github_added,
+	   gitlab_added,
+	   googledrive_added,
+	   onedrive_added,
+	   owncloud_added,
+	   s3_added
 	FROM osf_abstractnode
 	
 	LEFT JOIN (SELECT *
@@ -148,7 +178,7 @@ SELECT osf_abstractnode.id AS node_id, type, created, deleted_date, is_fork, is_
 	ON osf_abstractnode.id = existing_files.target_object_id
 
 	LEFT JOIN addon_connections
-	ON osf_abstractnode.id = addon_connections.node_id
+	ON osf_abstractnode.id = addon_connections.id
 
 	WHERE (type LIKE 'osf.node' OR type LIKE 'osf.registration') AND 
 			title NOT LIKE 'Bookmarks' AND

@@ -9,63 +9,52 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 							  osf_basefilenode.deleted_on IS NULL AND 
 							  osf_basefilenode.target_content_type_id = 30
 						GROUP BY target_object_id),
-	addon_connections AS (SELECT is_deleted, spam_status, type, osf_abstractnode.id,
-											  bitbucket.repo AS bitbucket_repo,  
-											  box.folder_name AS box_folder, 
-											  dataverse.dataset AS dataverse_dataset, 
-											  dropbox.folder AS dropbox_folder, 
-											  figshare.folder_name AS figshare_folder, 
-											  github.repo AS github_repo, 
-											  gitlab.repo AS gitlab_repo, 
-											  googledrive.folder_path AS googledrive_folderpath, 
-											  onedrive.folder_path AS onedrive_folderpath, 
-											  owncloud.folder_id AS owncloud_folderid, 
-											  s3.folder_name AS s3_foldername 
-						FROM osf_abstractnode
-						LEFT JOIN (SELECT owner_id, repo
-										FROM addons_bitbucket_nodesettings
-										WHERE deleted IS FALSE AND repo IS NOT NULL) bitbucket
-						ON osf_abstractnode.id = bitbucket.owner_id
-						LEFT JOIN (SELECT folder_name, owner_id
-										FROM addons_box_nodesettings
-										WHERE deleted IS FALSE AND folder_name IS NOT NULL) box
-						ON osf_abstractnode.id = box.owner_id
-						LEFT JOIN (SELECT dataset, owner_id
-										FROM addons_dataverse_nodesettings
-										WHERE deleted IS FALSE AND dataset IS NOT NULL) dataverse
-						ON osf_abstractnode.id = dataverse.owner_id
-						LEFT JOIN (SELECT folder, owner_id
-										FROM addons_dropbox_nodesettings
-										WHERE deleted IS FALSE AND folder IS NOT NULL) dropbox
-						ON osf_abstractnode.id = dropbox.owner_id
-						LEFT JOIN (SELECT folder_name, owner_id
-										FROM addons_figshare_nodesettings
-										WHERE deleted IS FALSE AND folder_name IS NOT NULL) figshare
-						ON osf_abstractnode.id = figshare.owner_id
-						LEFT JOIN (SELECT repo, owner_id
-										FROM addons_github_nodesettings
-										WHERE deleted IS FALSE AND repo IS NOT NULL) github
-						ON osf_abstractnode.id = github.owner_id
-						LEFT JOIN (SELECT repo, owner_id
-										FROM addons_gitlab_nodesettings
-										WHERE deleted IS FALSE AND repo IS NOT NULL) gitlab
-						ON osf_abstractnode.id = gitlab.owner_id
-						LEFT JOIN (SELECT folder_path, owner_id
-										FROM addons_googledrive_nodesettings
-										WHERE deleted IS FALSE AND folder_path IS NOT NULL) googledrive
-						ON osf_abstractnode.id = googledrive.owner_id
-						LEFT JOIN (SELECT folder_path, owner_id
-										FROM addons_onedrive_nodesettings
-										WHERE deleted IS FALSE AND folder_path IS NOT NULL) onedrive
-						ON osf_abstractnode.id = onedrive.owner_id
-						LEFT JOIN (SELECT folder_id, owner_id
-										FROM addons_owncloud_nodesettings
-										WHERE deleted IS FALSE AND folder_id IS NOT NULL) owncloud
-						ON osf_abstractnode.id = owncloud.owner_id
-						LEFT JOIN (SELECT folder_name, owner_id
-										FROM addons_s3_nodesettings
-										WHERE deleted IS FALSE AND folder_name IS NOT NULL) s3
-						ON osf_abstractnode.id = s3.owner_id),
+	addon_connections AS (SELECT node_id,
+							MAX(CASE WHEN action = 'bitbucket_repo_linked' THEN osf_nodelog.date ELSE NULL END) bitbucket_added,
+							MAX(CASE WHEN action = 'github_repo_linked' THEN osf_nodelog.date ELSE NULL END) github_added,
+							MAX(CASE WHEN action = 'github_repo_linked' THEN osf_nodelog.date ELSE NULL END) gitlab_added,
+							MAX(CASE WHEN action = 'box_folder_selected' THEN osf_nodelog.date ELSE NULL END) box_added,
+							MAX(CASE WHEN action = 'dropbox_folder_selected' THEN osf_nodelog.date ELSE NULL END) dropbox_added,
+							MAX(CASE WHEN action = 'figshare_folder_selected' THEN osf_nodelog.date ELSE NULL END) figshare_added,
+							MAX(CASE WHEN action = 'googledrive_folder_selected' THEN osf_nodelog.date ELSE NULL END) googledrive_added,
+							MAX(CASE WHEN action = 'onedrive_folder_selected' THEN osf_nodelog.date ELSE NULL END) onedrive_added,
+							MAX(CASE WHEN action = 'owncloud_folder_selected' THEN osf_nodelog.date ELSE NULL END) owncloud_added,
+							MAX(CASE WHEN action = 's3_bucket_linked' THEN osf_nodelog.date ELSE NULL END) s3_added,
+							MAX(CASE WHEN action = 'dataverse_dataset_linked' THEN osf_nodelog.date 
+								WHEN action = 'dataverse_study_linked' THEN osf_nodelog.date ELSE NULL END) dataverse_added,
+							MAX(CASE WHEN action = 'bitbucket_node_deauthorized' THEN osf_nodelog.date ELSE NULL END) bitbuck_removed,
+							MAX(CASE WHEN action = 'github_repo_unlinked' THEN osf_nodelog.date 
+								WHEN action = 'github_node_deauthorized' THEN osf_nodelog.date ELSE NULL END) github_removed,
+							MAX(CASE WHEN action = 'github_node_deauthorized' THEN osf_nodelog.date ELSE NULL END) gitlab_removed,
+							MAX(CASE WHEN action = 'box_node_deauthorized' THEN osf_nodelog.date ELSE NULL END) box_removed,
+							MAX(CASE WHEN action = 'dropbox_node_deauthorized' THEN osf_nodelog.date ELSE NULL END) dropbox_removed,
+							MAX(CASE WHEN action = 'figshare_content_unlinked' THEN osf_nodelog.date 
+								WHEN action = 'figshare_node_deauthorized' THEN osf_nodelog.date ELSE NULL END) figshare_removed,
+							MAX(CASE WHEN action = 'googledrive_node_deauthorized' THEN osf_nodelog.date ELSE NULL END) googledrive_removed,
+							MAX(CASE WHEN action = 'onedrive_node_deauthorized' THEN osf_nodelog.date ELSE NULL END) onedrive_removed,
+							MAX(CASE WHEN action = 'owncloud_node_deauthorized' THEN osf_nodelog.date ELSE NULL END) owncloud_removed,
+							MAX(CASE WHEN action = 'dataverse_node_deauthorized' THEN osf_nodelog.date ELSE NULL END) dataverse_removed,
+							MAX(CASE WHEN action = 's3_bucket_unlinked' THEN osf_nodelog.date 
+								WHEN action = 's3_node_deauthorized' THEN osf_nodelog.date ELSE NULL END) s3_removed
+							FROM osf_abstractnode
+							LEFT JOIN osf_nodelog
+							ON osf_abstractnode.id = osf_nodelog.node_id
+							WHERE is_deleted IS FALSE AND 
+									type = 'osf.node' AND 
+									title NOT LIKE 'Bookmarks' AND 
+									node_id = original_node_id AND
+									(spam_status IS NULL OR spam_status = 4) AND
+									(action LIKE '%repo_linked' OR 
+										action LIKE '%folder_selected' OR 
+										action LIKE '%node_deauthorized' OR 
+										action LIKE '%unlinked' OR 
+										action = 's3_bucket_linked' OR
+										action LIKE 'dataverse%')
+							GROUP BY node_id)
+
+
+
+
 	    files_on_nodes AS (SELECT id, 
 	    						COALESCE(num_files, 0) AS number_files, 
 	    						first_osf_file_created, 

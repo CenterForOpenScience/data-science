@@ -50,22 +50,48 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 										action LIKE '%unlinked' OR 
 										action = 's3_bucket_linked' OR
 										action LIKE 'dataverse%')
-							GROUP BY node_id)
-
-
-
-
-	    files_on_nodes AS (SELECT id, 
+							GROUP BY node_id),
+	    files_on_nodes AS (SELECT node_id, 
 	    						COALESCE(num_files, 0) AS number_files, 
-	    						first_osf_file_created, 
-	    						last_osf_file_created,
-	    						(SELECT count(*) 
-	    							from (values (bitbucket_repo), (box_folder), (dataverse_dataset), (dropbox_folder), (figshare_folder), (github_repo), (gitlab_repo), (googledrive_folderpath), (onedrive_folderpath), (owncloud_folderid), (s3_foldername)) as v(col) 
-	    							WHERE v.col is not null) AS addons_on_node
+	    						MAX(first_osf_file_created) AS first_osf_file_created, 
+	    						MAX(last_osf_file_created) AS last_osf_file_created,
+	    						SUM(CASE WHEN bitbucket_added > bitbuck_removed THEN 1
+	    								 WHEN github_added > github_removed THEN 1
+	    								 WHEN gitlab_added > gitlab_removed THEN 1
+	    								 WHEN box_added > box_removed THEN 1
+	    								 WHEN dropbox_added > dropbox_removed THEN 1
+	    								 WHEN figshare_added > figshare_removed THEN 1
+	    								 WHEN googledrive_added > googledrive_removed THEN 1
+	    								 WHEN onedrive_added > onedrive_removed THEN 1
+	    								 WHEN owncloud_added > owncloud_removed THEN 1
+	    								 WHEN s3_added > s3_removed THEN 1
+	    								 ELSE 0 END) AS num_addons,
+	    						MIN(CASE WHEN bitbucket_added > bitbuck_removed THEN bitbucket_added
+	    								 WHEN github_added > github_removed THEN github_added
+	    								 WHEN gitlab_added > gitlab_removed THEN gitlab_added
+	    								 WHEN box_added > box_removed THEN box_added
+	    								 WHEN dropbox_added > dropbox_removed THEN dropbox_added
+	    								 WHEN figshare_added > figshare_removed THEN figshare_added
+	    								 WHEN googledrive_added > googledrive_removed THEN googledrive_added
+	    								 WHEN onedrive_added > onedrive_removed THEN onedrive_added
+	    								 WHEN owncloud_added > owncloud_removed THEN owncloud_added
+	    								 WHEN s3_added > s3_removed THEN s3_added
+	    								 ELSE NULL END) AS first_addon_added,
+	    						MAX(CASE WHEN bitbucket_added > bitbuck_removed THEN bitbucket_added
+	    								 WHEN github_added > github_removed THEN github_added
+	    								 WHEN gitlab_added > gitlab_removed THEN gitlab_added
+	    								 WHEN box_added > box_removed THEN box_added
+	    								 WHEN dropbox_added > dropbox_removed THEN dropbox_added
+	    								 WHEN figshare_added > figshare_removed THEN figshare_added
+	    								 WHEN googledrive_added > googledrive_removed THEN googledrive_added
+	    								 WHEN onedrive_added > onedrive_removed THEN onedrive_added
+	    								 WHEN owncloud_added > owncloud_removed THEN owncloud_added
+	    								 WHEN s3_added > s3_removed THEN s3_added
+	    								 ELSE NULL END) AS last_addon_added
 						FROM addon_connections
 						LEFT JOIN existing_files
-						ON addon_connections.id = existing_files.target_object_id
-						WHERE type LIKE 'osf.node' AND is_deleted IS FALSE AND (spam_status = 4 OR spam_status IS NULL))
+						ON addon_connections.node_id = existing_files.target_object_id
+						GROUP BY node_id, num_files)
 
 SELECT osf_abstractnode.id AS node_id, type, created, deleted_date, is_fork, is_deleted, 
 			is_public, registered_date, creator_id, embargo_id, registered_from_id, 

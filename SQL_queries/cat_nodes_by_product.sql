@@ -12,7 +12,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 	addon_connections AS (SELECT node_id,
 							MAX(CASE WHEN action = 'bitbucket_repo_linked' THEN osf_nodelog.date ELSE NULL END) bitbucket_added,
 							MAX(CASE WHEN action = 'github_repo_linked' THEN osf_nodelog.date ELSE NULL END) github_added,
-							MAX(CASE WHEN action = 'github_repo_linked' THEN osf_nodelog.date ELSE NULL END) gitlab_added,
+							MAX(CASE WHEN action = 'gitlab_repo_linked' THEN osf_nodelog.date ELSE NULL END) gitlab_added,
 							MAX(CASE WHEN action = 'box_folder_selected' THEN osf_nodelog.date ELSE NULL END) box_added,
 							MAX(CASE WHEN action = 'dropbox_folder_selected' THEN osf_nodelog.date ELSE NULL END) dropbox_added,
 							MAX(CASE WHEN action = 'figshare_folder_selected' THEN osf_nodelog.date ELSE NULL END) figshare_added,
@@ -25,7 +25,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 							MAX(CASE WHEN action = 'bitbucket_node_deauthorized' THEN osf_nodelog.date ELSE NULL END) bitbuck_removed,
 							MAX(CASE WHEN action = 'github_repo_unlinked' THEN osf_nodelog.date 
 								WHEN action = 'github_node_deauthorized' THEN osf_nodelog.date ELSE NULL END) github_removed,
-							MAX(CASE WHEN action = 'github_node_deauthorized' THEN osf_nodelog.date ELSE NULL END) gitlab_removed,
+							MAX(CASE WHEN action = 'gitlab_node_deauthorized' THEN osf_nodelog.date ELSE NULL END) gitlab_removed,
 							MAX(CASE WHEN action = 'box_node_deauthorized' THEN osf_nodelog.date ELSE NULL END) box_removed,
 							MAX(CASE WHEN action = 'dropbox_node_deauthorized' THEN osf_nodelog.date ELSE NULL END) dropbox_removed,
 							MAX(CASE WHEN action = 'figshare_content_unlinked' THEN osf_nodelog.date 

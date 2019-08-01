@@ -10,17 +10,20 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 							  osf_basefilenode.target_content_type_id = 30
 						GROUP BY target_object_id),
 	addon_connections AS (SELECT osf_abstractnode.id,
-								bitbucket.created AS bitbucket_created,
-								box.created AS box_created,
-								dataverse.created AS dataverse_created, 
-								dropbox.created AS dropbox_created,
-								figshare.created AS figshare_created,
-								github.created AS github_created,
-								gitlab.created AS gitlab_created,
-								googledrive.created AS googledrive_created,
-								onedrive.created AS onedrive_created,
-								owncloud.created AS owncloud_created,
-								s3.created AS s3_created
+								LEAST(bitbucket.created, box.created, dataverse.created, dropbox.created, figshare.created, github.created, gitlab.created, googledrive.created, onedrive.created, owncloud.created, s3.created) AS first_addon_added,
+								GREATEST(bitbucket.created, box.created, dataverse.created, dropbox.created, figshare.created, github.created, gitlab.created, googledrive.created, onedrive.created, owncloud.created, s3.created) AS last_addon_added,
+								(SELECT count(*) from (values (bitbucket.created), (box.created), (dataverse.created), (dropbox.created), (figshare.created), (github.created), (gitlab.created), (googledrive.created), (onedrive.created), (owncloud.created), (s3.created)) as v(col) WHERE v.col is not null) AS num_addons,
+								bitbucket.created AS bitbucket_added,
+								box.created AS box_added,
+								dataverse.created AS dataverse_added,
+								dropbox.created AS dropbox_added,
+								figshare.created AS figshare_added,
+								github.created AS github_added,
+								gitlab.created AS gitlab_added,
+								googledrive.created AS googledrive_added,
+								onedrive.created AS onedrive_added,
+								owncloud.created AS owncloud_added,
+								s3.created AS s3_added
 							FROM osf_abstractnode
 							LEFT JOIN (SELECT node_id, MAX(date) AS created
 											FROM addons_bitbucket_nodesettings

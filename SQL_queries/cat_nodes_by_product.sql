@@ -165,7 +165,10 @@ SELECT osf_abstractnode.id AS node_id,
 	   onedrive_added,
 	   owncloud_added,
 	   s3_added,
-	   date_made_public
+	   date_made_public,
+	   num_regs,
+	   first_reg
+	   last_reg
 	FROM osf_abstractnode
 	
 	/* identify osf4m nodes */
@@ -192,6 +195,19 @@ SELECT osf_abstractnode.id AS node_id,
 				WHERE action = 'made_public'
 				GROUP BY node_id) as public_dates
 	ON osf_abstractnode.id = public_dates.node_id
+
+	/* add in registrations per node and timing of first and last registration */
+	LEFT JOIN (SELECT COUNT(regs.id) AS num_regs, osf_abstractnode.id AS node_id, MIN(regs.registered_date) AS first_reg, MAX(regs.registered_date) AS last_reg
+					FROM osf_abstractnode
+					LEFT JOIN osf_abstractnode AS regs
+					ON osf_abstractnode.id = regs.registered_from_id
+					WHERE osf_abstractnode.type = 'osf.node' AND 
+						  osf_abstractnode.title NOT LIKE 'Bookmarks' AND 
+						  regs.is_deleted IS FALSE AND 
+						  regs.retraction_id IS NULL AND 
+						  regs.type = 'osf.registration'
+					GROUP BY osf_abstractnode.id) as regs_data
+	ON osf_abstractnode.id = regs_data.node_id
 
 	WHERE (type LIKE 'osf.node' OR type LIKE 'osf.registration') AND 
 			title NOT LIKE 'Bookmarks' AND

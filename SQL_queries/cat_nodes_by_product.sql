@@ -133,7 +133,8 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 
 /* build full node timeline and categorication table */
 SELECT osf_abstractnode.id AS node_id, 
-	   type, created, 
+	   type, 
+	   created, 
 	   deleted_date, 
 	   is_fork, 
 	   is_deleted, 
@@ -148,13 +149,15 @@ SELECT osf_abstractnode.id AS node_id,
 	   preprint_id, 
 	   preprint_created, 
 	   supp_node,
-	   suppnode_date_added
+	   suppnode_date_added,
 	   num_files,
 	   first_osf_file_created,
 	   last_osf_file_created,
 	   num_addons,
 	   first_addon_added,
 	   last_addon_added,
+	   LEAST(first_osf_file_created, first_addon_added) AS first_file,
+	   GREATEST(last_osf_file_created, last_addon_added) AS last_file,
 	   bitbucket_added,
 	   box_added,
 	   dataverse_added,
@@ -169,7 +172,16 @@ SELECT osf_abstractnode.id AS node_id,
 	   date_made_public,
 	   num_regs,
 	   first_reg,
-	   last_reg
+	   last_reg,
+	   CASE WHEN num_regs IS NOT NULL AND type = 'osf.node' THEN TRUE ELSE FALSE END AS registered,
+	   CASE WHEN tag_id IS NOT NULL THEN TRUE ELSE FALSE END AS osf4m,
+	   CASE WHEN preprint_id IS NOT NULL THEN TRUE ELSE FALSE END AS preprint_suppnode,
+	   CASE WHEN num_addons IS NOT NULL OR num_files IS NOT NULL THEN TRUE ELSE FALSE END AS has_files,
+	   CASE WHEN is_public IS TRUE AND retraction_id IS NULL AND (num_addons IS NOT NULL OR num_files IS NOT NULL) THEN TRUE ELSE FALSE END AS public_sharing,
+	   CASE WHEN is_public IS FALSE AND retraction_id IS NULL AND (num_addons IS NOT NULL OR num_files IS NOT NULL) THEN TRUE ELSE FALSE END AS private_storage,
+		CASE WHEN is_public IS TRUE AND retraction_id IS NULL AND 
+	   			(num_addons IS NOT NULL OR num_files IS NOT NULL) THEN 
+	   			GREATEST(date_made_public, LEAST(first_osf_file_created, first_addon_added)) ELSE NULL END AS date_public_sharing
 	FROM osf_abstractnode
 	
 	/* identify osf4m nodes */

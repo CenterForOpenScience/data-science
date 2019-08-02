@@ -13,128 +13,69 @@ Data caveats and explanations:
 * Supplemental preprint nodes are include as 'projects' for this analysis.
 * Linked nodes are not included in this initial analysis. So, if a project is public has no files in it, but does have a linked node that is public and has a file in it, the project would not be counted as having a public file. 
 
-```{sql, eval = FALSE, echo = FALSE}
-
-/* query that generates data that gets pulled in; not connected to the DB directly, but here for record keeping */
-WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(created) AS first_osf_file_created, MAX(created) AS last_osf_file_created
-						FROM osf_basefilenode
-						WHERE type NOT LIKE '%folder%' AND provider LIKE 'osfstorage' AND osf_basefilenode.deleted_on IS NULL AND osf_basefilenode.target_content_type_id = 30
-						GROUP BY target_object_id),
-	addon_connections AS (SELECT is_public, is_deleted, spam_status, type, osf_abstractnode.id, root_id, osf_abstractnode.created AS node_created, 
-											  bitbucket.repo AS bitbucket_repo, bitbucket.created AS bitbucket_created, bitbucket.modified AS bitbucket_modified, 
-											  box.folder_name AS box_folder, box.created AS box_created, box.modified AS box_modified,
-											  dataverse.dataset AS dataverse_dataset, dataverse.created AS dataverse_created, dataverse.modified AS dataverse_modified,
-											  dropbox.folder AS dropbox_folder, dropbox.created AS dropbox_created, dropbox.modified AS dropbox_modified,
-											  figshare.folder_name AS figshare_folder, figshare.created AS figshare_created, figshare.modified AS figshare_modified,
-											  github.repo AS github_repo, github.created AS github_created, github.modified AS github_modified,
-											  gitlab.repo AS gitlab_repo, gitlab.created AS gitlab_created, gitlab.modified AS gitlab_modified,
-											  googledrive.folder_path AS googledrive_folderpath, googledrive.created AS googledrive_created, googledrive.modified AS googledrive_modified,
-											  onedrive.folder_path AS onedrive_folderpath, onedrive.created AS onedrive_created, onedrive.modified AS onedrive_modified,
-											  owncloud.folder_id AS owncloud_folderid, owncloud.created AS owncloud_created, owncloud.modified AS owncloud_modified,
-											  s3.folder_name AS s3_foldername, s3.created AS s3_created, s3.modified AS s3_modified
-						FROM osf_abstractnode
-						LEFT JOIN (SELECT created, modified, owner_id, repo
-										FROM addons_bitbucket_nodesettings
-										WHERE deleted IS FALSE AND repo IS NOT NULL) bitbucket
-						ON osf_abstractnode.id = bitbucket.owner_id
-						LEFT JOIN (SELECT folder_name, owner_id, created, modified
-										FROM addons_box_nodesettings
-										WHERE deleted IS FALSE AND folder_name IS NOT NULL) box
-						ON osf_abstractnode.id = box.owner_id
-						LEFT JOIN (SELECT dataverse, dataset, created, modified, owner_id
-										FROM addons_dataverse_nodesettings
-										WHERE deleted IS FALSE AND dataset IS NOT NULL) dataverse
-						ON osf_abstractnode.id = dataverse.owner_id
-						LEFT JOIN (SELECT folder, owner_id, created, modified
-										FROM addons_dropbox_nodesettings
-										WHERE deleted IS FALSE AND folder IS NOT NULL) dropbox
-						ON osf_abstractnode.id = dropbox.owner_id
-						LEFT JOIN (SELECT folder_name, owner_id, created, modified
-										FROM addons_figshare_nodesettings
-										WHERE deleted IS FALSE AND folder_name IS NOT NULL) figshare
-						ON osf_abstractnode.id = figshare.owner_id
-						LEFT JOIN (SELECT repo, owner_id, created, modified
-										FROM addons_github_nodesettings
-										WHERE deleted IS FALSE AND repo IS NOT NULL) github
-						ON osf_abstractnode.id = github.owner_id
-						LEFT JOIN (SELECT repo, owner_id, created, modified
-										FROM addons_gitlab_nodesettings
-										WHERE deleted IS FALSE AND repo IS NOT NULL) gitlab
-						ON osf_abstractnode.id = gitlab.owner_id
-						LEFT JOIN (SELECT folder_path, owner_id, created, modified
-										FROM addons_googledrive_nodesettings
-										WHERE deleted IS FALSE AND folder_path IS NOT NULL) googledrive
-						ON osf_abstractnode.id = googledrive.owner_id
-						LEFT JOIN (SELECT folder_path, owner_id, created, modified
-										FROM addons_onedrive_nodesettings
-										WHERE deleted IS FALSE AND folder_path IS NOT NULL) onedrive
-						ON osf_abstractnode.id = onedrive.owner_id
-						LEFT JOIN (SELECT folder_id, owner_id, created, modified
-										FROM addons_owncloud_nodesettings
-										WHERE deleted IS FALSE AND folder_id IS NOT NULL) owncloud
-						ON osf_abstractnode.id = owncloud.owner_id
-						LEFT JOIN (SELECT folder_name, owner_id, created, modified
-										FROM addons_s3_nodesettings
-										WHERE deleted IS FALSE AND folder_name IS NOT NULL) s3
-						ON osf_abstractnode.id = s3.owner_id),
-	registered_projects AS (SELECT DISTINCT ON (osf_abstractnode.root_id) osf_abstractnode.id, type, registered_date, root_id, is_public, is_deleted, date_retracted, embargo_id, osf_embargo.state, registered_from_id
-													FROM osf_abstractnode
-													LEFT JOIN osf_retraction
-													ON osf_abstractnode.retraction_id = osf_retraction.id
-													LEFT JOIN osf_embargo
-													ON osf_abstractnode.embargo_id = osf_embargo.id
-													WHERE type LIKE 'osf.registration' AND is_deleted IS FALSE AND (spam_status = 4 OR spam_status IS NULL) AND date_retracted IS NULL AND (is_public IS TRUE OR embargo_id IS NOT NULL)),
-	 files_and_registrations AS (SELECT addon_connections.id AS node_id, addon_connections.root_id, COALESCE(num_files, 0) AS number_files, addon_connections.is_public, node_created, registered_projects.registered_date AS registration_date, first_osf_file_created, last_osf_file_created,
-	    						(SELECT count(*) from (values (bitbucket_repo), (box_folder), (dataverse_dataset), (dropbox_folder), (figshare_folder), (github_repo), (gitlab_repo), (googledrive_folderpath), (onedrive_folderpath), (owncloud_folderid), (s3_foldername)) as v(col) WHERE v.col is not null) AS addons_on_node
-						FROM addon_connections
-						LEFT JOIN existing_files
-						ON addon_connections.id = existing_files.target_object_id
-						LEFT JOIN registered_projects
-						ON addon_connections.id = registered_projects.registered_from_id
-						WHERE addon_connections.type LIKE 'osf.node' AND addon_connections.is_deleted IS FALSE AND (addon_connections.spam_status = 4 OR addon_connections.spam_status IS NULL))
-
-Select *
-	FROM files_and_registrations;
-```
-
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
+#load libraries
 library(tidyverse)
 library(lubridate)
 library(scales)
-library(googledrive)
 library(kableExtra)
+library(osfr)
+library(here)
 
 knitr::opts_chunk$set(fig.width=12, fig.height=8) 
-
-data_projects <- read_csv('/Users/courtneysoderberg/Downloads/projects_multiple_OSFproducts.csv')
 ```
 
-```{r echo = FALSE}
+```{r warning=FALSE, echo=FALSE, message=FALSE}
+#load data, query used to generate node_data: https://github.com/CenterForOpenScience/data-science/blob/master/SQL_queries/cat_nodes_by_product.sql
+osf_retrieve_file('https://osf.io/z2bcq/') %>%
+  osf_download(overwrite = T)
+
+
+node_data <- read_csv(here::here('Longitudinal_Research_Plan','node_categorizations.csv'))
+
+content_logs <- read_csv('/Users/courtneysoderberg/Downloads/content_creation_logs.csv')
+all_logs <- read_csv('/Users/courtneysoderberg/Downloads/logs_per_node.csv')
+```
+
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 sharing_and_registered <- data_projects %>%
                             group_by(root_id) %>%
                             mutate(has_file = case_when(any(number_files > 0 | addons_on_node > 0) ~ 1, TRUE ~ 0)) %>%
                             mutate(shared_file = case_when(any((number_files > 0 | addons_on_node > 0) & is_public > 0) ~ 1, TRUE ~ 0)) %>%
                             mutate(registered = case_when(any(!is.na(registration_date)) ~ 1, TRUE ~ 0)) %>%
-                            summarize(has_file = max(has_file), shared_file = max(shared_file), registered = max(registered), first_registered = min(registration_date), last_registered = max(registration_date), project_created = min(node_created), earliest_osf_file = min(first_osf_file_created),
-                                      latest_osf_file = max(last_osf_file_created)) %>%
+                            summarize(has_file = max(has_file), shared_file = max(shared_file), registered = max(registered), project_created = min(node_created)) %>%
                             mutate(products = case_when(has_file > 0 & shared_file == 0 & registered == 0 ~ 'OSF_privatefiles_only',
                                                           shared_file ==1 & registered == 0 ~ 'OSF_sharingfiles_only',
                                                           shared_file == 0 & registered ==1 ~ 'Registrations_only',
                                                           shared_file == 1 & registered == 1 ~ 'OSF_sharingfiles_and_registrations',
                                                           shared_file == 0 & registered == 0 ~ 'None')) %>%
                             mutate(pc_by_day = as_date(project_created))
+
+first_registration <- data_projects %>% group_by(root_id) %>% arrange(registration_date) %>% slice(1L) %>% select(root_id, registration_date)
+first_osf_file_created <- data_projects %>% group_by(root_id) %>% arrange(first_osf_file_created) %>% slice(1L) %>% select(root_id, first_osf_file_created)
+first_made_public <-  data_projects %>% group_by(root_id) %>% arrange(last_public) %>% slice(1L) %>% select(root_id, last_public)
+
+all_dates <- sharing_and_registered %>%
+                left_join(all_logs, by = 'root_id') %>%
+                left_join(content_logs, by = 'root_id') %>%
+                left_join(first_registration , by = 'root_id') %>%
+                left_join(first_osf_file_created, by = 'root_id') %>%
+                left_join(first_made_public, by = 'root_id')
 ```
+
+## Initial Analyses
 
 The table below shows the number of projects that have each of the actions. These numbers are not mutually exclusive. So, if a project shares a file and has a registration, it will count towards all three totals.
 
 ```{r echo = FALSE}
 aggregate_data <- sharing_and_registered %>%
-                    summarize(`Projects with files` = sum(has_file > 0),
+                    summarize(`Projects with no files or registrations` = sum(has_file ==0 & registered == 0),
+                              `Projects with files` = sum(has_file > 0),
                               `Projects sharing > 0 files` = sum(shared_file > 0), 
                               `Projects with > 0 registrations` = sum(registered > 0),
                               `Projects sharing > 0 files and registered` = sum(shared_file > 0 & registered > 0)) %>%
                     gather() %>%
-                    mutate(percentage_total_project = round((value/141313)*100,2), percentage_public_projects = ifelse(key != 'Projects with > 0 registrations' & key != 'Projects with files', round((value/56937)*100,2), NA))
+                    mutate(percentage_total_project = round((value/141313)*100,2), percentage_public_projects = ifelse(key != 'Projects with > 0 registrations' & key != 'Projects with files' & key != 'Projects with no files or registrations', round((value/56937)*100,2), NA))
                                                                                                                           
 kable(aggregate_data,
   col.names = c('Project actions', 'Number of top-level projects', 'Percentage of top-level projects', 'Percentage of top-level projects with at least 1 public node')) %>%
@@ -158,6 +99,164 @@ The graph shows the number of top-level projects that were created each month th
  
  graph + theme(axis.text.x  = element_text(angle=45,hjust = 1,vjust = 1))
  
+```
+
+## Days from Project created to last log event:
+
+#### Last log:
+
+```{r echo = FALSE}
+
+## forked projects have logs from original project as well, so will see log dates that happened before project creation date. Moving all those to 0 so only see logs that happened after fork event for forked projects
+
+all_dates <- all_dates %>%
+                  mutate(project_to_public = difftime(last_public, project_created, units = 'days'),
+                         project_to_reg = difftime(registration_date, project_created, units = 'days'),
+                         project_to_lastlog = difftime(last_log, project_created, units = 'days'),
+                         project_to_lastcontentadd = difftime(last_contentadd_log, project_created, units = 'days')) %>%
+                  mutate(project_to_lastlog = ifelse(project_to_lastlog < 0, 0, project_to_lastlog),
+                         project_to_lastcontentadd = ifelse(project_to_lastcontentadd < 0, 0, project_to_lastcontentadd))
+
+```
+
+```{r echo=FALSE}
+##time in days from project creation to the last log on the project
+ggplot(all_dates %>% filter(!is.na(project_to_lastlog)), aes(project_to_lastlog)) +
+  geom_freqpoly(binwidth = 10) +
+  scale_x_continuous('Days Between Last Log and Date Created',
+                     breaks = round(seq(0, 2563, by = 365),1)) +
+  scale_y_continuous('Numebr of Top Level Projects', breaks = round(seq(0, 150000, by = 5000),1))
+
+
+##only projects with a difference more than 1 day
+ggplot(all_dates %>% filter(!is.na(project_to_lastlog)) %>% filter(project_to_lastlog >= 1),aes(project_to_lastlog)) + 
+  geom_freqpoly(binwidth = 10) +
+  ggtitle('Projects with >= 1 day between creation and last log') +
+  scale_x_continuous('Days Between Last Log and Date Created',
+                     breaks = round(seq(1, 2563, by = 365),1)) +
+  scale_y_continuous('Number of Top Level Projects', breaks = round(seq(0, 50000, by = 500),1))
+
+
+##only projects with a difference more than 1 day
+ggplot(all_dates %>% filter(!is.na(project_to_lastlog)) %>% filter(project_to_lastlog >= 1),aes(project_to_lastlog, color = products)) + 
+  geom_freqpoly(binwidth = 10) +
+  ggtitle('Projects with >= 1 day between creation and last log') +
+  scale_x_continuous('Days Between Last Log and Date Created',
+                     breaks = round(seq(1, 2563, by = 365),1)) +
+  scale_y_continuous('Number of Top Level Projects', breaks = round(seq(0, 50000, by = 500),1))
+
+
+##only projects with a difference more than 1 day
+ggplot(all_dates %>% filter(!is.na(project_to_lastlog)) %>% filter(project_to_lastlog >= 1),aes(project_to_lastlog, color = products)) + 
+  geom_density() +
+  ggtitle('Projects with >= 1 day between creation and last log') +
+  scale_x_continuous('Days Between Last Log and Date Created',
+                     breaks = round(seq(1, 2563, by = 365),1)) +
+  scale_y_continuous('Number of Top Level Projects')
+```
+
+#### Last content addition log
+
+```{r echo = FALSE}
+##time in days from project creation to the last log on the project
+ggplot(all_dates %>% filter(!is.na(project_to_lastcontentadd)), aes(project_to_lastcontentadd)) +
+  geom_freqpoly(binwidth = 10) +
+  scale_x_continuous('Days Between Last Log and Date Created',
+                     breaks = round(seq(0, 2563, by = 365),1)) +
+  scale_y_continuous('Numebr of Top Level Projects', breaks = round(seq(0, 150000, by = 5000),1))
+
+
+##only projects with a difference more than 1 day
+ggplot(all_dates %>% filter(!is.na(project_to_lastcontentadd)) %>% filter(project_to_lastcontentadd >= 1),aes(project_to_lastcontentadd)) + 
+  geom_freqpoly(binwidth = 10) +
+  ggtitle('Projects with >= 1 day between creation and last content creation log') +
+  scale_x_continuous('Days Between Last Log and Date Created',
+                     breaks = round(seq(1, 2563, by = 365),1)) +
+  scale_y_continuous('Number of Top Level Projects', breaks = round(seq(0, 50000, by = 500),1))
+
+
+##only projects with a difference more than 1 day
+ggplot(all_dates %>% filter(!is.na(project_to_lastcontentadd)) %>% filter(project_to_lastcontentadd >= 1),aes(project_to_lastcontentadd, color = products)) + 
+  geom_freqpoly(binwidth = 10) +
+  ggtitle('Projects with >= 1 day between creation and last content creation log') +
+  scale_x_continuous('Days Between Last Log and Date Created',
+                     breaks = round(seq(1, 2563, by = 365),1)) +
+  scale_y_continuous('Number of Top Level Projects', breaks = round(seq(0, 50000, by = 500),1))
+
+
+##only projects with a difference more than 1 day
+ggplot(all_dates %>% filter(!is.na(project_to_lastcontentadd)) %>% filter(project_to_lastcontentadd >= 1),aes(project_to_lastcontentadd, color = products)) + 
+  geom_density() +
+  ggtitle('Projects with >= 1 day between creation and content creation last log') +
+  scale_x_continuous('Days Between Last Log and Date Created',
+                     breaks = round(seq(1, 2563, by = 365),1)) +
+  scale_y_continuous('Number of Top Level Projects')
+```
+
+```{r}
+## the basefilenod table is showing incorrect creation dates for files from before
+
+later_project <- all_dates %>%
+                    filter(project_created >= '2015-05-01')
+
+
+first_none <- later_project %>% filter(is.na(first_osf_file_created) & is.na(registration_date) & is.na(last_public)) # number of none projects at first level
+
+file_first <- later_project %>% filter(!is.na(first_osf_file_created) & ((first_osf_file_created < last_public & first_osf_file_created < registration_date) | (first_osf_file_created < last_public & is.na(registration_date)) | (is.na(last_public) & first_osf_file_created < registration_date) | (is.na(last_public) & is.na(registration_date))))
+
+public_first <- later_project %>% filter(!is.na(last_public) & ((last_public < first_osf_file_created & last_public < registration_date) | (last_public < first_osf_file_created & is.na(registration_date)) | (is.na(first_osf_file_created) & last_public < registration_date) | (is.na(first_osf_file_created) & is.na(registration_date))))
+  
+registered_first <- later_project %>% 
+                        filter(!is.na(registration_date) & ((registration_date < last_public & registration_date < first_osf_file_created) | 
+                                                              (registration_date < last_public & is.na(first_osf_file_created)) | 
+                                                              (is.na(last_public) & registration_date < first_osf_file_created) | 
+                                                              (is.na(last_public) & is.na(first_osf_file_created))))
+
+
+file_then_reg <- file_first %>%
+                    filter(!is.na(registration_date) & ((registration_date < last_public) | is.na(last_public)))
+                    
+file_then_public <- file_first %>%
+                      filter(!is.na(last_public) & ((last_public < registration_date) | is.na(registration_date)))
+file_then_none <- file_first %>% filter(is.na(last_public) & is.na(registration_date))
+
+
+public_then_reg <- public_first %>%
+                      filter(!is.na(registration_date) & (registration_date < first_osf_file_created | is.na(first_osf_file_created)))
+public_then_file <- public_first %>%
+                      filter(!is.na(first_osf_file_created) & (first_osf_file_created < registration_date | is.na(registration_date)))
+public_then_nothing <- public_first %>% filter(is.na(first_osf_file_created) & is.na(registration_date))
+
+reg_then_public <- registered_first %>%
+                      filter(!is.na(last_public) & ((last_public < first_osf_file_created) | is.na(first_osf_file_created)))
+reg_then_file <- registered_first %>%
+                      filter(!is.na(first_osf_file_created) & ((first_osf_file_created < last_public) | is.na(last_public)))
+reg_then_node <- registered_first %>% filter(is.na(last_public) & is.na(first_osf_file_created))
+
+
+file_reg_public <- file_then_reg %>% filter(!is.na(last_public))
+file_reg_none <- file_then_reg %>% filter(is.na(last_public))
+
+file_public_reg <- file_then_public %>% filter(!is.na(registration_date))
+file_public_none <- file_then_public %>% filter(is.na(registration_date))
+
+
+public_reg_file <- public_then_reg %>% filter(!is.na(first_osf_file_created))
+public_reg_none <- public_then_reg %>% filter(is.na(first_osf_file_created))
+
+public_file_reg <- public_then_file %>% filter(!is.na(registration_date))
+public_file_none <- public_then_file %>% filter(is.na(registration_date))
+
+reg_public_file <- reg_then_public %>% filter(!is.na(first_osf_file_created))
+reg_public_none <- reg_then_public %>% filter(is.na(first_osf_file_created))
+
+reg_file_public <- reg_then_file %>% filter(!is.na(last_public))
+reg_file_none <- reg_then_file %>% filter(is.na(last_public))
+
+```
+
+
+
 ```
 
 Potential Next Steps for more complex relationships:

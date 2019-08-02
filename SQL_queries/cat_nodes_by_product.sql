@@ -9,6 +9,8 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 							  osf_basefilenode.deleted_on IS NULL AND 
 							  osf_basefilenode.target_content_type_id = 30
 						GROUP BY target_object_id),
+	
+	/* determine what addons are currently connected to which nodes and when those connections happened */
 	addon_connections AS (SELECT osf_abstractnode.id,
 								LEAST(bitbucket.created, box.created, dataverse.created, dropbox.created, figshare.created, github.created, gitlab.created, googledrive.created, onedrive.created, owncloud.created, s3.created) AS first_addon_added,
 								GREATEST(bitbucket.created, box.created, dataverse.created, dropbox.created, figshare.created, github.created, gitlab.created, googledrive.created, onedrive.created, owncloud.created, s3.created) AS last_addon_added,
@@ -129,6 +131,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 								  title NOT LIKE 'Bookmarks' 
 								  AND (spam_status IS NULL OR spam_status = 4))
 
+/* build full node timeline and categorication table */
 SELECT osf_abstractnode.id AS node_id, 
 	   type, created, 
 	   deleted_date, 
@@ -164,19 +167,21 @@ SELECT osf_abstractnode.id AS node_id,
 	   s3_added
 	FROM osf_abstractnode
 	
+	/* identify osf4m nodes */
 	LEFT JOIN (SELECT *
 					FROM osf_abstractnode_tags
 					WHERE tag_id = 26265) AS osf4m_tags
 	ON osf_abstractnode.id = osf4m_tags.abstractnode_id
 	
+	/* identify preprint supp nodes */
 	LEFT JOIN (SELECT id AS preprint_id, created AS preprint_created, node_id AS supp_node
 					FROM osf_preprint
 					WHERE node_id IS NOT NULL) AS supp_nodes
 	ON osf_abstractnode.id = supp_nodes.supp_node
 	
+	/* join in file and addon information */
 	LEFT JOIN existing_files
 	ON osf_abstractnode.id = existing_files.target_object_id
-
 	LEFT JOIN addon_connections
 	ON osf_abstractnode.id = addon_connections.id
 

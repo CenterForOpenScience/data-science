@@ -164,7 +164,8 @@ SELECT osf_abstractnode.id AS node_id,
 	   googledrive_added,
 	   onedrive_added,
 	   owncloud_added,
-	   s3_added
+	   s3_added,
+	   date_made_public
 	FROM osf_abstractnode
 	
 	/* identify osf4m nodes */
@@ -184,6 +185,13 @@ SELECT osf_abstractnode.id AS node_id,
 	ON osf_abstractnode.id = existing_files.target_object_id
 	LEFT JOIN addon_connections
 	ON osf_abstractnode.id = addon_connections.id
+
+	/* join in when each node was last made public */
+	LEFT JOIN (SELECT node_id, MAX(date) AS date_made_public
+				FROM osf_nodelog
+				WHERE action = 'made_public'
+				GROUP BY node_id) as public_dates
+	ON osf_abstractnode.id = public_dates.node_id
 
 	WHERE (type LIKE 'osf.node' OR type LIKE 'osf.registration') AND 
 			title NOT LIKE 'Bookmarks' AND

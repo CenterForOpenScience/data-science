@@ -148,6 +148,7 @@ SELECT osf_abstractnode.id AS node_id,
 	   preprint_id, 
 	   preprint_created, 
 	   supp_node,
+	   suppnode_date_added
 	   num_files,
 	   first_osf_file_created,
 	   last_osf_file_created,
@@ -167,7 +168,7 @@ SELECT osf_abstractnode.id AS node_id,
 	   s3_added,
 	   date_made_public,
 	   num_regs,
-	   first_reg
+	   first_reg,
 	   last_reg
 	FROM osf_abstractnode
 	
@@ -178,8 +179,13 @@ SELECT osf_abstractnode.id AS node_id,
 	ON osf_abstractnode.id = osf4m_tags.abstractnode_id
 	
 	/* identify preprint supp nodes */
-	LEFT JOIN (SELECT id AS preprint_id, created AS preprint_created, node_id AS supp_node
+	LEFT JOIN (SELECT id AS preprint_id, osf_preprint.created AS preprint_created, node_id AS supp_node, suppnode_date_added
 					FROM osf_preprint
+					LEFT JOIN (SELECT preprint_id, MAX(created) AS suppnode_date_added
+									FROM osf_preprintlog
+									WHERE action = 'supplement_node_added'
+									GROUP BY preprint_id) as suppnode_log
+					ON osf_preprint.id = suppnode_log.preprint_id
 					WHERE node_id IS NOT NULL) AS supp_nodes
 	ON osf_abstractnode.id = supp_nodes.supp_node
 	

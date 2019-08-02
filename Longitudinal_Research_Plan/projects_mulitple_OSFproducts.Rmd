@@ -44,7 +44,8 @@ node_data <- read_csv(
                   figshare_added = col_datetime(),
                   gitlab_added = col_datetime(),
                   onedrive_added = col_datetime(),
-                  owncloud_added = col_datetime()
+                  owncloud_added = col_datetime(),
+                  registered = col_logical()
                 ))
 
 content_logs <- read_csv('/Users/courtneysoderberg/Downloads/content_creation_logs.csv')
@@ -52,12 +53,19 @@ all_logs <- read_csv('/Users/courtneysoderberg/Downloads/logs_per_node.csv')
 ```
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
-sharing_and_registered <- data_projects %>%
+projects_by_product <- node_data %>%
+                            filter(type == 'osf.node' & is_deleted == FALSE) %>%
                             group_by(root_id) %>%
-                            mutate(has_file = case_when(any(number_files > 0 | addons_on_node > 0) ~ 1, TRUE ~ 0)) %>%
-                            mutate(shared_file = case_when(any((number_files > 0 | addons_on_node > 0) & is_public > 0) ~ 1, TRUE ~ 0)) %>%
-                            mutate(registered = case_when(any(!is.na(registration_date)) ~ 1, TRUE ~ 0)) %>%
-                            summarize(has_file = max(has_file), shared_file = max(shared_file), registered = max(registered), project_created = min(node_created)) %>%
+                            mutate(has_file = case_when(any(has_files == TRUE) ~ 1, TRUE ~ 0)) %>%
+                            mutate(shared_file = case_when(any(public_sharing == TRUE) ~ 1, TRUE ~ 0)) %>%
+                            mutate(registered = case_when(any(registered == TRUE) ~ 1, TRUE ~ 0)) %>%
+                            summarize(has_file = max(has_file), 
+                                      shared_file = max(shared_file), 
+                                      registered = max(registered), 
+                                      project_created = min(created),
+                                      first_reg = min(first_reg),
+                                      first_file = min(first_file),
+                                      first_public = min(date_made_public)) %>%
                             mutate(products = case_when(has_file > 0 & shared_file == 0 & registered == 0 ~ 'OSF_privatefiles_only',
                                                           shared_file ==1 & registered == 0 ~ 'OSF_sharingfiles_only',
                                                           shared_file == 0 & registered ==1 ~ 'Registrations_only',
@@ -65,16 +73,9 @@ sharing_and_registered <- data_projects %>%
                                                           shared_file == 0 & registered == 0 ~ 'None')) %>%
                             mutate(pc_by_day = as_date(project_created))
 
-first_registration <- data_projects %>% group_by(root_id) %>% arrange(registration_date) %>% slice(1L) %>% select(root_id, registration_date)
-first_osf_file_created <- data_projects %>% group_by(root_id) %>% arrange(first_osf_file_created) %>% slice(1L) %>% select(root_id, first_osf_file_created)
-first_made_public <-  data_projects %>% group_by(root_id) %>% arrange(last_public) %>% slice(1L) %>% select(root_id, last_public)
-
-all_dates <- sharing_and_registered %>%
+all_dates <- projects_by_product %>%
                 left_join(all_logs, by = 'root_id') %>%
-                left_join(content_logs, by = 'root_id') %>%
-                left_join(first_registration , by = 'root_id') %>%
-                left_join(first_osf_file_created, by = 'root_id') %>%
-                left_join(first_made_public, by = 'root_id')
+                left_join(content_logs, by = 'root_id')
 ```
 
 ## Initial Analyses

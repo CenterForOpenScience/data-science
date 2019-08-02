@@ -31,7 +31,21 @@ osf_retrieve_file('https://osf.io/z2bcq/') %>%
   osf_download(overwrite = T)
 
 
-node_data <- read_csv(here::here('Longitudinal_Research_Plan','node_categorizations.csv'))
+node_data <- read_csv(
+                here::here('Longitudinal_Research_Plan','node_categorizations.csv'), 
+                col_types = cols(
+                  deleted_date = col_datetime(),
+                  registered_date = col_datetime(),
+                  embargo_id = col_double(),
+                  registered_from_id = col_double(),
+                  retraction_id = col_double(),
+                  suppnode_date_added = col_datetime(),
+                  bitbucket_added = col_datetime(),
+                  figshare_added = col_datetime(),
+                  gitlab_added = col_datetime(),
+                  onedrive_added = col_datetime(),
+                  owncloud_added = col_datetime()
+                ))
 
 content_logs <- read_csv('/Users/courtneysoderberg/Downloads/content_creation_logs.csv')
 all_logs <- read_csv('/Users/courtneysoderberg/Downloads/logs_per_node.csv')

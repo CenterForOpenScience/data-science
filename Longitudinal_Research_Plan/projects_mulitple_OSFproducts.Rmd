@@ -3,14 +3,15 @@ title: "projects_multiple_OSFproducts"
 output: html_document
 ---
 
-This analysis is collecting initial data on the number of projects that take advantage of two of the major behaviors on the OSF that also represent different different points in the workflow: sharing files and registrations. The initial analysis does not take into account when these behaviors happen in relation to each other (e.g. are files uploaded to the project/modified after the registration or only before?), but that may be included as a more complicated relationship in later analyses. 
+This analysis is collecting initial data on the number of projects that take advantage of two of the major behaviors on the OSF that also represent different different points in the workflow: sharing files and registrations.
 
 Data caveats and explanations:
 
-* The data used for the analyses below goes through 4/8/19. 
-* 'Sharing a file' is measured by looking for non-registered nodes that are public and have a file in them. It includes files from OSFstorage and all add-ons. If any node in a project is public and has a file in it, the top-level project is counted as sharing a file, even if the top-level itself is private. The registration does not have to be on or include the node that is sharing a file, it just has to be on a node within the same project.
-* Only non-spam non-deleted projects/nodes are counted, and only non-withdrawn, non-deleted registrations are counted (excluding old private registrations). Registrations can be under embargo though and still be counted.
-* Supplemental preprint nodes are include as 'projects' for this analysis.
+* The data used for the analyses below goes through 6/27/19. 
+* Only non-spam non-deleted projects/nodes are counted. Supplemental nodes that were created pre-NPD and are empty (no files, no addons, no links, no components, and no wiki_update or registration logs) were removed from the analysis.
+* 'Sharing a file' is measured by looking for non-registered nodes that are public and have an OSFstorage file in them or an add-on folder/repo attached. If any node in a project is public and has a file in it, the top-level project is counted as sharing a file, even if the top-level itself is private. 
+* Only non-withdrawn, non-deleted registrations are counted (excluding old private registrations). Registrations can be under embargo though and still be counted.
+* For a project to be labeled `Sharing a file` and `Registered`, the sharing and registration do not have to include the same nodes, just some node within a project must be sharing a file and either the same or a different node must be registered.
 * Linked nodes are not included in this initial analysis. So, if a project is public has no files in it, but does have a linked node that is public and has a file in it, the project would not be counted as having a public file. 
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
@@ -131,8 +132,8 @@ The graph shows the number of top-level projects that were created each month th
 ## forked projects have logs from original project as well, so will see log dates that happened before project creation date. Moving all those to 0 so only see logs that happened after fork event for forked projects
 
 all_dates <- all_dates %>%
-                  mutate(project_to_public = difftime(last_public, project_created, units = 'days'),
-                         project_to_reg = difftime(registration_date, project_created, units = 'days'),
+                  mutate(project_to_public = difftime(first_public, project_created, units = 'days'),
+                         project_to_reg = difftime(first_reg, project_created, units = 'days'),
                          project_to_lastlog = difftime(last_log, project_created, units = 'days'),
                          project_to_lastcontentadd = difftime(last_contentadd_log, project_created, units = 'days')) %>%
                   mutate(project_to_lastlog = ifelse(project_to_lastlog < 0, 0, project_to_lastlog),

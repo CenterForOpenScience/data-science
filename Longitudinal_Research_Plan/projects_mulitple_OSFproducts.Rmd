@@ -56,13 +56,17 @@ all_logs <- read_csv('/Users/courtneysoderberg/Downloads/logs_per_node.csv')
 projects_by_product <- node_data %>%
                             filter(type == 'osf.node' & is_deleted == FALSE) %>%
                             group_by(root_id) %>%
-                            mutate(has_file = case_when(any(has_files == TRUE) ~ 1, TRUE ~ 0)) %>%
-                            mutate(shared_file = case_when(any(public_sharing == TRUE) ~ 1, TRUE ~ 0)) %>%
-                            mutate(registered = case_when(any(registered == TRUE) ~ 1, TRUE ~ 0)) %>%
+                            mutate(has_file = case_when(any(has_files == TRUE) ~ 1, all(has_files == FALSE) ~ 0)) %>%
+                            mutate(shared_file = case_when(any(public_sharing == TRUE) ~ 1, all(public_sharing == FALSE) ~ 0)) %>%
+                            mutate(registered = case_when(any(registered == TRUE) ~ 1, all(registered == FALSE) ~ 0)) %>%
+                            mutate(is_suppnode = case_when(any(preprint_suppnode == TRUE) ~ 1, all(preprint_suppnode == FALSE) ~ 0)) %>%
+                            mutate(is_osf4m = case_when(any(osf4m == TRUE) ~ 1, all(osf4m == FALSE) ~ 0)) %>%
                             summarize(has_file = max(has_file), 
                                       shared_file = max(shared_file), 
                                       registered = max(registered), 
                                       project_created = min(created),
+                                      osf4m = max(is_osf4m),
+                                      suppnode = max(is_suppnode),
                                       first_reg = min(first_reg),
                                       first_file = min(first_file),
                                       first_public = min(date_made_public)) %>%
@@ -70,7 +74,7 @@ projects_by_product <- node_data %>%
                                                           shared_file ==1 & registered == 0 ~ 'OSF_sharingfiles_only',
                                                           shared_file == 0 & registered ==1 ~ 'Registrations_only',
                                                           shared_file == 1 & registered == 1 ~ 'OSF_sharingfiles_and_registrations',
-                                                          shared_file == 0 & registered == 0 ~ 'None')) %>%
+                                                          shared_file == 0 & registered == 0 & has_file == 0 ~ 'None')) %>%
                             mutate(pc_by_day = as_date(project_created))
 
 all_dates <- projects_by_product %>%
@@ -83,22 +87,24 @@ all_dates <- projects_by_product %>%
 The table below shows the number of projects that have each of the actions. These numbers are not mutually exclusive. So, if a project shares a file and has a registration, it will count towards all three totals.
 
 ```{r echo = FALSE}
-aggregate_data <- sharing_and_registered %>%
-                    summarize(`Projects with no files or registrations` = sum(has_file ==0 & registered == 0),
+atleast_one_pubnode <- nrow(node_data %>% group_by(root_id) %>% summarize(num_public_nodes = sum(is_public == TRUE)) %>% filter(num_public_nodes > 0))
+
+aggregate_data <- projects_by_product %>%
+                    summarize(`Projects with no files or registrations` = sum(has_file == 0 & registered == 0),
                               `Projects with files` = sum(has_file > 0),
                               `Projects sharing > 0 files` = sum(shared_file > 0), 
                               `Projects with > 0 registrations` = sum(registered > 0),
                               `Projects sharing > 0 files and registered` = sum(shared_file > 0 & registered > 0)) %>%
                     gather() %>%
-                    mutate(percentage_total_project = round((value/141313)*100,2), percentage_public_projects = ifelse(key != 'Projects with > 0 registrations' & key != 'Projects with files' & key != 'Projects with no files or registrations', round((value/56937)*100,2), NA))
+                    mutate(percentage_total_project = round((value/nrow(projects_by_product))*100,2), percentage_public_projects = ifelse(key != 'Projects with > 0 registrations' & key != 'Projects with files' & key != 'Projects with no files or registrations', round((value/atleast_one_pubnode)*100,2), NA))
                                                                                                                           
 kable(aggregate_data,
   col.names = c('Project actions', 'Number of top-level projects', 'Percentage of top-level projects', 'Percentage of top-level projects with at least 1 public node')) %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
   
-sharing_projects <- sharing_and_registered %>% filter(shared_file == 1) %>% nrow()
-registered_projects <- sharing_and_registered %>% filter(registered == 1) %>% nrow()
-sharing_registered <- sharing_and_registered %>% filter(shared_file ==1 & registered ==1) %>% nrow()
+sharing_projects <- projects_by_product %>% filter(shared_file == 1) %>% nrow()
+registered_projects <- projects_by_product %>% filter(registered == 1) %>% nrow()
+sharing_registered <- projects_by_product %>% filter(shared_file ==1 & registered ==1) %>% nrow()
 
 ```
 
@@ -106,7 +112,7 @@ The graph shows the number of top-level projects that were created each month th
 
 ```{r echo = FALSE}
 
- graph <- ggplot(sharing_and_registered, aes(pc_by_day, color = products)) + 
+ graph <- ggplot(projects_by_product, aes(pc_by_day, color = products)) + 
   geom_freqpoly(binwidth = 30) +
   xlab('When projects were created') +
   ylab('Number of Top Level Projects') +

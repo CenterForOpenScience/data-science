@@ -173,12 +173,12 @@ SELECT osf_abstractnode.id AS node_id,
 	   num_regs,
 	   first_reg,
 	   last_reg,
-	   CASE WHEN num_regs IS NOT NULL AND type = 'osf.node' THEN TRUE ELSE FALSE END AS registered,
-	   CASE WHEN tag_id IS NOT NULL THEN TRUE ELSE FALSE END AS osf4m,
-	   CASE WHEN preprint_id IS NOT NULL THEN TRUE ELSE FALSE END AS preprint_suppnode,
-	   CASE WHEN LEAST(first_osf_file_created, first_addon_added) IS NOT NULL THEN TRUE ELSE FALSE END AS has_files,
-	   CASE WHEN is_public IS TRUE AND retraction_id IS NULL AND LEAST(first_osf_file_created, first_addon_added) IS NOT NULL THEN TRUE ELSE FALSE END AS public_sharing,
-	   CASE WHEN is_public IS FALSE AND retraction_id IS NULL AND LEAST(first_osf_file_created, first_addon_added) IS NOT NULL THEN TRUE ELSE FALSE END AS private_storage,
+	   CASE WHEN num_regs IS NOT NULL AND type = 'osf.node' THEN 1 ELSE 0 END AS registered,
+	   CASE WHEN tag_id IS NOT NULL THEN 1 ELSE 0 END AS osf4m,
+	   CASE WHEN preprint_id IS NOT NULL THEN 1 ELSE 0 END AS preprint_suppnode,
+	   CASE WHEN LEAST(first_osf_file_created, first_addon_added) IS NOT NULL THEN 1 ELSE 0 END AS has_files,
+	   CASE WHEN is_public IS TRUE AND retraction_id IS NULL AND LEAST(first_osf_file_created, first_addon_added) IS NOT NULL THEN 1 ELSE 0 END AS public_sharing,
+	   CASE WHEN is_public IS FALSE AND retraction_id IS NULL AND LEAST(first_osf_file_created, first_addon_added) IS NOT NULL THEN 1 ELSE 0 END AS private_storage,
 		CASE WHEN is_public IS TRUE AND retraction_id IS NULL AND 
 	   			LEAST(first_osf_file_created, first_addon_added) IS NOT NULL THEN 
 	   			GREATEST(date_made_public, LEAST(first_osf_file_created, first_addon_added)) ELSE NULL END AS date_public_sharing

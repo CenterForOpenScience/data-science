@@ -22,6 +22,7 @@ library(scales)
 library(kableExtra)
 library(osfr)
 library(here)
+library(ggalluvial)
 
 knitr::opts_chunk$set(fig.width=12, fig.height=8) 
 ```
@@ -57,31 +58,110 @@ all_logs <- read_csv('/Users/courtneysoderberg/Downloads/logs_per_node.csv')
 projects_by_product <- node_data %>%
                             filter(type == 'osf.node' & is_deleted == FALSE) %>%
                             group_by(root_id) %>%
-                            mutate(has_file = case_when(any(has_files == TRUE) ~ 1, all(has_files == FALSE) ~ 0)) %>%
-                            mutate(shared_file = case_when(any(public_sharing == TRUE) ~ 1, all(public_sharing == FALSE) ~ 0)) %>%
                             mutate(registered = case_when(any(registered == TRUE) ~ 1, all(registered == FALSE) ~ 0)) %>%
-                            mutate(is_suppnode = case_when(any(preprint_suppnode == TRUE) ~ 1, all(preprint_suppnode == FALSE) ~ 0)) %>%
-                            mutate(is_osf4m = case_when(any(osf4m == TRUE) ~ 1, all(osf4m == FALSE) ~ 0)) %>%
-                            summarize(has_file = max(has_file), 
-                                      shared_file = max(shared_file), 
+                            summarize(has_file = max(has_files), 
+                                      shared_file = max(public_sharing), 
                                       registered = max(registered), 
                                       project_created = min(created),
-                                      osf4m = max(is_osf4m),
-                                      suppnode = max(is_suppnode),
-                                      first_reg = min(first_reg),
-                                      first_file = min(first_file),
-                                      first_public = min(date_made_public)) %>%
+                                      osf4m = max(osf4m),
+                                      suppnode = max(preprint_suppnode),
+                                      first_reg = if(all(is.na(first_reg))) NA else min(first_reg, na.rm = TRUE),
+                                      first_file = if(all(is.na(first_file))) NA else min(first_file, na.rm = TRUE),
+                                      first_public = if(all(is.na(date_made_public))) NA else min(date_made_public, na.rm = TRUE)) %>%
                             mutate(products = case_when(has_file > 0 & shared_file == 0 & registered == 0 ~ 'OSF_privatefiles_only',
                                                           shared_file ==1 & registered == 0 ~ 'OSF_sharingfiles_only',
                                                           shared_file == 0 & registered ==1 ~ 'Registrations_only',
                                                           shared_file == 1 & registered == 1 ~ 'OSF_sharingfiles_and_registrations',
                                                           shared_file == 0 & registered == 0 & has_file == 0 ~ 'None')) %>%
-                            mutate(pc_by_day = as_date(project_created))
+                            mutate(pc_by_day = as_date(project_created))  %>%
+                            mutate(year = year(project_created))
 
 all_dates <- projects_by_product %>%
                 left_join(all_logs, by = 'root_id') %>%
                 left_join(content_logs, by = 'root_id')
 ```
+
+```{r}
+library(plotly) 
+
+action_flow <- projects_by_product %>%
+                        mutate(action1 = 'Created Project',
+                               action2 = case_when(is.na(first_file) & is.na(first_public) & is.na(first_reg) ~ 'None',
+                                                   (first_file < first_public | (is.na(first_public) & !is.na(first_file))) &
+                                                      (first_file < first_reg | (is.na(first_reg) & !is.na(first_file))) ~ 'Upload File',
+                                                   (first_public < first_file | (is.na(first_file) & !is.na(first_public))) & 
+                                                      (first_public < first_reg | (is.na(first_reg) & !is.na(first_public))) ~ 'Made Public',
+                                                   (first_reg < first_public | (is.na(first_public) & !is.na(first_reg))) & 
+                                                      (first_reg < first_file | (is.na(first_file) & !is.na(first_reg))) ~ 'Registered'),
+                               action3 = case_when(action2 == 'Upload File' & is.na(first_public) & is.na(first_reg) ~ 'None',
+                                                   action2 == 'Upload File' & (first_public < first_reg | is.na(first_reg)) ~ 'Made Public',
+                                                   action2 == 'Upload File' & (first_reg < first_public | is.na(first_public)) ~ 'Registered',
+                                                   action2 == 'Made Public' & is.na(first_file) & is.na(first_reg) ~ 'None',
+                                                   action2 == 'Made Public' & (first_file < first_reg | is.na(first_reg)) ~ 'Upload File',
+                                                   action2 == 'Made Public' & (first_reg < first_file | is.na(first_file)) ~ 'Registered',
+                                                   action2 == 'Registered' & is.na(first_file) & is.na(first_public) ~ 'None',
+                                                   action2 == 'Registered' & (first_file < first_public | is.na(first_public)) ~ 'Upload File',
+                                                   action2 == 'Registered' & (first_public < first_file | is.na(first_file)) ~ 'Made Public',
+                                                   action2 == 'None' ~ 'None'),
+                               action4 = case_when(action2 == 'Upload File' & action3 == 'Made Public' & is.na(first_reg) ~ 'None',
+                                                   action2 == 'Upload File' & action3 == 'Made Public' & !is.na(first_reg) ~ 'Registered',
+                                                   action2 == 'Upload File' & action3 == 'Registered' & is.na(first_public) ~ 'None',
+                                                   action2 == 'Upload File' & action3 == 'Registered' & !is.na(first_public) ~ 'Made Public',
+                                                   action2 == 'Made Public' & action3 == 'Upload File' & is.na(first_reg) ~ 'None',
+                                                   action2 == 'Made Public' & action3 == 'Upload File' & !is.na(first_reg) ~ 'Registered',
+                                                   action2 == 'Made Public' & action3 == 'Registered' & is.na(first_file) ~ 'None',
+                                                   action2 == 'Made Public' & action3 == 'Registered' & !is.na(first_file) ~ 'Upload File',
+                                                   action2 == 'Registered' & action3 == 'Upload File' & is.na(first_public) ~ 'None',
+                                                   action2 == 'Registered' & action3 == 'Upload File' & !is.na(first_public) ~ 'Made Public',
+                                                   action2 == 'Registered' & action3 == 'Made Public' & is.na(first_file) ~ 'None',
+                                                   action2 == 'Registered' & action3 == 'Made Public' & !is.na(first_file) ~ 'Upload File',
+                                                   action3 == 'None' ~ 'None')) %>%
+                                  select(action1, action2, action3, action4) %>%
+                                  group_by(action1, action2, action3, action4) %>%
+                                  tally()
+
+source <- c(0, 0, 0, 0, 3, 3, 3, 2, 2, 2, 4, 4, 4, 7, 7, 7, 6, 6, 6, 8, 8, 8)
+target <- c(3, 1, 2, 4, 5, 6, 8, 7, 5, 8, 7, 5, 6, 9, 10, 12, 11, 9, 12, 11, 9, 10)
+
+sankey_data <- rbind(action_flow %>% group_by(action1, action2) %>% summarize(total = sum(n)) %>% rename(from = action1, to = action2),
+                      action_flow %>% group_by(action2, action3) %>% summarize(total = sum(n)) %>% rename(from = action2, to = action3),
+                      action_flow %>% group_by(action3, action4) %>% summarize(total = sum(n)) %>% rename(from = action3, to = action4)) %>%
+              filter(from != 'None') %>%
+              add_column(source, target)
+
+
+
+p <- plot_ly(
+  type = 'sankey',
+  orientation = 'h',
+  
+  node = list(
+    label = c("Created Project", "None", "Registered", "Made Public", "Upload File", 'None', "Registered", 'Made Public', "Upload File", "None", "Registered", "Made Public", "Upload File"),
+    color = c("blue", "black", "blue", "blue", "blue", "black", "red", "red", "red", "black", "green", "green", "green"),
+    pad = 15,
+    thickness = 20,
+    line = list(
+      color = 'black',
+      width = .5
+    )
+  ),
+  
+  link = list(
+    source = sankey_data$source,
+    target = sankey_data$target,
+    value = sankey_data$total
+  )
+) %>%
+  layout(
+    title = 'Non-Deleted, Non-registrations Project Event Flow',
+    font = list(
+      size = 10
+    )
+  )
+ p
+
+```
+
 
 ## Initial Analyses
 
@@ -170,6 +250,31 @@ ggplot(all_dates %>% filter(!is.na(project_to_lastlog)) %>% filter(project_to_la
 
 ##only projects with a difference more than 1 day
 ggplot(all_dates %>% filter(!is.na(project_to_lastlog)) %>% filter(project_to_lastlog >= 1),aes(project_to_lastlog, color = products)) + 
+  geom_density() +
+  ggtitle('Projects with >= 1 day between creation and last log') +
+  scale_x_continuous('Days Between Last Log and Date Created',
+                     breaks = round(seq(1, 2563, by = 365),1)) +
+  scale_y_continuous('Number of Top Level Projects')
+
+
+##only projects with a difference more than 1 day - 2016
+ggplot(all_dates %>% filter(!is.na(project_to_lastlog)) %>% filter(project_to_lastlog >= 1) %>% filter( year == 2016),aes(project_to_lastlog, color = products)) + 
+  geom_density() +
+  ggtitle('Projects with >= 1 day between creation and last log') +
+  scale_x_continuous('Days Between Last Log and Date Created',
+                     breaks = round(seq(1, 2563, by = 365),1)) +
+  scale_y_continuous('Number of Top Level Projects')
+
+##only projects with a difference more than 1 day - 2017
+ggplot(all_dates %>% filter(!is.na(project_to_lastlog)) %>% filter(project_to_lastlog >= 1) %>% filter( year == 2017),aes(project_to_lastlog, color = products)) + 
+  geom_density() +
+  ggtitle('Projects with >= 1 day between creation and last log') +
+  scale_x_continuous('Days Between Last Log and Date Created',
+                     breaks = round(seq(1, 2563, by = 365),1)) +
+  scale_y_continuous('Number of Top Level Projects')
+
+##only projects with a difference more than 1 day - 2018
+ggplot(all_dates %>% filter(!is.na(project_to_lastlog)) %>% filter(project_to_lastlog >= 1) %>% filter( year == 2018),aes(project_to_lastlog, color = products)) + 
   geom_density() +
   ggtitle('Projects with >= 1 day between creation and last log') +
   scale_x_continuous('Days Between Last Log and Date Created',

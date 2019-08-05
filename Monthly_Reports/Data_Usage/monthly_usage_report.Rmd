@@ -2,10 +2,7 @@
 title: "Monthly Storage Report"
 output:
   html_document:
-    df_print: paged
-  html_notebook: default
-  pdf_document: default
-  word_document: default
+    smart: false 
 ---
 
 ```{r, warning=FALSE, include=FALSE}
@@ -20,7 +17,7 @@ library(plotly)
 options(digits=10)
 
 # creating additional variables
-storage_data <- read_csv(here::here("/Monthly_Reports/Data_Usage",'osf_storage_metrics.csv')) %>%
+storage_data <- read_csv('/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Data_Usage/osf_storage_metrics.csv', col_types = cols(date = col_datetime(format = "%m/%d/%y"))) %>%
                     mutate(month = month(date, label = T),
                            year = year(date)) %>%
                     filter(year == year(as.Date(Sys.time()) - 5)) %>%
@@ -50,9 +47,6 @@ The data used to generate this report can be found [here](https://osf.io/a7w36/)
 raw_storage <- storage_data %>%
   select(month, total_tib, pubnode_tib, privatenode_tib, deleted_tib) %>%
   gather(total_tib:deleted_tib, key = 'storage_type', value = 'storage', factor_key = T) %>%
-  group_by(storage_type, month) %>%
-  slice(1L) %>%
-  ungroup() %>%
   spread(month, storage) %>%
   rename(Type = storage_type)
 
@@ -67,9 +61,6 @@ raw_storage$Type <- fct_relevel(raw_storage$Type, c('Total', 'Deleted', 'Public 
 diff_storage <- storage_data %>%
   select(month, total_tib, pubnode_tib, privatenode_tib, deleted_tib) %>%
   gather(total_tib:deleted_tib, key = 'storage_type', value = 'storage', factor_key = T) %>%
-  group_by(storage_type, month) %>%
-  slice(1L) %>%
-  ungroup() %>%
   group_by(storage_type) %>%
   mutate(storage_diff = storage - lag(storage)) %>%
   ungroup() %>%
@@ -88,9 +79,6 @@ diff_storage$Type <- fct_relevel(diff_storage$Type, c('Total', 'Deleted', 'Publi
 raw_product_storage <- storage_data %>%
   select(month, node_tib, preprint_tib, quickfiles_tib, regs_tib) %>%
   gather(regs_tib:node_tib, key = 'product_type', value = 'storage', factor_key = T) %>%
-  group_by(product_type, month) %>%
-  slice(1L) %>%
-  ungroup() %>%
   spread(month, storage) %>%
   rename(Type = product_type)
 
@@ -104,9 +92,6 @@ raw_product_storage$Type <- fct_relevel(raw_product_storage$Type, c('Nodes', 'Re
 diff_product_storage <- storage_data %>%
   select(month, node_tib, preprint_tib, quickfiles_tib, regs_tib) %>%
   gather(regs_tib:node_tib, key = 'product_type', value = 'storage', factor_key = T) %>%
-  group_by(product_type, month) %>%
-  slice(1L) %>%
-  ungroup() %>%
   group_by(product_type) %>%
   mutate(storage_diff = storage - lag(storage)) %>%
   ungroup() %>%

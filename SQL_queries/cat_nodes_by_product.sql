@@ -169,7 +169,7 @@ SELECT osf_abstractnode.id AS node_id,
 	   onedrive_added,
 	   owncloud_added,
 	   s3_added,
-	   date_made_public,
+	   CASE WHEN is_public IS TRUE THEN date_made_public ELSE NULL END AS date_made_public,
 	   num_regs,
 	   first_reg,
 	   last_reg,
@@ -211,7 +211,7 @@ SELECT osf_abstractnode.id AS node_id,
 	ON osf_abstractnode.id = addon_connections.id
 
 	/* join in when each node was last made public and the number of wiki and link logs per node*/
-	LEFT JOIN (SELECT node_id, MAX(date) AS date_made_public, 
+	LEFT JOIN (SELECT node_id, MAX(CASE WHEN osf_nodelog.action LIKE 'made_public' THEN osf_nodelog.date ELSE NULL END) date_made_public, 
 					SUM(CASE WHEN osf_nodelog.action LIKE 'wiki_updated' THEN 1 ELSE 0 END) num_wiki_edits,
 					SUM(CASE WHEN osf_nodelog.action LIKE 'pointer_created' THEN 1 ELSE 0 END) num_links_added,
 					SUM(CASE WHEN osf_nodelog.action LIKE 'pointer_removed' THEN 1 ELSE 0 END) num_links_removed

@@ -59,7 +59,8 @@ projects_by_product <- node_data %>%
                             filter(type == 'osf.node' & is_deleted == FALSE) %>%
                             group_by(root_id) %>%
                             mutate(registered = case_when(any(registered == TRUE) ~ 1, all(registered == FALSE) ~ 0)) %>%
-                            summarize(has_file = max(has_files), 
+                            summarize(nodes_in_project = n(),
+                                      has_file = max(has_files), 
                                       shared_file = max(public_sharing), 
                                       registered = max(registered), 
                                       project_created = min(created),
@@ -189,6 +190,68 @@ p <- plot_ly(
 For this analysis, I removed projects that were OSF4M projects.
 
 ```{r}
+
+project_timeline <- projects_by_product %>%
+  filter(project_created > '2015-05-01') %>%
+  filter(osf4m == 0 | (nodes_in_project > 1 & osf4m == 1)) %>%
+  mutate(action1 = 'Created Project',
+         action2 = case_when(is.na(first_file) & is.na(first_public) & is.na(first_reg) ~ 'None',
+                             (first_file < first_public | (is.na(first_public) & !is.na(first_file))) &
+                                (first_file < first_reg | (is.na(first_reg) & !is.na(first_file))) ~ 'Upload File',
+                             (first_public < first_file | (is.na(first_file) & !is.na(first_public))) & 
+                                (first_public < first_reg | (is.na(first_reg) & !is.na(first_public))) ~ 'Made Public',
+                             (first_reg < first_public | (is.na(first_public) & !is.na(first_reg))) & 
+                                (first_reg < first_file | (is.na(first_file) & !is.na(first_reg))) ~ 'Registered'),
+         action3 = case_when(action2 == 'Upload File' & is.na(first_public) & is.na(first_reg) ~ 'None',
+                             action2 == 'Upload File' & (first_public < first_reg | is.na(first_reg)) ~ 'Made Public',
+                             action2 == 'Upload File' & (first_reg < first_public | is.na(first_public)) ~ 'Registered',
+                             action2 == 'Made Public' & is.na(first_file) & is.na(first_reg) ~ 'None',
+                             action2 == 'Made Public' & (first_file < first_reg | is.na(first_reg)) ~ 'Upload File',
+                             action2 == 'Made Public' & (first_reg < first_file | is.na(first_file)) ~ 'Registered',
+                             action2 == 'Registered' & is.na(first_file) & is.na(first_public) ~ 'None',
+                             action2 == 'Registered' & (first_file < first_public | is.na(first_public)) ~ 'Upload File',
+                             action2 == 'Registered' & (first_public < first_file | is.na(first_file)) ~ 'Made Public',
+                             action2 == 'None' ~ 'None'),
+         action4 = case_when(action2 == 'Upload File' & action3 == 'Made Public' & is.na(first_reg) ~ 'None',
+                             action2 == 'Upload File' & action3 == 'Made Public' & !is.na(first_reg) ~ 'Registered',
+                             action2 == 'Upload File' & action3 == 'Registered' & is.na(first_public) ~ 'None',
+                             action2 == 'Upload File' & action3 == 'Registered' & !is.na(first_public) ~ 'Made Public',
+                             action2 == 'Made Public' & action3 == 'Upload File' & is.na(first_reg) ~ 'None',
+                             action2 == 'Made Public' & action3 == 'Upload File' & !is.na(first_reg) ~ 'Registered',
+                             action2 == 'Made Public' & action3 == 'Registered' & is.na(first_file) ~ 'None',
+                             action2 == 'Made Public' & action3 == 'Registered' & !is.na(first_file) ~ 'Upload File',
+                             action2 == 'Registered' & action3 == 'Upload File' & is.na(first_public) ~ 'None',
+                             action2 == 'Registered' & action3 == 'Upload File' & !is.na(first_public) ~ 'Made Public',
+                             action2 == 'Registered' & action3 == 'Made Public' & is.na(first_file) ~ 'None',
+                             action2 == 'Registered' & action3 == 'Made Public' & !is.na(first_file) ~ 'Upload File',
+                             action3 == 'None' ~ 'None')) %>%
+  mutate(time_action2 = case_when(action2 == 'Made Public' ~ days_create_public,
+                                  action2 == 'Registered' ~ days_create_reg,
+                                  action2 == 'Upload File' ~ days_create_files),
+         time_action3 = case_when(action2 == 'Made Public' & action3 == 'Registered' ~ days_public_reg,
+                                  action2 == 'Made Public' & action3 == 'Upload File' ~ days_public_files,
+                                  action2 == 'Registered' & action3 == 'Upload File' ~ days_reg_files,
+                                  action2 == 'Registered' & action3 == 'Made Public' ~ days_reg_pub,
+                                  action2 == 'Upload File' & action3 == 'Registered' ~ days_files_reg,
+                                  action2 == 'Upload File' & action3 == 'Made Public' ~ days_files_public),
+         time_action4 = case_when(action3 == 'Made Public' & action4 == 'Upload File' ~ days_public_files,
+                                  action3 == 'Made Public' & action4 == 'Registered' ~ days_public_reg,
+                                  action3 == 'Registered' & action4 == 'Upload File' ~ days_reg_files,
+                                  action3 == 'Registered' & action4 == 'Made Public' ~ days_reg_pub,
+                                  action3 == 'Upload File' & action4 == 'Registered' ~ days_files_reg,
+                                  action3 == 'Upload File' & action4 == 'Made Public' ~ days_files_public),
+         total_time = case_when(action3 == 'None' & action2 == 'Registered' ~ days_create_reg,
+                                action3 == 'None' & action2 == 'Made Public' ~ days_create_public,
+                                action3 == 'None' & action2 == 'Upload File' ~ days_create_files,
+                                action4 == 'None' & action3 == 'Registered'~ days_create_reg,
+                                action4 == 'None' & action3 == 'Made Public' ~ days_create_public,
+                                action4 == 'None' & action3 == 'Upload File' ~ days_create_files))
+
+
+
+
+
+
 
 ```
 

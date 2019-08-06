@@ -70,14 +70,26 @@ projects_by_product <- node_data %>%
                                       suppnode = max(preprint_suppnode),
                                       first_reg = if(all(is.na(first_reg))) NA else min(first_reg, na.rm = TRUE),
                                       first_file = if(all(is.na(first_file))) NA else min(first_file, na.rm = TRUE),
-                                      first_public = if(all(is.na(date_made_public))) NA else min(date_made_public, na.rm = TRUE)) %>%
+                                      first_public = if(all(is.na(date_made_public))) NA else min(date_made_public, na.rm = TRUE),
+                                      first_reg = as_datetime(first_reg)) %>%
                             mutate(products = case_when(has_file > 0 & shared_file == 0 & registered == 0 ~ 'OSF_privatefiles_only',
                                                           shared_file ==1 & registered == 0 ~ 'OSF_sharingfiles_only',
                                                           shared_file == 0 & registered ==1 ~ 'Registrations_only',
                                                           shared_file == 1 & registered == 1 ~ 'OSF_sharingfiles_and_registrations',
                                                           shared_file == 0 & registered == 0 & has_file == 0 ~ 'None')) %>%
+                            mutate(days_create_public = difftime(first_public, project_created, units = 'days'),
+                                   days_create_reg = difftime(first_reg, project_created, units = 'days'),
+                                   days_create_files = difftime(first_file, project_created, units = 'days'),
+                                   days_reg_pub = difftime(first_public, first_reg, units = 'days'),
+                                   days_reg_files = difftime(first_file, first_reg, units = 'days'),
+                                   days_public_reg = difftime(first_reg, first_public, units = 'days'),
+                                   days_public_files = difftime(first_file, first_public, units = 'days'),
+                                   days_files_reg = difftime(first_reg, first_file, units = 'days'),
+                                   days_files_public = difftime(first_public, first_file, units = 'days')) %>%
                             mutate(pc_by_day = as_date(project_created))  %>%
-                            mutate(year = year(project_created))
+                                                      mutate(year = year(project_created))
+
+
 
 all_dates <- projects_by_product %>%
                 left_join(all_logs, by = 'root_id') %>%
@@ -88,6 +100,7 @@ all_dates <- projects_by_product %>%
 library(plotly) 
 
 action_flow <- projects_by_product %>%
+                        filter(project_created > '2015-05-01') %>%   #file creation dates only accurate after May 1st, 2015
                         mutate(action1 = 'Created Project',
                                action2 = case_when(is.na(first_file) & is.na(first_public) & is.na(first_reg) ~ 'None',
                                                    (first_file < first_public | (is.na(first_public) & !is.na(first_file))) &
@@ -132,8 +145,6 @@ sankey_data <- rbind(action_flow %>% group_by(action1, action2) %>% summarize(to
               filter(from != 'None') %>%
               add_column(source, target)
 
-
-
 p <- plot_ly(
   type = 'sankey',
   orientation = 'h',
@@ -164,6 +175,23 @@ p <- plot_ly(
  p
 
 ```
+
+
+## Workflow Investigations:
+
+###Can wikis or links explain the strange 'None' behavior?
+
+* Percentage of `Created -> None` projects with wiki updates or linked nodes: `r round(100*sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & is.na(projects_by_product$first_public) & (projects_by_product$wiki_updates > 0 | projects_by_product$link_created > 0))/sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & is.na(projects_by_product$first_public)),2)`
+* Percentage of `Created -> Made Public -> None` projects with wiki updates or linked nodes: `r round(100*sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & !is.na(projects_by_product$first_public) & (projects_by_product$wiki_updates > 0 | projects_by_product$link_created > 0))/sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & !is.na(projects_by_product$first_public)),2)`
+
+###Average Time between Steps
+
+For this analysis, I removed projects that were OSF4M projects.
+
+```{r}
+
+```
+
 
 
 ## Initial Analyses

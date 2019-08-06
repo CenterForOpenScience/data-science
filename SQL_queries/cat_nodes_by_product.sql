@@ -173,6 +173,9 @@ SELECT osf_abstractnode.id AS node_id,
 	   num_regs,
 	   first_reg,
 	   last_reg,
+	   num_wiki_edits,
+	   num_links_added,
+	   num_links_removed,
 	   CASE WHEN num_regs IS NOT NULL AND type = 'osf.node' THEN 1 ELSE 0 END AS registered,
 	   CASE WHEN tag_id IS NOT NULL THEN 1 ELSE 0 END AS osf4m,
 	   CASE WHEN preprint_id IS NOT NULL THEN 1 ELSE 0 END AS preprint_suppnode,
@@ -207,10 +210,13 @@ SELECT osf_abstractnode.id AS node_id,
 	LEFT JOIN addon_connections
 	ON osf_abstractnode.id = addon_connections.id
 
-	/* join in when each node was last made public */
-	LEFT JOIN (SELECT node_id, MAX(date) AS date_made_public
+	/* join in when each node was last made public and the number of wiki and link logs per node*/
+	LEFT JOIN (SELECT node_id, MAX(date) AS date_made_public, 
+					SUM(CASE WHEN osf_nodelog.action LIKE 'wiki_updated' THEN 1 ELSE 0 END) num_wiki_edits,
+					SUM(CASE WHEN osf_nodelog.action LIKE 'pointer_created' THEN 1 ELSE 0 END) num_links_added,
+					SUM(CASE WHEN osf_nodelog.action LIKE 'pointer_removed' THEN 1 ELSE 0 END) num_links_removed
 				FROM osf_nodelog
-				WHERE action = 'made_public'
+				WHERE action = 'made_public' OR action = 'pointer_created' OR action = 'pointer_removed' OR action = 'wiki_updated'
 				GROUP BY node_id) as public_dates
 	ON osf_abstractnode.id = public_dates.node_id
 

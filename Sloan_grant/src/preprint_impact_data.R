@@ -19,14 +19,12 @@ impact_tibble <- function(call_output) {
     rownames_to_column() %>% 
     filter(!is.na(unlist(json_to_r))) %>% 
     rename(downloads = `unlist(json_to_r)`) %>% 
-    slice(-1)
-  
-  call_data <- separate(data = call_data, col = rowname, into = paste("V", 1:4, sep = '_'), sep = "\\.") %>% 
+    slice(-1) %>%
+    separate(col = rowname, into = paste("V", 1:4, sep = '_'), sep = "\\.") %>% 
     select(V_2,V_4,downloads) %>% 
     rename(date = V_2, preprint_guid = V_4) %>% 
-    mutate(preprint_guid = str_sub(preprint_guid, 1, 5))
-  
-  call_data <- as_tibble(call_data) %>% 
+    mutate(preprint_guid = str_sub(preprint_guid, 1, 5)) %>%
+    as_tibble() %>% 
     mutate(downloads = as.numeric(as.character(downloads))) %>% 
     mutate(date = ymd_hms(date))
   

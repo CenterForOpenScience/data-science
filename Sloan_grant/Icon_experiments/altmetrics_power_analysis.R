@@ -23,6 +23,13 @@ data <- map_df(altmetrics_data, read_csv, col_types = cols(doi = col_character()
 may_preprints <- read_csv(here::here('Documents/data-science/Sloan_grant/Icon_experiments', 'may_preprints.csv'))
 
 # join together to retain only altemtric info about may preprints
-may_data <- left_join(may_preprints, data , by = 'guid')
+may_data <- left_join(may_preprints, data , by = 'guid') %>%
+              mutate(date_published = date(date_published),
+                     one_week = date_published + 7,
+                     two_week = date_published + 14,
+                     three_week = date_published + 21,
+                     four_week = date_published + 28,
+                     days_since_published = date - date_published) %>%
+              mutate(score = replace_na(score, 0))
             
 

@@ -4,24 +4,19 @@
 
 /* get all nodes (excluding registrations) with their logs (excluding actions that come along when a project is forked) */
 SELECT is_deleted, user_id, 
-			SUM(CASE WHEN osf_nodelog.action = 'project_created' AND osf_abstractnode.id = root_id THEN 1 ELSE 0 END) created_project,
-			SUM(CASE WHEN osf_nodelog.action = 'project_created' AND osf_abstractnode.id != root_id THEN 1 ELSE 0 END) created_component,
 			SUM(CASE WHEN osf_nodelog.action LIKE 'contributer_added' THEN 1 ELSE 0 END) added_contributor,
-			SUM(CASE WHEN osf_nodelog.action LIKE '%file_added' THEN 1 ELSE 0 END) uploaded_file,
+			SUM(CASE WHEN osf_nodelog.action LIKE '%file_added' THEN 1 ELSE 0 END) added_file,
+			SUM(CASE WHEN osf_nodelog.action LIKE '%file_updated' THEN 1 ELSE 0 END) updated_file,
 			SUM(CASE WHEN osf_nodelog.action LIKE 'wiki_updated' THEN 1 ELSE 0 END) wiki_edited,
 			SUM(CASE WHEN osf_nodelog.action LIKE 'made_public' THEN 1 ELSE 0 END) made_public,
 			SUM(CASE WHEN osf_nodelog.action LIKE 'made_private' THEN 1 ELSE 0 END) made_private,
 			SUM(CASE WHEN osf_nodelog.action LIKE 'addon_added' THEN 1 ELSE 0 END) addon_added,
-			MIN(CASE WHEN osf_nodelog.action = 'project_created' AND osf_abstractnode.id = root_id THEN osf_nodelog.date ELSE NULL END) first_project,
-			MIN(CASE WHEN osf_nodelog.action = 'project_created' AND osf_abstractnode.id != root_id THEN osf_nodelog.date ELSE NULL END) first_component,
 			MIN(CASE WHEN osf_nodelog.action LIKE 'contributer_added' THEN osf_nodelog.date ELSE NULL END) first_add_contrib,
 			MIN(CASE WHEN osf_nodelog.action LIKE '%file_added' THEN osf_nodelog.date ELSE NULL END) first_upload_file,
 			MIN(CASE WHEN osf_nodelog.action LIKE 'wiki_updated' THEN osf_nodelog.date ELSE NULL END) first_wiki_edit,
 			MIN(CASE WHEN osf_nodelog.action LIKE 'made_public' THEN osf_nodelog.date ELSE NULL END) first_made_public,
 			MIN(CASE WHEN osf_nodelog.action LIKE 'made_private' THEN osf_nodelog.date ELSE NULL END) first_made_private,
 			MIN(CASE WHEN osf_nodelog.action LIKE 'addon_added' THEN osf_nodelog.date ELSE NULL END) first_addon_added,
-			MAX(CASE WHEN osf_nodelog.action = 'project_created' AND osf_abstractnode.id = root_id THEN osf_nodelog.date ELSE NULL END) last_project,
-			MAX(CASE WHEN osf_nodelog.action = 'project_created' AND osf_abstractnode.id != root_id THEN osf_nodelog.date ELSE NULL END) last_component,
 			MAX(CASE WHEN osf_nodelog.action LIKE 'contributer_added' THEN osf_nodelog.date ELSE NULL END) last_add_contrib,
 			MAX(CASE WHEN osf_nodelog.action LIKE '%file_added' THEN osf_nodelog.date ELSE NULL END) last_upload_file,
 			MAX(CASE WHEN osf_nodelog.action LIKE 'wiki_updated' THEN osf_nodelog.date ELSE NULL END) last_wiki_edit,
@@ -432,7 +427,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 								  SUM(CASE WHEN osf4m = 0 AND
 								  		preprint_suppnode =1 AND /*only want to count nodes made during the preprint process*/
 								  		((preprint_created > '2018-12-14' AND created > preprint_created) OR 
-								  		(preprint_created <= '2018-12-14' AND created::date = preprint_created::date)) THEN 1 ELSE 0 END) AS num_suppnode,
+								  		(preprint_created <= '2018-12-14' AND date_trun('day', created) = date_trun('day', preprint_created))) THEN 1 ELSE 0 END) AS num_suppnode,
 								MIN(CASE WHEN node_id = root_id AND 
 								  		osf4m = 1 THEN created ELSE NULL END) AS first_osf4m,
 								MAX(CASE WHEN node_id = root_id AND 
@@ -457,10 +452,12 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 								  			(preprint_suppnode = 1 AND preprint_created <= '2018-12-14' AND created != preprint_created)) THEN created ELSE NULL END) AS last_node,		
 								MIN(CASE WHEN osf4m = 0 AND
 								  		preprint_suppnode =1 AND
-								  		((preprint_created > '2018-12-14' AND created > preprint_created) OR (preprint_created <= '2018-12-14' AND created::date = preprint_created::date)) THEN created ELSE NULL END) AS first_suppnode,
+								  		((preprint_created > '2018-12-14' AND created > preprint_created) OR 
+								  			(preprint_created <= '2018-12-14' AND date_trunc('day', created) = date_trunc('day', preprint_created))) THEN created ELSE NULL END) AS first_suppnode,
 								MAX(CASE WHEN osf4m = 0 AND
 								  		preprint_suppnode =1 AND
-								  		((preprint_created > '2018-12-14' AND created > preprint_created) OR (preprint_created <= '2018-12-14' AND created::date = preprint_created::date)) THEN created ELSE NULL END) AS last_suppnode	
+								  		((preprint_created > '2018-12-14' AND created > preprint_created) OR 
+								  			(preprint_created <= '2018-12-14' AND date_trunc('day', created) = date_trunc('day', preprint_created))) AS last_suppnode	
 								FROM node_categories
 								WHERE type = 'osf.node'
 								GROUP BY creator_id),

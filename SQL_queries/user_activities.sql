@@ -29,6 +29,9 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 								owncloud.created AS owncloud_added,
 								s3.created AS s3_added
 							FROM osf_abstractnode
+							
+							/* creation dates in each addon table aren't necessarily when they were attached to a project, so need to get those dates from node_logs and match them up with nodes that still
+								have addons attached to get actual attachment date for each node*/
 							LEFT JOIN (SELECT node_id, MAX(date) AS created
 											FROM addons_bitbucket_nodesettings
 											LEFT JOIN osf_nodelog
@@ -132,7 +135,9 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 								  is_deleted IS FALSE AND 
 								  title NOT LIKE 'Bookmarks' 
 								  AND (spam_status IS NULL OR spam_status = 4)),
-	node_categories AS (SELECT osf_abstractnode.id AS node_id, /* build full node timeline and categorication table */
+	
+	/* for each node, build out what type it is based on the products/behaviors that have happend to it and the timeline of those */
+	node_categories AS (SELECT osf_abstractnode.id AS node_id, 
 						   type, 
 						   created, 
 						   deleted_date, 
@@ -234,6 +239,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 										GROUP BY osf_abstractnode.id) as regs_data
 						ON osf_abstractnode.id = regs_data.node_id
 
+						/* exclude bookmark nodes and quickfiles, spam nodes, deleted nodes, retracted registrations or empty suppnodes created b/c of NPD*/
 						WHERE (type LIKE 'osf.node' OR type LIKE 'osf.registration') AND 
 								title NOT LIKE 'Bookmarks' AND
 								(spam_status IS NULL OR spam_status = 4) AND 
@@ -300,6 +306,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 											SELECT suppnode_id
 												FROM supp_nodes
 												WHERE total_actions = 0)),
+	
 	/* count the number of osf4m, projects, and subnodes each user created */
 	user_nodes AS (SELECT creator_id,
 								  SUM(CASE WHEN node_id = root_id AND /*only counting rootids b/c osf4m emails automatically created a new project*/
@@ -360,7 +367,8 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 								FROM node_categories
 								WHERE type = 'osf.node'
 								GROUP BY creator_id),
-	/*count number of registrations made by each user*/
+	
+	/*count number of registrations made by each user; needs to be it's own query b/c of different grouping variable for creator btw osf.nodes and osf.registrations*/
 	user_regs AS (SELECT registered_user_id,
 						 SUM(CASE WHEN node_id = root_id THEN 1 ELSE 0 END) AS num_toplevel_regs,
 						 COUNT(DISTINCT node_id) AS num_reg_nodes,
@@ -369,6 +377,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 					FROM node_categories
 					WHERE type = 'osf.registration'
 					GROUP BY registered_user_id),
+	
 	/*get a list of only published preprints*/
 	published_preprints AS (SELECT *
 								FROM osf_preprint
@@ -378,10 +387,12 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 										(machine_state = 'accepted' OR machine_state = 'initial' OR machine_state = 'pending') AND 
 										date_withdrawn IS NULL AND 
 										osf_preprint.deleted IS NULL),
+	
 	/* how many published preprints created by each user */
 	num_preprints_created AS (SELECT creator_id AS user, COUNT(published_preprints.id) AS num_preprints, MIN(created) AS date_first_preprint, MAX(created) AS date_last_preprint
 									FROM published_preprints
 									GROUP BY creator_id),
+	
 	/* how many published preprint is each user a contributor on*/
 	num_preprints_contrib AS (SELECT user_id, 
 									SUM(CASE WHEN visible IS FALSE THEN 1 ELSE 0 END) AS num_pp_invisible_contrib,

@@ -164,8 +164,8 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 						   CASE WHEN tag_id IS NOT NULL THEN 1 ELSE 0 END AS osf4m,
 						   CASE WHEN preprint_id IS NOT NULL THEN 1 ELSE 0 END AS preprint_suppnode,
 						   CASE WHEN preprint_id IS NOT NULL AND
-						   		((suppnode_date_added IS NOT NULL AND suppnode_date_added - created <= '00:05:00') OR
-						   			(suppnode_date_added IS NULL AND created - preprint_created <= '00:20:00')) THEN 1 ELSE 0 END  AS pp_workflow_suppnode,
+						   		((suppnode_date_added IS NOT NULL AND preprint_created < created AND suppnode_date_added - created <= '00:05:00') OR
+						   			(suppnode_date_added IS NULL AND preprint_created - created <= '00:20:00')) THEN 1 ELSE 0 END  AS pp_workflow_suppnode,
 						   CASE WHEN LEAST(first_osf_file_created, first_addon_added) IS NOT NULL THEN 1 ELSE 0 END AS has_files,
 						   CASE WHEN is_public IS TRUE AND retraction_id IS NULL AND LEAST(first_osf_file_created, first_addon_added) IS NOT NULL THEN 1 ELSE 0 END AS public_sharing,
 						   CASE WHEN is_public IS FALSE AND retraction_id IS NULL AND LEAST(first_osf_file_created, first_addon_added) IS NOT NULL THEN 1 ELSE 0 END AS private_storage,

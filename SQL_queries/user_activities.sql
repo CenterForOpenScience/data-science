@@ -294,57 +294,35 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 								  		osf4m = 1 THEN 1 ELSE 0 END) AS num_osf4m,  
 								  SUM(CASE WHEN node_id = root_id AND 
 								  		osf4m = 0 AND 
-								  		(preprint_suppnode = 0 OR /*want to exclude project created as part of preprint workflow*/
-								  			(preprint_suppnode = 1 AND preprint_created > '2018-12-14' AND created < preprint_created) OR
-								  			(preprint_suppnode = 1 AND preprint_created <= '2018-12-14' AND created != preprint_created)) THEN 1 ELSE 0 END) AS num_toplevel_projects,
+								  		pp_workflow_suppnode = 0 THEN 1 ELSE 0 END) AS num_toplevel_projects,
 								  SUM(CASE WHEN osf4m = 0 AND 
-								  		(preprint_suppnode = 0 OR /*want to exclude nodes created as part of preprint workflow*/
-								  			(preprint_suppnode = 1 AND preprint_created > '2018-12-14' AND created < preprint_created) OR
-								  			(preprint_suppnode = 1 AND preprint_created <= '2018-12-14' AND created != preprint_created)) THEN 1 ELSE 0 END) AS num_nodes,
+								  		pp_workflow_suppnode = 0 THEN 1 ELSE 0 END) AS num_nodes,
 								  SUM(CASE WHEN osf4m = 0 AND 
-								  		(preprint_suppnode = 0 OR /*want to exclude nodes created as part of preprint workflow*/
-								  			(preprint_suppnode = 1 AND preprint_created > '2018-12-14' AND created < preprint_created) OR
-								  			(preprint_suppnode = 1 AND preprint_created <= '2018-12-14' AND created != preprint_created)) AND 
+								  		pp_workflow_suppnode = 0 AND 
 								  		public_sharing = 1 THEN 1 ELSE 0 END) AS num_publicfiles_nodes,
 								  SUM(CASE WHEN osf4m = 0 AND 
-								  		(preprint_suppnode = 0  OR /*want to exclude nodes created as part of preprint workflow*/
-								  			(preprint_suppnode = 1 AND preprint_created > '2018-12-14' AND created < preprint_created) OR
-								  			(preprint_suppnode = 1 AND preprint_created <= '2018-12-14' AND created != preprint_created)) AND 
+								  		pp_workflow_suppnode = 0 AND 
 								  		private_storage = 1 THEN 1 ELSE 0 END) AS num_privatefiles_nodes,
 								  SUM(CASE WHEN osf4m = 0 AND
-								  		preprint_suppnode =1 AND /*only want to count nodes made during the preprint process*/
-								  		((preprint_created > '2018-12-14' AND created > preprint_created) OR 
-								  		(preprint_created <= '2018-12-14' AND date_trunc('day', created) = date_trunc('day', preprint_created))) THEN 1 ELSE 0 END) AS num_suppnode,
+								  		pp_workflow_suppnode = 1 AS num_suppnode,
 								MIN(CASE WHEN node_id = root_id AND 
 								  		osf4m = 1 THEN created ELSE NULL END) AS first_osf4m,
 								MAX(CASE WHEN node_id = root_id AND 
 								  		osf4m = 1 THEN created ELSE NULL END) AS last_osf4m,
 								MIN(CASE WHEN node_id = root_id AND 
 								  		osf4m = 0 AND 
-								  		(preprint_suppnode = 0 OR 
-								  			(preprint_suppnode = 1 AND preprint_created > '2018-12-14' AND created < preprint_created) OR
-								  			(preprint_suppnode = 1 AND preprint_created <= '2018-12-14' AND created != preprint_created)) THEN created ELSE NULL END) AS first_toplevel_project,
+								  		pp_workflow_suppnode = 0 THEN created ELSE NULL END) AS first_toplevel_project,
 								MAX(CASE WHEN node_id = root_id AND 
 								  		osf4m = 0 AND 
-								  		(preprint_suppnode = 0 OR 
-								  			(preprint_suppnode = 1 AND preprint_created > '2018-12-14' AND created < preprint_created) OR
-								  			(preprint_suppnode = 1 AND preprint_created <= '2018-12-14' AND created != preprint_created)) THEN created ELSE NULL END) AS last_toplevel_project,
+								  		pp_workflow_suppnode = 0 THEN created ELSE NULL END) AS last_toplevel_project,
 								MIN(CASE WHEN osf4m = 0 AND 
-								  		(preprint_suppnode = 0 OR
-								  			(preprint_suppnode = 1 AND preprint_created > '2018-12-14' AND created < preprint_created) OR
-								  			(preprint_suppnode = 1 AND preprint_created <= '2018-12-14' AND created != preprint_created)) THEN created ELSE NULL END) AS first_node,
+								  		pp_workflow_suppnode = 0 THEN created ELSE NULL END) AS first_node,
 								MAX(CASE WHEN osf4m = 0 AND 
-								  		(preprint_suppnode = 0 OR
-								  			(preprint_suppnode = 1 AND preprint_created > '2018-12-14' AND created < preprint_created) OR
-								  			(preprint_suppnode = 1 AND preprint_created <= '2018-12-14' AND created != preprint_created)) THEN created ELSE NULL END) AS last_node,		
+								  		pp_workflow_suppnode = 0 THEN created ELSE NULL END) AS last_node,		
 								MIN(CASE WHEN osf4m = 0 AND
-								  		preprint_suppnode =1 AND
-								  		((preprint_created > '2018-12-14' AND created > preprint_created) OR 
-								  			(preprint_created <= '2018-12-14' AND date_trunc('day', created) = date_trunc('day', preprint_created))) THEN created ELSE NULL END) AS first_suppnode,
+								  		pp_workflow_suppnode = 1 AS first_suppnode,
 								MAX(CASE WHEN osf4m = 0 AND
-								  		preprint_suppnode =1 AND
-								  		((preprint_created > '2018-12-14' AND created > preprint_created) OR 
-								  			(preprint_created <= '2018-12-14' AND date_trunc('day', created) = date_trunc('day', preprint_created)))THEN created ELSE NULL END) AS last_suppnode	
+								  		pp_workflow_suppnode = 1 AS last_suppnode	
 								FROM node_categories
 								WHERE type = 'osf.node'
 								GROUP BY creator_id),
@@ -395,22 +373,15 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 								   SUM(CASE WHEN osf4m = 1 THEN 1 ELSE 0 END) AS num_osf4m_contrib,
 								   SUM(CASE WHEN type = 'osf.registration' THEN 1 ELSE 0 END) AS num_regnodes_contrib,
 								   SUM(CASE WHEN osf4m = 0 AND 
-								  		(preprint_suppnode = 0 OR
-								  			(preprint_suppnode = 1 AND preprint_created > '2018-12-14' AND created < preprint_created) OR
-								  			(preprint_suppnode = 1 AND preprint_created <= '2018-12-14' AND created != preprint_created)) THEN 1 ELSE 0 END) AS num_nodes_contrib,
+								  		pp_workflow_suppnode = 0 AS num_nodes_contrib,
 								   SUM(CASE WHEN osf4m = 0 AND 
-								  		(preprint_suppnode = 0 OR
-								  			(preprint_suppnode = 1 AND preprint_created > '2018-12-14' AND created < preprint_created) OR
-								  			(preprint_suppnode = 1 AND preprint_created <= '2018-12-14' AND created != preprint_created)) AND 
+								  		pp_workflow_suppnode = 0 AND 
 								  		public_sharing = 1 THEN 1 ELSE 0 END) AS num_publicfiles_nodes_contrib,
 								   SUM(CASE WHEN osf4m = 0 AND 
-								  		(preprint_suppnode = 0  OR
-								  			(preprint_suppnode = 1 AND preprint_created > '2018-12-14' AND created < preprint_created) OR
-								  			(preprint_suppnode = 1 AND preprint_created <= '2018-12-14' AND created != preprint_created)) AND 
+								  		pp_workflow_suppnode = 0 AND 
 								  		private_storage = 1 THEN 1 ELSE 0 END) AS num_privatefiles_nodes_contrib,
 								   SUM(CASE WHEN osf4m = 0 AND
-								  		preprint_suppnode =1 AND
-								  		((preprint_created > '2018-12-14' AND created > preprint_created) OR (preprint_created <= '2018-12-14' AND created::date = preprint_created::date)) THEN 1 ELSE 0 END) AS num_suppnode_contrib
+								  		pp_workflow_suppnode = 1 THEN 1 ELSE 0 END) AS num_suppnode_contrib
 								FROM node_categories
 								LEFT JOIN osf_contributor
 								ON node_categories.node_id = osf_contributor.node_id
@@ -446,9 +417,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 							ON node_categories.node_id = osf_nodelog.node_id
 							WHERE type = 'osf.node' AND 
 								  osf4m = 0 AND 
-								  (preprint_suppnode = 0 OR 
-								  	(preprint_suppnode = 1 AND preprint_created > '2018-12-14' AND preprint_created < created) OR 
-								  	(preprint_suppnode = 1 AND preprint_created <= '2018-12-14' AND date_trunc('day', preprint_created) != date_trunc('day', created)))
+								  pp_workflow_suppnode = 0
 							GROUP BY user_id)
 
 									

@@ -427,7 +427,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 								  SUM(CASE WHEN osf4m = 0 AND
 								  		preprint_suppnode =1 AND /*only want to count nodes made during the preprint process*/
 								  		((preprint_created > '2018-12-14' AND created > preprint_created) OR 
-								  		(preprint_created <= '2018-12-14' AND date_trun('day', created) = date_trun('day', preprint_created))) THEN 1 ELSE 0 END) AS num_suppnode,
+								  		(preprint_created <= '2018-12-14' AND date_trunc('day', created) = date_trunc('day', preprint_created))) THEN 1 ELSE 0 END) AS num_suppnode,
 								MIN(CASE WHEN node_id = root_id AND 
 								  		osf4m = 1 THEN created ELSE NULL END) AS first_osf4m,
 								MAX(CASE WHEN node_id = root_id AND 
@@ -457,7 +457,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 								MAX(CASE WHEN osf4m = 0 AND
 								  		preprint_suppnode =1 AND
 								  		((preprint_created > '2018-12-14' AND created > preprint_created) OR 
-								  			(preprint_created <= '2018-12-14' AND date_trunc('day', created) = date_trunc('day', preprint_created))) AS last_suppnode	
+								  			(preprint_created <= '2018-12-14' AND date_trunc('day', created) = date_trunc('day', preprint_created)))THEN created ELSE NULL END) AS last_suppnode	
 								FROM node_categories
 								WHERE type = 'osf.node'
 								GROUP BY creator_id),
@@ -522,7 +522,42 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 								FROM node_categories
 								LEFT JOIN osf_contributor
 								ON node_categories.node_id = osf_contributor.node_id
-								GROUP BY user_id)
+								GROUP BY user_id),
+	/* count logs of a few important types by users on non-osf4m, non-registrations, non-preprint suppnodes created during the preprint workflow */
+	activity_on_nodes AS (SELECT user_id,
+									SUM(CASE WHEN osf_nodelog.action LIKE 'contributor_added' THEN 1 ELSE 0 END) added_contributor,
+									SUM(CASE WHEN osf_nodelog.action LIKE '%file_added' THEN 1 ELSE 0 END) added_file,
+									SUM(CASE WHEN osf_nodelog.action LIKE '%file_updated' THEN 1 ELSE 0 END) updated_file,
+									SUM(CASE WHEN osf_nodelog.action LIKE 'wiki_updated' THEN 1 ELSE 0 END) wiki_edited,
+									SUM(CASE WHEN osf_nodelog.action LIKE 'made_public' THEN 1 ELSE 0 END) made_public,
+									SUM(CASE WHEN osf_nodelog.action LIKE 'made_private' THEN 1 ELSE 0 END) made_private,
+									SUM(CASE WHEN osf_nodelog.action LIKE 'addon_added' THEN 1 ELSE 0 END) addon_added,
+									MIN(CASE WHEN osf_nodelog.action LIKE 'contributor_added' THEN osf_nodelog.date ELSE NULL END) first_add_contrib,
+									MIN(CASE WHEN osf_nodelog.action LIKE '%file_added' THEN osf_nodelog.date ELSE NULL END) first_upload_file,
+									MIN(CASE WHEN osf_nodelog.action LIKE '%file_updated' THEN osf_nodelog.date ELSE NULL END) first_update_file,
+									MIN(CASE WHEN osf_nodelog.action LIKE 'wiki_updated' THEN osf_nodelog.date ELSE NULL END) first_wiki_edit,
+									MIN(CASE WHEN osf_nodelog.action LIKE 'made_public' THEN osf_nodelog.date ELSE NULL END) first_made_public,
+									MIN(CASE WHEN osf_nodelog.action LIKE 'made_private' THEN osf_nodelog.date ELSE NULL END) first_made_private,
+									MIN(CASE WHEN osf_nodelog.action LIKE 'addon_added' THEN osf_nodelog.date ELSE NULL END) first_addon_added,
+									MAX(CASE WHEN osf_nodelog.action LIKE 'contributor_added' THEN osf_nodelog.date ELSE NULL END) last_add_contrib,
+									MAX(CASE WHEN osf_nodelog.action LIKE '%file_added' THEN osf_nodelog.date ELSE NULL END) last_upload_file,
+									MAX(CASE WHEN osf_nodelog.action LIKE '%file_updated' THEN osf_nodelog.date ELSE NULL END) last_update_file,
+									MAX(CASE WHEN osf_nodelog.action LIKE 'wiki_updated' THEN osf_nodelog.date ELSE NULL END) last_wiki_edit,
+									MAX(CASE WHEN osf_nodelog.action LIKE 'made_public' THEN osf_nodelog.date ELSE NULL END) last_made_public,
+									MAX(CASE WHEN osf_nodelog.action LIKE 'made_private' THEN osf_nodelog.date ELSE NULL END) last_made_private,
+									MAX(CASE WHEN osf_nodelog.action LIKE 'addon_added' THEN osf_nodelog.date ELSE NULL END) last_addon_added
+							FROM node_categories
+							LEFT JOIN (SELECT date, action, node_id, user_id
+											FROM osf_nodelog
+											WHERE node_id = original_node_id AND (action LIKE 'contributor_added' OR action LIKE '%file_added' OR action LIKE '%file_updated' OR action LIKE 'wiki_updated' OR action LIKE 'made_public' OR action LIKE 'made_private' OR action LIKE 'addon_added')) AS osf_nodelog
+							ON node_categories.node_id = osf_nodelog.node_id
+							WHERE type = 'osf.node' AND 
+								  osf4m = 0 AND 
+								  (preprint_suppnode = 0 OR 
+								  	(preprint_suppnode = 1 AND preprint_created > '2018-12-14' AND preprint_created < created) OR 
+								  	(preprint_suppnode = 1 AND preprint_created <= '2018-12-14' AND date_trunc('day', preprint_created) != date_trunc('day', created)))
+							GROUP BY user_id)
+
 									
 /* count creations and contributor types by project types */
 SELECT osf_osfuser.id,
@@ -570,7 +605,28 @@ SELECT osf_osfuser.id,
 		COALESCE(num_nodes_contrib,0) AS num_nodes_contrib,
 		COALESCE(num_publicfiles_nodes_contrib,0) AS num_publicfiles_nodes_contrib,
 		COALESCE(num_privatefiles_nodes_contrib,0) AS num_privatefiles_nodes_contrib,
-		COALESCE(num_suppnode_contrib,0) AS num_suppnode_contrib
+		COALESCE(num_suppnode_contrib,0) AS num_suppnode_contrib,
+		added_contributor,
+		added_file,
+		updated_file,
+		wiki_edited,
+		made_public,
+		made_private,
+		addon_added,
+		first_add_contrib,
+		first_upload_file,
+		first_update_file,
+		first_wiki_edit,
+		first_made_public,
+		first_made_private,
+		first_addon_added,
+		last_add_contrib,
+		last_upload_file,
+		last_update_file,
+		last_wiki_edit,
+		last_made_public,
+		last_made_private,
+		last_addon_added
 	FROM osf_osfuser
 	LEFT JOIN (SELECT * 
 			FROM osf_guid
@@ -590,6 +646,8 @@ SELECT osf_osfuser.id,
 	ON osf_osfuser.id = user_preprint_nums.id
 	LEFT JOIN user_node_contribs
 	ON osf_osfuser.id = user_node_contribs.user_id
+	LEFT JOIN activity_on_nodes
+	ON osf_osfuser.id = activity_on_nodes.user_id
 	WHERE (spam_status IS NULL OR spam_status = 1 OR spam_status = 4);
 
 

@@ -304,7 +304,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 								  		pp_workflow_suppnode = 0 AND 
 								  		private_storage = 1 THEN 1 ELSE 0 END) AS num_privatefiles_nodes,
 								  SUM(CASE WHEN osf4m = 0 AND
-								  		pp_workflow_suppnode = 1 AS num_suppnode,
+								  		pp_workflow_suppnode = 1 THEN 1 ELSE 0 END) AS num_suppnode,
 								MIN(CASE WHEN node_id = root_id AND 
 								  		osf4m = 1 THEN created ELSE NULL END) AS first_osf4m,
 								MAX(CASE WHEN node_id = root_id AND 
@@ -320,9 +320,9 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 								MAX(CASE WHEN osf4m = 0 AND 
 								  		pp_workflow_suppnode = 0 THEN created ELSE NULL END) AS last_node,		
 								MIN(CASE WHEN osf4m = 0 AND
-								  		pp_workflow_suppnode = 1 AS first_suppnode,
+								  		pp_workflow_suppnode = 1 THEN created ELSE NULL END) AS first_suppnode,
 								MAX(CASE WHEN osf4m = 0 AND
-								  		pp_workflow_suppnode = 1 AS last_suppnode	
+								  		pp_workflow_suppnode = 1 THEN created ELSE NULL END) AS last_suppnode	
 								FROM node_categories
 								WHERE type = 'osf.node'
 								GROUP BY creator_id),
@@ -373,7 +373,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 								   SUM(CASE WHEN osf4m = 1 THEN 1 ELSE 0 END) AS num_osf4m_contrib,
 								   SUM(CASE WHEN type = 'osf.registration' THEN 1 ELSE 0 END) AS num_regnodes_contrib,
 								   SUM(CASE WHEN osf4m = 0 AND 
-								  		pp_workflow_suppnode = 0 AS num_nodes_contrib,
+								  		pp_workflow_suppnode = 0 THEN 1 ELSE 0 END) AS num_nodes_contrib,
 								   SUM(CASE WHEN osf4m = 0 AND 
 								  		pp_workflow_suppnode = 0 AND 
 								  		public_sharing = 1 THEN 1 ELSE 0 END) AS num_publicfiles_nodes_contrib,

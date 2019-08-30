@@ -16,18 +16,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 	addon_connections AS (SELECT osf_abstractnode.id,
 								LEAST(bitbucket.created, box.created, dataverse.created, dropbox.created, figshare.created, github.created, gitlab.created, googledrive.created, onedrive.created, owncloud.created, s3.created) AS first_addon_added,
 								GREATEST(bitbucket.created, box.created, dataverse.created, dropbox.created, figshare.created, github.created, gitlab.created, googledrive.created, onedrive.created, owncloud.created, s3.created) AS last_addon_added,
-								(SELECT count(*) from (values (bitbucket.created), (box.created), (dataverse.created), (dropbox.created), (figshare.created), (github.created), (gitlab.created), (googledrive.created), (onedrive.created), (owncloud.created), (s3.created)) as v(col) WHERE v.col is not null) AS num_addons,
-								bitbucket.created AS bitbucket_added,
-								box.created AS box_added,
-								dataverse.created AS dataverse_added,
-								dropbox.created AS dropbox_added,
-								figshare.created AS figshare_added,
-								github.created AS github_added,
-								gitlab.created AS gitlab_added,
-								googledrive.created AS googledrive_added,
-								onedrive.created AS onedrive_added,
-								owncloud.created AS owncloud_added,
-								s3.created AS s3_added
+								(SELECT count(*) from (values (bitbucket.created), (box.created), (dataverse.created), (dropbox.created), (figshare.created), (github.created), (gitlab.created), (googledrive.created), (onedrive.created), (owncloud.created), (s3.created)) as v(col) WHERE v.col is not null) AS num_addons
 							FROM osf_abstractnode
 							
 							/* creation dates in each addon table aren't necessarily when they were attached to a project, so need to get those dates from node_logs and match them up with nodes that still
@@ -164,17 +153,6 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 						   last_addon_added,
 						   LEAST(first_osf_file_created, first_addon_added) AS first_file,
 						   GREATEST(last_osf_file_created, last_addon_added) AS last_file,
-						   bitbucket_added,
-						   box_added,
-						   dataverse_added,
-						   dropbox_added,
-						   figshare_added,
-						   github_added,
-						   gitlab_added,
-						   googledrive_added,
-						   onedrive_added,
-						   owncloud_added,
-						   s3_added,
 						   CASE WHEN is_public IS TRUE THEN date_made_public ELSE NULL END AS date_made_public,
 						   num_regs,
 						   first_reg,
@@ -408,6 +386,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 								LEFT JOIN num_preprints_contrib
 								ON osf_osfuser.id = user_id
 								WHERE (spam_status IS NULL or spam_status = 4 OR spam_status = 1)),
+	
 	/* how many of each node type is a user a contributor on */
 	user_node_contribs AS (SELECT user_id,
 								   SUM(CASE WHEN osf4m = 1 THEN 1 ELSE 0 END) AS num_osf4m_contrib,
@@ -433,6 +412,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 								LEFT JOIN osf_contributor
 								ON node_categories.node_id = osf_contributor.node_id
 								GROUP BY user_id),
+	
 	/* count logs of a few important types by users on non-osf4m, non-registrations, non-preprint suppnodes created during the preprint workflow */
 	activity_on_nodes AS (SELECT user_id,
 									SUM(CASE WHEN osf_nodelog.action LIKE 'contributor_added' THEN 1 ELSE 0 END) added_contributor,

@@ -60,6 +60,7 @@ library(lubridate)
 library(scales)
 library(knitr)
 library(kableExtra)
+library(gt)
 
 
 knitr::opts_chunk$set(fig.width=12, fig.height=8) 
@@ -127,6 +128,77 @@ user_categorization <- user_data %>%
 
 
 ```{r echo=FALSE}
+user_products_table_data <- user_categorization %>%
+                                filter(is_active == TRUE) %>%
+                                summarize(created_none = sum(preprint_creator == 0 & osf4m_creator == 0 & osf_projects_creator == 0 & osf_node_creator == 0 & registrations_creator == 0 & suppnode_creator == 0),
+                                          on_none = sum(preprint_contributor == 0 & osf4m_contributor == 0 & osf_node_contributor == 0 & registrations_contributor == 0 & suppnode_contributor == 0),
+                                          user_none = sum(preprint_user == 0 & osf4m_user == 0 & osf_node_user == 0 & registrations_user == 0 & suppnode_user == 0),
+                                          created_privatestorage_only = sum(preprint_creator == 0 & osf4m_creator == 0 & private_storage_creator == 1 & public_sharing_creator == 0 & registrations_creator == 0 & suppnode_creator == 0),
+                                          on_privatestorage_only = sum(preprint_contributor == 0 & osf4m_contributor == 0 & private_storage_contributor == 1 & public_sharing_contributor == 0 & registrations_contributor == 0 & suppnode_contributor == 0),
+                                          user_privatestorage_only = sum(preprint_user == 0 & osf4m_user == 0 & private_storage_user ==1 & public_sharing_user == 0 & registrations_user == 0 & suppnode_user == 0),
+                                          created_osf4m = sum(osf4m_creator == 1),
+                                          on_osf4m= sum(osf4m_contributor == 1),
+                                          user_osf4m = sum(osf4m_user == 1),
+                                          created_preprint= sum(preprint_creator == 1),
+                                          on_preprint = sum(preprint_contributor == 1),
+                                          user_preprint= sum(preprint_user == 1),
+                                          created_suppnode = sum(suppnode_creator == 1),
+                                          on_suppnode = sum(suppnode_contributor == 1),
+                                          user_suppnode = sum(suppnode_user == 1),
+                                          created_nodes = sum(osf_projects_creator == 1 | osf_node_creator == 1),
+                                          on_nodes = sum(osf_node_contributor == 1),
+                                          user_nodes = sum(osf_node_user),
+                                          created_publicstorage = sum(public_sharing_creator == 1),
+                                          on_publicstorage = sum(public_sharing_contributor == 1),
+                                          user_publicstorage = sum(public_sharing_user == 1),
+                                          created_registrations = sum(registrations_creator == 1),
+                                          on_registrations = sum(registrations_contributor == 1),
+                                          user_registrations = sum(registrations_user == 1)) %>%
+                        gather() %>%
+                        separate(key, c('type', 'product'), '_') %>%
+                        spread(type, value) %>%
+                        mutate(product = case_when(product == 'nodes' ~ 'OSF Node',
+                                                   product == 'none' ~ 'No nodes or preprints',
+                                                   product == 'osf4m' ~ 'osf4m',
+                                                   product == 'preprint' ~ 'Preprints',
+                                                   product == 'privatestorage' ~ 'Only Private nodes with files',
+                                                   product == 'publicstorage' ~ 'Public OSF nodes with files',
+                                                   product == 'suppnode' ~ 'Supplemental preprint node',
+                                                   product == 'registrations' ~ 'Registrations')) %>%
+                        mutate(product = as_factor(product)) %>%
+                        mutate(product = fct_relevel(product, "No nodes or preprints", "osf4m", "OSF Node", "Only Private nodes with files", "Public OSF nodes with files", "Registrations", "Preprints", "Supplemental preprint node")) %>%
+                        arrange(product) %>%
+                        mutate(created_prc = round(100*created/nrow(user_categorization %>% filter(is_active == TRUE)),2),
+                               on_prc = round(100*on/nrow(user_categorization %>% filter(is_active == TRUE)),2),
+                               user_prc = round(100*user/nrow(user_categorization %>% filter(is_active == TRUE)),2)) %>%
+                        gt() %>%
+                        tab_header(
+                          title = 'Users by Product Type'
+                        ) %>%
+                        cols_merge(col_1 = vars(created), col_2 = vars(created_prc), pattern = '{1} ({2}%)') %>%
+                        cols_merge(col_1 = vars(on), col_2 = vars(on_prc), pattern = '{1} ({2}%)') %>%
+                        cols_merge(col_1 = vars(user), col_2 = vars(user_prc), pattern = '{1} ({2}%)') %>%
+                        cols_label(product = 'Product Type',
+                                   created = 'Creator',
+                                   on = 'Contributor',
+                                   user = 'Creator or Contributor') %>%
+                        tab_footnote(
+                              footnote = 'Only includes nodes that are not osf4m or supplemental nodes created during the preprint process',
+                              locations = cells_data(
+                                columns = vars(product),
+                                rows = c(3,5)
+                              )) %>%
+                                tab_footnote(
+                              footnote = 'Only includes supplemental nodes created during the preprint process',
+                              locations = cells_data(
+                                columns = vars(product),
+                                rows = 7
+                              ))
+                        
+                        
+                                          
+                                          
+
 data <- data %>%
            mutate(by_day_confirmed = as_date(date_confirmed)) %>%
            mutate(by_day_registered = as_date(date_registered)) %>%

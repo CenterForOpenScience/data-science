@@ -3,16 +3,17 @@ title: "Users_mulitple_osfproducts"
 output: html_document
 ---
 
-This analysis is collecting initial data on the number of users who take advantage of the different products/major classes of sharing behavior on the OSF. The classes of behavior are defined as sharing a file, being on a registration, or being on a preprint. A user does not need to initiate the action themselves to be counted as 'utilizing' the product, they just have to be a contributor on that product. This decision was made because the collaborative nature of OSF projects means that many more researchers take advantage of the existance of a functinoality, such as registratoins, than necessarily do the actions themselves. 
+This analysis is collecting initial data on the number of users who take advantage of the different products/major classes of sharing behavior on the OSF. I've seperated out preprints, osf4m, registrations, and osf nodes (for both public and private storage) in terms of products, and focused in on 3 key behaviors: registration, preprints, and sharing files. Where applicable, I've broken up users by creators, contributors, and users, with users indicating they are either a contributor or creator.
 
-Nodes sharing files is a proxy measure for sharing of data, code, or materials/methods. These are behaviors that are talked about repeatedly in the business plan and are important aspects of TOP, but unfortunately we can't measure this directly yet (we may get closer once filemetadata is implemented, but we'll likely be missing a lot of historical information). So, I've assumed that researchers would mostly be sharing data, materials, and/or code as files within a node, rather than in the wiki, to create a proxy. 
+Nodes sharing files is a proxy measure for sharing of data, code, or materials/methods. These are behaviors that are talked about repeatedly in the business plan and are important aspects of TOP, but unfortunately we can't measure this directly yet (we may get closer once filemetadata is implemented, but we'll likely be missing a lot of historical information). So, I've assumed that researchers would mostly be sharing data, materials, and/or code as files within a node, rather than in the wiki, to create a proxy. Because of this, I have also excluded osf4m nodes from being counted as 'sharing nodes', because they are mainly sharing a presentation, rather than something like data or code. Supplemental preprint nodes created during the preprint workflow have also been excluded from `public sharing` counts, as many of these nodes, especially after NPD, do not contain any files. 
 
 Data caveats and explanations:
 
- * The data used for the analyses below goes through 4/8/19. 
- * Prepints only include being a contributor on the preprint itself, not just the supplemental node. 
- * Supplemental preprint nodes are include as 'projects' for this analysis.
- * 'Sharing a file' is measured by looking for non-registered nodes that are public and have a file in them. It includes files from OSFstorage and all add-ons
+ * The data used for the analyses below goes through 6/27/19
+ * Empty supplemental nodes that resulted from NPD have been removed from the data
+ * The analysis only include **Non-Deleted/Withdrawn** nodes, registrations, and preprints
+ * Supplemental preprint node that were created as part of the preprint workflow and osf4m projects are not included as OSF nodes or public storage for this analysis
+ * 'Public Sharing' is measured by looking for non-registered nodes that are public and have a file in them or an add-on connected. It does **not** include osf4m or preprint supplemental nodes.
 
 ```{sql, eval = FALSE, echo = FALSE}
 WITH pp_contrib AS (SELECT user_id, COUNT(preprint_id) AS number_pp, MIN(created) AS first_preprint, MAX(created) AS last_preprint
@@ -71,7 +72,7 @@ user_data <- read_csv('/Users/courtneysoderberg/Downloads/User_activity.csv', co
 
 The table below shows the raw number and percentage of active users who are contributors on the 3 different 'products' and all possible combinations of them. These are not mutually exclusive numbers. For example, 'Registration' includes everyone who is a contributor on at least one registration, not only users who are contributors on registrations but not on a preprint or a non-registration node that shares a file.
 
-```{r}
+```{r echo = FALSE}
 user_categorization <- user_data %>%
                           mutate(by_day_confirmed = as_date(date_confirmed)) %>%
                           mutate(by_day_registered = as_date(date_registered)) %>%
@@ -129,15 +130,15 @@ user_categorization <- user_data %>%
                                  num_logs = added_contributor + added_file + updated_file + wiki_edited,
                                  user_type = case_when(preprint_user == 0 & osf4m_user == 0 & osf_node_user == 0 & registrations_user == 0 & suppnode_user == 0 ~ 'No products',
                                                        preprint_user == 0 & osf4m_user == 0 & registrations_user == 0 & suppnode_user == 0 & public_sharing_user == 0 & private_storage_user == 1 ~ 'Only private storage',
-                                                       preprint_user == 0 & registrations_user == 0 & public_sharing_user == 1 ~ 'Only projects',
+                                                       preprint_user == 0 & registrations_user == 0 & public_sharing_user == 1 ~ 'Only node sharing',
                                                        preprint_user == 0 & registrations_user == 1 & public_sharing_user == 0 ~ 'Only regs',
                                                        preprint_user == 1 & registrations_user == 0 & public_sharing_user == 0 ~ 'Only preprints',
-                                                       preprint_user == 0 & registrations_user == 1 & public_sharing_user == 1 ~ 'Projects & Regs',
-                                                       preprint_user == 1 & registrations_user == 0 & public_sharing_user == 1 ~ 'Projects & Preprints',
+                                                       preprint_user == 0 & registrations_user == 1 & public_sharing_user == 1 ~ 'Sharing & Regs',
+                                                       preprint_user == 1 & registrations_user == 0 & public_sharing_user == 1 ~ 'Sharing & Preprints',
                                                        preprint_user == 1 & registrations_user == 1 & public_sharing_user == 0 ~ 'Regs & Preprints',
                                                        preprint_user == 1 & registrations_user == 1 & public_sharing_user == 1 ~ 'All three')) %>%
                           mutate(user_type = as_factor(user_type)) %>%
-                        mutate(user_type = fct_relevel(user_type, "No products", "Only private storage", "Only projects", "Only regs", "Only preprints", "Projects & Regs", "Projects & Preprints", "Regs & Preprints", "All three"))
+                        mutate(user_type = fct_relevel(user_type, "No products", "Only private storage", "Only node sharing", "Only regs", "Only preprints", "Sharing & Regs", "Sharing & Preprints", "Regs & Preprints", "All three"))
 
 ```
 
@@ -239,7 +240,7 @@ user_categorization %>%
 
 ## To what extent do users who engage in certain actions tend to do other actions?
 
-```{r}
+```{r echo = FALSE}
 creators <- user_categorization %>%
                 filter(is_active == TRUE) %>%
                 select(ends_with('creator'))
@@ -395,7 +396,7 @@ Mode <- function(x) {
 
 
 #### Where are they coming from?
-```{r}
+```{r echo = FALSE}
 no_product_users %>%
   group_by(user_origin) %>%
   tally() %>%

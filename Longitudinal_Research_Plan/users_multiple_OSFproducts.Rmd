@@ -73,6 +73,8 @@ The table below shows the raw number and percentage of active users who are cont
 
 ```{r}
 user_categorization <- user_data %>%
+                          mutate(by_day_confirmed = as_date(date_confirmed)) %>%
+                          mutate(by_day_registered = as_date(date_registered)) %>%
                           mutate(preprint_creator = case_when(num_preprints > 0 ~ 1,
                                                               TRUE ~ 0),
                                  preprint_contributor = case_when(num_pp_visible_contrib + num_pp_visible_contrib > 0 ~ 1,
@@ -124,7 +126,19 @@ user_categorization <- user_data %>%
                                                          is_invited == FALSE ~ 'OSF'),
                                  power_user = case_when(num_toplevel_regs + num_toplevel_projects >= 10 ~ 1,
                                                         TRUE ~ 0),
-                                 num_logs = added_contributor + added_file + updated_file + wiki_edited)
+                                 num_logs = added_contributor + added_file + updated_file + wiki_edited,
+                                 user_type = case_when(preprint_user == 0 & osf4m_user == 0 & osf_node_user == 0 & registrations_user == 0 & suppnode_user == 0 ~ 'No products',
+                                                       preprint_user == 0 & osf4m_user == 0 & registrations_user == 0 & suppnode_user == 0 & public_sharing_user == 0 & private_storage_user == 1 ~ 'Only private storage',
+                                                       preprint_user == 0 & registrations_user == 0 & public_sharing_user == 1 ~ 'Only projects',
+                                                       preprint_user == 0 & registrations_user == 1 & public_sharing_user == 0 ~ 'Only regs',
+                                                       preprint_user == 1 & registrations_user == 0 & public_sharing_user == 0 ~ 'Only preprints',
+                                                       preprint_user == 0 & registrations_user == 1 & public_sharing_user == 1 ~ 'Projects & Regs',
+                                                       preprint_user == 1 & registrations_user == 0 & public_sharing_user == 1 ~ 'Projects & Preprints',
+                                                       preprint_user == 1 & registrations_user == 1 & public_sharing_user == 0 ~ 'Regs & Preprints',
+                                                       preprint_user == 1 & registrations_user == 1 & public_sharing_user == 1 ~ 'All three')) %>%
+                          mutate(user_type = as_factor(user_type)) %>%
+                        mutate(user_type = fct_relevel(user_type, "No products", "Only private storage", "Only projects", "Only regs", "Only preprints", "Projects & Regs", "Projects & Preprints", "Regs & Preprints", "All three"))
+
 ```
 
 
@@ -380,7 +394,9 @@ The graphs below shows when the different types of users were confirmed. For the
 
 ```{r echo = FALSE}
 
- graph <- ggplot(data %>% filter(number_public_file_nodes >0 & number_regs > 0 & number_pp > 0) %>% filter(is_active == 'TRUE'), aes(by_day_confirmed)) + 
+
+
+ graph <- ggplot(user_categorization %>% filter(user_type == 'All three') %>% filter(is_active == 'TRUE'), aes(by_day_confirmed)) + 
   geom_freqpoly(binwidth = 30) +
   xlab('When user was confirmed') +
   ylab('Number of users') +
@@ -390,7 +406,7 @@ The graphs below shows when the different types of users were confirmed. For the
  graph + theme(axis.text.x  = element_text(angle=45,hjust = 1,vjust = 1))
  
 
- graph2 <- ggplot(data %>% filter(is_active == 'TRUE') %>% filter(action_types != 'Only private file nodes'), aes(by_day_confirmed, color = action_types)) + 
+ graph2 <- ggplot(user_categorization %>% filter(is_active == 'TRUE') %>% filter(user_type != 'Only private storage'), aes(by_day_confirmed, color = user_type)) + 
   geom_freqpoly(binwidth = 30) +
   xlab('When user was confirmed') +
   ylab('Number of users') +

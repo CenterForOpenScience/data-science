@@ -268,7 +268,7 @@ user_categorization %>%
 ```{r echo = FALSE, warning=FALSE}
 creators <- user_categorization %>%
                 filter(is_active == TRUE) %>%
-                select(ends_with('creator'))
+                select(ends_with('creator'), -osf_projects_creator)
 
 creator_matrix <- matrix(,nrow = ncol(creators), ncol=ncol(creators))
 colnames(creator_matrix) <- colnames(creators)
@@ -321,14 +321,21 @@ creator_matrix %>%
       title = 'Conditional Probabilities by Product Creator Type'
     ) %>%
   data_color(
-    columns = vars(preprint_creator, suppnode_creator, osf4m_creator, registrations_creator, osf_projects_creator, osf_node_creator, public_sharing_creator, private_storage_creator),
+    columns = vars(preprint_creator, suppnode_creator, osf4m_creator, registrations_creator, osf_node_creator, public_sharing_creator, private_storage_creator),
     colors = scales::col_numeric(
       palette = paletteer::paletteer_d(
         package = "ggsci",
         palette = "green_material"
       ),
       domain = c(0, .99999))
-  )
+  ) %>%
+  cols_label(preprint_creator = 'Preprints',
+             suppnode_creator = 'Supp Node',
+             osf4m_creator = 'osf4m',
+             registrations_creator = 'Regs',
+             osf_node_creator = 'OSF node',
+             public_sharing_creator  = 'Sharing',
+             private_storage_creator = 'Private Storage')
   
 
 users_matrix %>%
@@ -347,7 +354,14 @@ users_matrix %>%
         palette = "green_material"
       ),
       domain = c(0, .99999))
-  )
+  ) %>%
+  cols_label(preprint_user = 'Preprints',
+             suppnode_user = 'Supp Node',
+             osf4m_user = 'osf4m',
+             registrations_user = 'Regs',
+             osf_node_user = 'OSF node',
+             public_sharing_user  = 'Sharing',
+             private_storage_user = 'Private Storage')
 
 creators_contributors_matrix %>% 
   as.data.frame() %>% 
@@ -357,7 +371,7 @@ creators_contributors_matrix %>%
   slice(1:7) %>%
   gt() %>%
   tab_header(
-      title = 'Conditional Probabilities by Product User Type'
+      title = 'Conditional Probabilities by Product Contributor Type'
     ) %>%
   data_color(
     columns = vars(preprint_contributor, suppnode_contributor, osf4m_contributor, registrations_contributor, osf_node_contributor, public_sharing_contributor, private_storage_contributor),
@@ -367,7 +381,14 @@ creators_contributors_matrix %>%
         palette = "green_material"
       ),
       domain = c(0, .99999))
-  )
+  ) %>%
+  cols_label(preprint_contributor = 'Preprints',
+             suppnode_contributor = 'Supp Node',
+             osf4m_contributor = 'osf4m',
+             registrations_contributor = 'Regs',
+             osf_node_contributor = 'OSF node',
+             public_sharing_contributor  = 'Sharing',
+             private_storage_contributor = 'Private Storage')
   
   
   

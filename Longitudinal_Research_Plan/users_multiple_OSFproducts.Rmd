@@ -266,6 +266,116 @@ kable(table_data,
   kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
+```{r}
+creators <- user_categorization %>%
+                select(ends_with('creator'))
+
+creator_matrix <- matrix(,nrow = ncol(creators), ncol=ncol(creators))
+colnames(creator_matrix) <- colnames(creators)
+rownames(creator_matrix) <- colnames(creators)
+                
+
+for (i in 1:ncol(creators)) {
+  for (j in 1:ncol(creators)) {
+    creator_matrix[i, j] <- sum(creators[,j] == 1 & creators[,i] == 1)/sum(creators[,i] == 1)
+  }
+}
+
+
+users <- user_categorization %>%
+            select(ends_with('user'), -power_user)
+
+users_matrix <- matrix(,nrow = ncol(users), ncol=ncol(users))
+colnames(users_matrix) <- colnames(users)
+rownames(users_matrix) <- colnames(users)
+
+for (i in 1:ncol(users)) {
+  for (j in 1:ncol(users)) {
+    users_matrix[i, j] <- sum(users[,j] == 1 & users[,i] == 1)/sum(users[,i] == 1)
+  }
+}
+
+
+creators_contributors <- user_categorization %>%
+                select(ends_with('creator'), ends_with('contributor'), -c(added_contributor, osf_projects_creator))
+
+creators_contributors_matrix <- matrix(,nrow = ncol(creators_contributors), ncol=ncol(creators_contributors))
+colnames(creators_contributors_matrix) <- colnames(creators_contributors)
+rownames(creators_contributors_matrix) <- colnames(creators_contributors)
+
+for (i in 1:ncol(creators_contributors)) {
+  for (j in 1:ncol(creators_contributors)) {
+    creators_contributors_matrix[i, j] <- sum(creators_contributors[,j] == 1 & creators_contributors[,i] == 1)/sum(creators_contributors[,i] == 1)
+  }
+}
+
+
+creator_matrix %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "rowname") %>%
+  rename(rowname = rowname) %>%
+  gt() %>%
+  tab_header(
+      title = 'Conditional Probabilities by Product Creator Type'
+    ) %>%
+  data_color(
+    columns = vars(preprint_creator, suppnode_creator, osf4m_creator, registrations_creator, osf_projects_creator, osf_node_creator, public_sharing_creator, private_storage_creator),
+    colors = scales::col_numeric(
+      palette = paletteer::paletteer_d(
+        package = "ggsci",
+        palette = "green_material"
+      ),
+      domain = c(0, .99999))
+  )
+  
+
+users_matrix %>%
+  as.data.frame() %>% 
+  rownames_to_column(var = "rowname") %>%
+  rename(rowname = rowname) %>%
+  gt() %>%
+  tab_header(
+      title = 'Conditional Probabilities by Product User Type'
+    ) %>%
+  data_color(
+    columns = vars(preprint_user, suppnode_user, osf4m_user, registrations_user, osf_node_user, public_sharing_user, private_storage_user),
+    colors = scales::col_numeric(
+      palette = paletteer::paletteer_d(
+        package = "ggsci",
+        palette = "green_material"
+      ),
+      domain = c(0, .99999))
+  )
+
+creators_contributors_matrix %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "rowname") %>%
+  rename(rowname = rowname) %>%
+  select(ends_with('contributor'), rowname) %>%
+  slice(1:7) %>%
+  gt() %>%
+  tab_header(
+      title = 'Conditional Probabilities by Product User Type'
+    ) %>%
+  data_color(
+    columns = vars(preprint_contributor, suppnode_contributor, osf4m_contributor, registrations_contributor, osf_node_contributor, public_sharing_contributor, private_storage_contributor),
+    colors = scales::col_numeric(
+      palette = paletteer::paletteer_d(
+        package = "ggsci",
+        palette = "green_material"
+      ),
+      domain = c(0, .99999))
+  )
+  
+  
+  
+
+
+```
+
+
+
+
 The graphs below shows when the different types of users were confirmed. For the second graph, these show mutually exclusive categories of users. So, 'only preprints' are users who are contributors on preprints, but not registrations or non-registration nodes that share files. 
 
 ```{r echo = FALSE}

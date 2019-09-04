@@ -241,6 +241,11 @@ user_categorization %>%
                         
 ```
 
+#### When did different types of users confirm their accounts?
+
+The graphs below shows when the different types of users were confirmed. For the second graph, these show mutually exclusive categories of users. So, 'only preprints' are users who are contributors on preprints, but not registrations or non-registration nodes that share files. 
+
+
 ```{r echo = FALSE, warning=FALSE}
  graph <- ggplot(user_categorization %>% filter(user_type == 'All three') %>% filter(is_active == 'TRUE'), aes(by_day_confirmed)) + 
   geom_freqpoly(binwidth = 30) +
@@ -267,8 +272,13 @@ user_categorization %>%
 
 The tables show conditional probabilities for different product types. For each table, the conditional probability is calculated as: given that the osf user has been identified as a creator/user of the product for that row, what is the probability that they were also a creator/user/contributor for each product column. To put it another way, what is the probability that the user has been involved with both products?
 
+\
+\
 
 #### Creator vs. Creator probabilities
+
+In general creators of registrations and supplemental nodes (thought not necessarily preprints) show a relatively higher probability of having created nodes that eventually shared data. They also showed relatively high probabilities of also having created nodes that are currently used for private storage.  
+
 ```{r echo = FALSE, warning=FALSE}
 creators <- user_categorization %>%
                 filter(is_active == TRUE) %>%
@@ -311,7 +321,13 @@ creator_matrix %>%
              private_storage_creator = 'Private Storage')
 ```
 
+\
+\
+
 #### Creators vs. Contributors Probabilities
+
+The patterns in the table below look similar to the table above, but in general all the probabilities are higher. 
+
 ```{r echo = FALSE, warning=FALSE}
 
 creators_contributors <- user_categorization %>%
@@ -356,7 +372,13 @@ creators_contributors_matrix %>%
              private_storage_contributor = 'Private Storage')
 ```
 
+\
+\
+
 #### User vs. User probabilities
+
+Again, the pattern looks mostly similar. Two cells that increased more than others across the 3 tables are Public sharing users and Registrations and Public sharing users and Private storage. 
+
 ```{r echo = FALSE, warning=FALSE}
 
 users <- user_categorization %>%
@@ -404,8 +426,6 @@ users_matrix %>%
 
 
 
-
-The graphs below shows when the different types of users were confirmed. For the second graph, these show mutually exclusive categories of users. So, 'only preprints' are users who are contributors on preprints, but not registrations or non-registration nodes that share files. 
 
 
 

@@ -62,6 +62,7 @@ library(scales)
 library(knitr)
 library(kableExtra)
 library(gt)
+library(reshape2)
 
 
 knitr::opts_chunk$set(fig.width=12, fig.height=8) 
@@ -423,8 +424,89 @@ users_matrix %>%
 
 
 
+# User deep dives
 
+## Does user origin matter?
 
+This analysis is restricted to non-invited users, b/c we currently don't accurately capture how invited users entered the system. Since the patterns were mostly the same for creators vs. users, I've also only looked at the broader 'users' term (so including anyone who is creating or is a contributor on each product type)
+
+```{r}
+user_categorization %>%
+  filter(is_active == TRUE) %>%
+  filter(is_invited == FALSE) %>%
+  group_by(user_origin) %>%
+  summarize(none = sum(preprint_user == 0 & osf4m_user == 0 & osf_node_user == 0 & registrations_user == 0 & suppnode_user == 0),
+            privatestorage_only = sum(preprint_user == 0 & osf4m_user == 0 & private_storage_user ==1 & public_sharing_user == 0 & registrations_user == 0 & suppnode_user == 0),
+            osf4m = sum(osf4m_user == 1),
+            preprint= sum(preprint_user == 1),
+            suppnode = sum(suppnode_user == 1),
+            nodes = sum(osf_node_user),
+            publicstorage = sum(public_sharing_user == 1),
+            registrations = sum(registrations_user == 1),
+            regpublicstorage = sum(registrations_user == 1 & public_sharing_user == 1),
+            regpreprint = sum(registrations_user == 1 & preprint_user == 1),
+            publicstoragepreprint = sum(public_sharing_user == 1 & preprint_user == 1),
+            allthree = sum(public_sharing_user == 1 & preprint_user == 1 & registrations_contributor == 1)
+            ) %>%
+melt(variable.name = 'product') %>% 
+dcast(product ~ user_origin) %>%
+mutate(product = case_when(product == 'nodes' ~ 'OSF Node',
+                     product == 'none' ~ 'No nodes or preprints',
+                     product == 'osf4m' ~ 'osf4m',
+                     product == 'preprint' ~ 'Preprints',
+                     product == 'privatestorage_only' ~ 'Only private storage',
+                     product == 'publicstorage' ~ 'Public OSF node storage',
+                     product == 'suppnode' ~ 'Supplemental preprint node',
+                     product == 'registrations' ~ 'Registrations',
+                     product == 'regpreprint' ~ 'Registrations & Preprints',
+                     product == 'regpublicstorage' ~ 'Public Sharing & Registrations',
+                     product ==  'publicstoragepreprint' ~ 'Public Sharing & Preprints',
+                     product == 'allthree' ~ 'All three products')) %>%
+mutate(product = as_factor(product)) %>%
+mutate(product = fct_relevel(product, "No nodes or preprints", "Only private storage", "osf4m", "OSF Node", "Public OSF node storage", "Registrations", "Preprints", "Supplemental preprint node", "Public Sharing & Registrations", "Public Sharing & Preprints", "Registrations & Preprints", "All three products")) %>%
+arrange(product) %>%
+mutate(meetings_prc = round(100*meetings/nrow(user_categorization %>% filter(is_active == TRUE & is_invited == FALSE & user_origin == 'meetings')),2),
+ osf_prc = round(100*OSF/nrow(user_categorization %>% filter(is_active == TRUE & is_invited == FALSE & user_origin == 'OSF')),2),
+ registries_prc = round(100*registries/nrow(user_categorization %>% filter(is_active == TRUE & is_invited == FALSE & user_origin == 'registries')),2),
+ preprints_prc = round(100*preprints/nrow(user_categorization %>% filter(is_active == TRUE & is_invited == FALSE & user_origin == 'preprints')),2)) %>%
+gt() %>%
+tab_header(
+title = 'Users by Product Type'
+) %>%
+cols_merge(col_1 = vars(meetings), col_2 = vars(meetings_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(col_1 = vars(OSF), col_2 = vars(osf_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(col_1 = vars(registries), col_2 = vars(registries_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(col_1 = vars(preprints), col_2 = vars(preprints_prc), pattern = '{1} ({2}%)') %>%
+cols_label(product = 'Product Type',
+     meetings = 'osf4m',
+     OSF = 'OSF',
+     registries = 'Registries',
+     preprints = 'Preprints') %>%
+tab_footnote(
+footnote = 'Only includes nodes that are not osf4m or supplemental nodes created during the preprint process',
+locations = cells_data(
+  columns = vars(product),
+  rows = c(3,5)
+)) %>%
+  tab_footnote(
+footnote = 'Only includes supplemental nodes created during the preprint process',
+locations = cells_data(
+  columns = vars(product),
+  rows = 8
+)) %>%
+tab_row_group(
+  group = 'Exclusive Product Usage',
+  rows = 1:2
+) %>%
+tab_row_group(
+  group = 'Individual Product Usage',
+  rows = 3:8
+) %>%
+tab_row_group(
+  group = 'Multiple Product Usage',
+  rows = 9:12)
+
+```
 
 
 

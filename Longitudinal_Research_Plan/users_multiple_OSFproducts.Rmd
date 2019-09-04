@@ -265,6 +265,10 @@ user_categorization %>%
 
 ## To what extent do users who engage in certain actions tend to do other actions?
 
+The tables show conditional probabilities for different product types. For each table, the conditional probability is calculated as: given that the osf user has been identified as a creator/user of the product for that row, what is the probability that they were also a creator/user/contributor for each product column. To put it another way, what is the probability that the user has been involved with both products?
+
+
+#### Creator vs. Creator probabilities
 ```{r echo = FALSE, warning=FALSE}
 creators <- user_categorization %>%
                 filter(is_active == TRUE) %>%
@@ -280,37 +284,6 @@ for (i in 1:ncol(creators)) {
     creator_matrix[i, j] <- sum(creators[,j] == 1 & creators[,i] == 1)/sum(creators[,i] == 1)
   }
 }
-
-
-users <- user_categorization %>%
-            filter(is_active == TRUE) %>%
-            select(ends_with('user'), -power_user)
-
-users_matrix <- matrix(,nrow = ncol(users), ncol=ncol(users))
-colnames(users_matrix) <- colnames(users)
-rownames(users_matrix) <- colnames(users)
-
-for (i in 1:ncol(users)) {
-  for (j in 1:ncol(users)) {
-    users_matrix[i, j] <- sum(users[,j] == 1 & users[,i] == 1)/sum(users[,i] == 1)
-  }
-}
-
-
-creators_contributors <- user_categorization %>%
-                filter(is_active == TRUE) %>%
-                select(ends_with('creator'), ends_with('contributor'), -c(added_contributor, osf_projects_creator))
-
-creators_contributors_matrix <- matrix(,nrow = ncol(creators_contributors), ncol=ncol(creators_contributors))
-colnames(creators_contributors_matrix) <- colnames(creators_contributors)
-rownames(creators_contributors_matrix) <- colnames(creators_contributors)
-
-for (i in 1:ncol(creators_contributors)) {
-  for (j in 1:ncol(creators_contributors)) {
-    creators_contributors_matrix[i, j] <- sum(creators_contributors[,j] == 1 & creators_contributors[,i] == 1)/sum(creators_contributors[,i] == 1)
-  }
-}
-
 
 creator_matrix %>% 
   as.data.frame() %>% 
@@ -336,32 +309,24 @@ creator_matrix %>%
              osf_node_creator = 'OSF node',
              public_sharing_creator  = 'Sharing',
              private_storage_creator = 'Private Storage')
-  
+```
 
-users_matrix %>%
-  as.data.frame() %>% 
-  rownames_to_column(var = "rowname") %>%
-  rename(rowname = rowname) %>%
-  gt() %>%
-  tab_header(
-      title = 'Conditional Probabilities by Product User Type'
-    ) %>%
-  data_color(
-    columns = vars(preprint_user, suppnode_user, osf4m_user, registrations_user, osf_node_user, public_sharing_user, private_storage_user),
-    colors = scales::col_numeric(
-      palette = paletteer::paletteer_d(
-        package = "ggsci",
-        palette = "green_material"
-      ),
-      domain = c(0, .99999))
-  ) %>%
-  cols_label(preprint_user = 'Preprints',
-             suppnode_user = 'Supp Node',
-             osf4m_user = 'osf4m',
-             registrations_user = 'Regs',
-             osf_node_user = 'OSF node',
-             public_sharing_user  = 'Sharing',
-             private_storage_user = 'Private Storage')
+#### Creators vs. Contributors Probabilities
+```{r echo = FALSE, warning=FALSE}
+
+creators_contributors <- user_categorization %>%
+                filter(is_active == TRUE) %>%
+                select(ends_with('creator'), ends_with('contributor'), -c(added_contributor, osf_projects_creator))
+
+creators_contributors_matrix <- matrix(,nrow = ncol(creators_contributors), ncol=ncol(creators_contributors))
+colnames(creators_contributors_matrix) <- colnames(creators_contributors)
+rownames(creators_contributors_matrix) <- colnames(creators_contributors)
+
+for (i in 1:ncol(creators_contributors)) {
+  for (j in 1:ncol(creators_contributors)) {
+    creators_contributors_matrix[i, j] <- sum(creators_contributors[,j] == 1 & creators_contributors[,i] == 1)/sum(creators_contributors[,i] == 1)
+  }
+}
 
 creators_contributors_matrix %>% 
   as.data.frame() %>% 
@@ -389,12 +354,53 @@ creators_contributors_matrix %>%
              osf_node_contributor = 'OSF node',
              public_sharing_contributor  = 'Sharing',
              private_storage_contributor = 'Private Storage')
-  
-  
-  
-
-
 ```
+
+#### User vs. User probabilities
+```{r echo = FALSE, warning=FALSE}
+
+users <- user_categorization %>%
+            filter(is_active == TRUE) %>%
+            select(ends_with('user'), -power_user)
+
+users_matrix <- matrix(,nrow = ncol(users), ncol=ncol(users))
+colnames(users_matrix) <- colnames(users)
+rownames(users_matrix) <- colnames(users)
+
+for (i in 1:ncol(users)) {
+  for (j in 1:ncol(users)) {
+    users_matrix[i, j] <- sum(users[,j] == 1 & users[,i] == 1)/sum(users[,i] == 1)
+  }
+}
+
+users_matrix %>%
+  as.data.frame() %>% 
+  rownames_to_column(var = "rowname") %>%
+  rename(rowname = rowname) %>%
+  gt() %>%
+  tab_header(
+      title = 'Conditional Probabilities by Product User Type'
+    ) %>%
+  data_color(
+    columns = vars(preprint_user, suppnode_user, osf4m_user, registrations_user, osf_node_user, public_sharing_user, private_storage_user),
+    colors = scales::col_numeric(
+      palette = paletteer::paletteer_d(
+        package = "ggsci",
+        palette = "green_material"
+      ),
+      domain = c(0, .99999))
+  ) %>%
+  cols_label(preprint_user = 'Preprints',
+             suppnode_user = 'Supp Node',
+             osf4m_user = 'osf4m',
+             registrations_user = 'Regs',
+             osf_node_user = 'OSF node',
+             public_sharing_user  = 'Sharing',
+             private_storage_user = 'Private Storage')
+```
+
+
+
 
 
 

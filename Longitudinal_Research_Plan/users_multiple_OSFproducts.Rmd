@@ -123,7 +123,8 @@ user_categorization <- user_data %>%
                                                          is_invited == TRUE ~ 'unknown',
                                                          is_invited == FALSE ~ 'OSF'),
                                  power_user = case_when(num_toplevel_regs + num_toplevel_projects >= 10 ~ 1,
-                                                        TRUE ~ 0))
+                                                        TRUE ~ 0),
+                                 num_logs = added_contributor + added_file + updated_file + wiki_edited)
 ```
 
 
@@ -293,71 +294,44 @@ The graphs below shows when the different types of users were confirmed. For the
 ## What are the 'none' users doing?
 
 ```{r echo=FALSE}
-logs_no_product_users <- data %>% 
-                            filter(action_types == 'No products') %>%
-                            filter(is_active == 'TRUE') %>%
-                            left_join(user_logs, by = 'user_id') %>%
-                            mutate(count = replace_na(count, 0))
-
-logs_per_user <- logs_no_product_users %>%
-                    group_by(user_id) %>%
-                    summarize(total_logs = sum(count))
+no_product_users <- user_categorization %>%
+                      filter(is_active == TRUE) %>%
+                      filter(preprint_user == 0 & osf4m_user == 0 & osf_node_user == 0 & registrations_user == 0 & suppnode_user == 0) %>%
+                      select(is_invited, user_tag, user_origin, added_contributor, added_file, wiki_edited, updated_file, num_logs)
 
 Mode <- function(x) {
    ux <- unique(x)
    ux[which.max(tabulate(match(x, ux)))]
 }
-
-nodes_no_product_users <- data %>%
-                            filter(action_types == 'No products') %>%
-                            filter(is_active == 'TRUE') %>%
-                            left_join(contributor_nodes, by = 'user_id')
-
-nodes_per_user <- nodes_no_product_users %>% 
-                      group_by(user_id) %>% 
-                      summarise(total_nodes = sum(!is.na(node_id)),
-                                total_nondeleted_nodes = sum(!is.na(node_id) & is_deleted == 'FALSE'))
-            
 ```
+
+
+#### Where are they coming from?
+```{r}
+no_product_users %>%
+  group_by(user_origin) %>%
+  tally() %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+no_product_users %>%
+  group_by(is_invited) %>%
+  tally() %>%
+  kable %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+
+#### On projects then taken off?
+
+* Number of users with non-zero `contributor added`, `file added`, `file updated`, or `wiki updated` logs: `r sum(no_product_users$num_logs > 0)`
+
+#### On/created now deleted projects?
 
 #### Quickfiles?
 The number of these users who have uploaded quickfiles is: `r data %>% filter(action_types == 'No products') %>% summarize(quickfiles = sum(quickfile_node > 0))`
 
-#### Logs?
 
-When all users were given a 'Bookmarks' node, this created a log for all users. Bookmark nodes are excluded from the node analysis, but the log action is 'created_project' so not unique. So, many users have 1 log because of there automatically generate bookmark node. 
-
-
-The number of users with 1 or fewer logs is: `r sum(logs_per_user$total_logs <= 1)`
-
-* The mean number of logs is: `r round(mean(logs_per_user$total_logs),2)` 
-* The mediam number of logs is: `r median(logs_per_user$total_logs)` 
-* The modal number of logs is: `r Mode(logs_per_user$total_logs)`
-
-
-#### Nodes (registrations or project nodes)?
-
-The number of users on no nodes is: `r sum(nodes_per_user$total_nodes == 0)`
-The number of users on no *non-deleted nodes* is: `r sum(nodes_per_user$total_nondeleted_nodes == 0)`
-
-* The mean number of nodes is: `r round(mean(nodes_per_user$total_nodes),2)` 
-* The mediam number of nodes is: `r median(nodes_per_user$total_nodes)` 
-* The modal number of nodes is: `r Mode(nodes_per_user$total_nodes)`
-
-* The mean number of *non-deleted* nodes is: `r round(mean(nodes_per_user$total_nondeleted_nodes),2)` 
-* The mediam number of *non-deleted* nodes is: `r median(nodes_per_user$total_nondeleted_nodes)` 
-* The modal number of *non-deleted* nodes is: `r Mode(nodes_per_user$total_nondeleted_nodes)`
-
-```{r echo = FALSE}
-logs_and_nodes <- full_join(logs_per_user, nodes_per_user, by = 'user_id')
-
-```
-
-#### No nodes and less than 2 logs (see bookmark node above)?
-
-The number of active users with no logs and who are not contributors on any nodes or registrations is: `r sum(logs_and_nodes$total_logs <= 1 & logs_and_nodes$total_nodes == 0)`
-
-The number of active users with no logs and who are not contributors on any *non-deleted* nodes or registrations is: `r sum(logs_and_nodes$total_logs <= 1 & logs_and_nodes$total_nondeleted_nodes == 0)`
 
 ## Potential Next Steps for more complex relationships:
 

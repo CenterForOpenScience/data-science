@@ -423,6 +423,91 @@ users_matrix %>%
              private_storage_user = 'Private Storage')
 ```
 
+## What is the order of creation actions?
+Looking at creation actions, we can see the order in which users engage with different products. For the analyses below, the times for each user represent times for non-deleted/withdrawn items and are only tracking creation actions (so it does not include when a user may have been added as a contributor on a product type that they didn't create).
+
+```{r warning=FALSE, echo=FALSE, message=FALSE}
+action_flow <- user_categorization %>%
+  filter(is_active == TRUE) %>%
+  distinct(id, .keep_all = TRUE) %>%
+  select(id, first_osf4m, first_toplevel_project, first_node, first_suppnode, first_toplevel_reg, date_first_preprint) %>%
+  melt(id.vars = 'id') %>%
+  filter(!is.na(value)) %>%
+  group_by(id) %>%
+  arrange(value) %>%
+  mutate(action1 = first(variable),
+         action2 = nth(variable, 2),
+         action3 = nth(variable, 3),
+         action4 = nth(variable, 4),
+         action5 = nth(variable, 5),
+         action6 = nth(variable, 6)) 
+
+action_flow_corrected <- action_flow %>%
+  group_by(id) %>%
+  slice(1L) %>%
+  ungroup() %>%
+  mutate(action1 = as.character(action1),
+        action2 = as.character(action2),
+        action3 = as.character(action3),
+        action4 = as.character(action4),
+        action5 = as.character(action5),
+        action6 = as.character(action6)) %>%
+  mutate(action2 = case_when(action1 == 'first_toplevel_project' ~ action3,
+                             TRUE ~ action2),
+         action3 = case_when(action1 == 'first_toplevel_project' ~ action4,
+                             TRUE ~ action3),
+         action4 = case_when(action1 == 'first_toplevel_project' ~ action5,
+                             TRUE ~ action4),
+         action5 = case_when(action1 == 'first_toplevel_project' ~ action6,
+                             TRUE ~ action5),
+         action6 = case_when(action1 == 'first_toplevel_project' ~ NA_character_,
+                             TRUE ~ action6)) %>%
+  mutate(action3 = case_when(action1 != 'first_node' & action2 == 'first_toplevel_project' ~ action4,
+                             TRUE ~ action3),
+           action4 = case_when(action1 != 'first_node' & action2 == 'first_toplevel_project' ~ action5,
+                             TRUE ~ action4),
+           action5 = case_when(action1 != 'first_node' & action2 == 'first_toplevel_project' ~ action6,
+                             TRUE ~ action5),
+           action6 = case_when(action1 != 'first_node' & action2 == 'first_toplevel_project' ~ NA_character_,
+                             TRUE ~ action6)) %>%
+  mutate(action4 = case_when(action1 != 'first_node' & action2 != 'first_node' & action3 == 'first_toplevel_project' ~ action5,
+                             TRUE ~ action4),
+         action5 = case_when(action1 != 'first_node' & action2 != 'first_node' & action3 == 'first_toplevel_project' ~ action6,
+                             TRUE ~ action5),
+         action6 = case_when(action1 != 'first_node' & action2 != 'first_node' & action3 == 'first_toplevel_project' ~ NA_character_,
+                             TRUE ~ action6)) %>%
+  mutate(action5 = case_when(action1 != 'first_node' & action2 != 'first_node' & action3 != 'first_node' & action4 == 'first_toplevel_project' ~ action6,
+                             TRUE ~ action5),
+         action6 = case_when(action1 != 'first_node' & action2 != 'first_node' & action4 != 'first_node' & action4 == 'first_toplevel_project' ~ NA_character_,
+                             TRUE ~ action6)) %>%
+  mutate(action6 = case_when(action1 != 'first_node' & action2 != 'first_node' & action4 != 'first_node'  & action5 != 'first_node' & action6 == 'first_toplevel_project' ~ NA_character_,
+                             TRUE ~ action6)) %>%
+  select(id, action1, action2, action3, action4, action5, action6)
+```
+
+The majority of users only have creation actions within one type of product. Below is a table showing for each product, the percentage of users who have only created that product type.
+
+```{r warning=FALSE, echo=FALSE, message=FALSE}
+action_flow_corrected %>%
+  filter(is.na(action2)) %>%
+  group_by(action1) %>%
+  summarise(single_action_n = n())%>%
+  left_join(action_flow_corrected %>% group_by(action1) %>% summarise(total_n = n())) %>%
+  mutate(percentage_single_action = round(100*single_action_n/total_n,2)) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+For users who have created at least 2 product types, the graph below shows the order in which those were created. I have no included single product creators in this graph b/c the high levels of NAs made nearly all the non-NA values unreadable. 
+
+```{r warning=FALSE, echo=FALSE, message=FALSE}
+ggplot(action_flow_corrected %>% filter(!is.na(action2)) %>% melt(id.var = 'id'),
+       aes(x = variable, stratum = value, alluvium = id, fill = value, label = value)) +
+  scale_fill_brewer(type = 'qual', palette = 'Set2') +
+  geom_flow() +
+  geom_stratum() +
+  ggtitle("Action flow for users who have done at least 2 actions")
+```
 
 
 # User deep dives
@@ -441,7 +526,7 @@ Additionally, I have only included users who actually engaged in the product tha
 
 The table below doesn't show a *great* deal of movement between services. Of particular note is that only ~24% of preprints users are also users of OSF nodes, which is much lower than the 55% found in the initial analysis for the business plan. That sample was nearly early socarxiv users, whereas this analysis includes users of many different preprint services. So, this could indicate time/services differences between transition rates from preprints to other OSF products. Though it's by far the smallest group of users so descriptives should be taken with a grain of salt, users who signed up through registries show relatively higher levels of transition to other products. 
 
-```{r}
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 user_categorization %>%
   filter(is_active == TRUE & is_invited == FALSE) %>%
   filter((user_origin == 'meetings' & osf4m_user == 1) | 
@@ -523,7 +608,7 @@ tab_row_group(
 ```
 
 
-## What products 'depth users' create?
+## What products do 'depth users' create?
 
 We don't have a good definitive definition of 'depth user', but for this analysis, a depth user is defined as anyone who is the creator of at least 10 top-level items (which could be OSF project or registrations. For this analysis, osf4m projects and preprint supplemental nodes created during the preprint workflow were *not* counted to define depth users). The table below shows creation rates by product type, with depth users showing high levels of engagement with all product types.
 
@@ -596,94 +681,6 @@ tab_row_group(
   group = 'Multiple Product Usage',
   rows = 9:12)
 ```
-
-
-## What is the order of creation actions?
-Looking at creation actions, we can see the order in which users engage with different products. For the analyses below, the times for each user represent times for non-deleted/withdrawn items and are only tracking creation actions (so it does not include when a user may have been added as a contributor on a product type that they didn't create).
-
-```{r}
-action_flow <- user_categorization %>%
-  filter(is_active == TRUE) %>%
-  distinct(id, .keep_all = TRUE) %>%
-  select(id, first_osf4m, first_toplevel_project, first_node, first_suppnode, first_toplevel_reg, date_first_preprint) %>%
-  melt(id.vars = 'id') %>%
-  filter(!is.na(value)) %>%
-  group_by(id) %>%
-  arrange(value) %>%
-  mutate(action1 = first(variable),
-         action2 = nth(variable, 2),
-         action3 = nth(variable, 3),
-         action4 = nth(variable, 4),
-         action5 = nth(variable, 5),
-         action6 = nth(variable, 6)) 
-
-action_flow_corrected <- action_flow %>%
-  group_by(id) %>%
-  slice(1L) %>%
-  ungroup() %>%
-  mutate(action1 = as.character(action1),
-        action2 = as.character(action2),
-        action3 = as.character(action3),
-        action4 = as.character(action4),
-        action5 = as.character(action5),
-        action6 = as.character(action6)) %>%
-  mutate(action2 = case_when(action1 == 'first_toplevel_project' ~ action3,
-                             TRUE ~ action2),
-         action3 = case_when(action1 == 'first_toplevel_project' ~ action4,
-                             TRUE ~ action3),
-         action4 = case_when(action1 == 'first_toplevel_project' ~ action5,
-                             TRUE ~ action4),
-         action5 = case_when(action1 == 'first_toplevel_project' ~ action6,
-                             TRUE ~ action5),
-         action6 = case_when(action1 == 'first_toplevel_project' ~ NA_character_,
-                             TRUE ~ action6)) %>%
-  mutate(action3 = case_when(action1 != 'first_node' & action2 == 'first_toplevel_project' ~ action4,
-                             TRUE ~ action3),
-           action4 = case_when(action1 != 'first_node' & action2 == 'first_toplevel_project' ~ action5,
-                             TRUE ~ action4),
-           action5 = case_when(action1 != 'first_node' & action2 == 'first_toplevel_project' ~ action6,
-                             TRUE ~ action5),
-           action6 = case_when(action1 != 'first_node' & action2 == 'first_toplevel_project' ~ NA_character_,
-                             TRUE ~ action6)) %>%
-  mutate(action4 = case_when(action1 != 'first_node' & action2 != 'first_node' & action3 == 'first_toplevel_project' ~ action5,
-                             TRUE ~ action4),
-         action5 = case_when(action1 != 'first_node' & action2 != 'first_node' & action3 == 'first_toplevel_project' ~ action6,
-                             TRUE ~ action5),
-         action6 = case_when(action1 != 'first_node' & action2 != 'first_node' & action3 == 'first_toplevel_project' ~ NA_character_,
-                             TRUE ~ action6)) %>%
-  mutate(action5 = case_when(action1 != 'first_node' & action2 != 'first_node' & action3 != 'first_node' & action4 == 'first_toplevel_project' ~ action6,
-                             TRUE ~ action5),
-         action6 = case_when(action1 != 'first_node' & action2 != 'first_node' & action4 != 'first_node' & action4 == 'first_toplevel_project' ~ NA_character_,
-                             TRUE ~ action6)) %>%
-  mutate(action6 = case_when(action1 != 'first_node' & action2 != 'first_node' & action4 != 'first_node'  & action5 != 'first_node' & action6 == 'first_toplevel_project' ~ NA_character_,
-                             TRUE ~ action6)) %>%
-  select(id, action1, action2, action3, action4, action5, action6)
-```
-
-The majority of users only have creation actions within one type of product. Below is a table showing for each product, the percentage of users who have only created that product type.
-
-```{r}
-action_flow_corrected %>%
-  filter(is.na(action2)) %>%
-  group_by(action1) %>%
-  summarise(single_action_n = n())%>%
-  left_join(action_flow_corrected %>% group_by(action1) %>% summarise(total_n = n())) %>%
-  mutate(percentage_single_action = round(100*single_action_n/total_n,2)) %>%
-  kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover"))
-```
-
-For users who have created at least 2 product types, the graph below shows the order in which those were created. I have no included single product creators in this graph b/c the high levels of NAs made nearly all the non-NA values unreadable. 
-
-```{r}
-ggplot(action_flow_corrected %>% filter(!is.na(action2)) %>% melt(id.var = 'id'),
-       aes(x = variable, stratum = value, alluvium = id, fill = value, label = value)) +
-  scale_fill_brewer(type = 'qual', palette = 'Set2') +
-  geom_flow() +
-  geom_stratum() +
-  ggtitle("Action flow for users who have done at least 2 actions")
-```
-
 
 ## What are the 'none' users doing?
 

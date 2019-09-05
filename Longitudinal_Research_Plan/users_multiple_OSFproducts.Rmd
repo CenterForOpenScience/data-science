@@ -123,8 +123,8 @@ user_categorization <- user_data %>%
                                                          grepl('challenge', user_tag) | grepl('registries', user_tag) ~ 'registries',
                                                          is_invited == TRUE ~ 'unknown',
                                                          is_invited == FALSE ~ 'OSF'),
-                                 power_user = case_when(num_toplevel_regs + num_toplevel_projects >= 10 ~ 1,
-                                                        TRUE ~ 0),
+                                 depth_user = case_when(num_toplevel_regs + num_toplevel_projects >= 10 ~ 'depth',
+                                                        TRUE ~ 'nondepth'),
                                  num_logs = added_contributor + added_file + updated_file + wiki_edited,
                                  user_type = case_when(preprint_user == 0 & osf4m_user == 0 & osf_node_user == 0 & registrations_user == 0 & suppnode_user == 0 ~ 'No products',
                                                        preprint_user == 0 & osf4m_user == 0 & registrations_user == 0 & suppnode_user == 0 & public_sharing_user == 0 & private_storage_user == 1 ~ 'Only private storage',
@@ -521,6 +521,80 @@ tab_row_group(
 
 ```
 
+
+## What products 'depth users' create?
+
+We don't have a good definitive definition of 'depth user', but for this analysis, a depth user is defined as anyone who is the creator of at least 10 top-level items (which could be OSF project or registrations. For this analysis, osf4m projects and preprint supplemental nodes created during the preprint workflow were *not* counted to define depth users). The table below shows creation rates by product type, with depth users showing high levels of engagement with all product types.
+
+```{r echo = FALSE, warning= FALSE}
+user_categorization %>%
+  filter(is_active == TRUE) %>%
+  group_by(depth_user) %>%
+  summarize(none = sum(preprint_user == 0 & osf4m_user == 0 & osf_node_user == 0 & registrations_user == 0 & suppnode_user == 0),
+            privatestorage_only = sum(preprint_user == 0 & osf4m_user == 0 & private_storage_user ==1 & public_sharing_user == 0 & registrations_user == 0 & suppnode_user == 0),
+            osf4m = sum(osf4m_creator == 1),
+            preprint= sum(preprint_creator == 1),
+            suppnode = sum(suppnode_creator == 1),
+            nodes = sum(osf_node_creator),
+            publicstorage = sum(public_sharing_creator == 1),
+            registrations = sum(registrations_creator == 1),
+            regpublicstorage = sum(registrations_creator == 1 & public_sharing_creator == 1),
+            regpreprint = sum(registrations_creator == 1 & preprint_creator == 1),
+            publicstoragepreprint = sum(public_sharing_creator == 1 & preprint_creator == 1),
+            allthree = sum(public_sharing_creator == 1 & preprint_creator == 1 & registrations_creator == 1)
+            ) %>%
+melt(id.vars = 'depth_user', variable.name = 'product') %>% 
+dcast(product ~ depth_user) %>%
+mutate(product = case_when(product == 'nodes' ~ 'OSF Node',
+                     product == 'none' ~ 'No nodes or preprints',
+                     product == 'osf4m' ~ 'osf4m',
+                     product == 'preprint' ~ 'Preprints',
+                     product == 'privatestorage_only' ~ 'Only private storage',
+                     product == 'publicstorage' ~ 'Public OSF node storage',
+                     product == 'suppnode' ~ 'Supplemental preprint node',
+                     product == 'registrations' ~ 'Registrations',
+                     product == 'regpreprint' ~ 'Registrations & Preprints',
+                     product == 'regpublicstorage' ~ 'Public Sharing & Registrations',
+                     product ==  'publicstoragepreprint' ~ 'Public Sharing & Preprints',
+                     product == 'allthree' ~ 'All three products')) %>%
+mutate(product = as_factor(product)) %>%
+mutate(product = fct_relevel(product, "No nodes or preprints", "Only private storage", "osf4m", "OSF Node", "Public OSF node storage", "Registrations", "Preprints", "Supplemental preprint node", "Public Sharing & Registrations", "Public Sharing & Preprints", "Registrations & Preprints", "All three products")) %>%
+arrange(product) %>%
+mutate(depth_prc = round(100*depth/nrow(user_categorization %>% filter(is_active == TRUE & depth_user == 'depth')),2),
+ nondepth_prc = round(100*nondepth/nrow(user_categorization %>% filter(is_active == TRUE & depth_user == 'nondepth')),2)) %>%
+gt() %>%
+tab_header(
+title = 'Usage - Product Type by Depth Usage'
+) %>%
+cols_merge(col_1 = vars(depth), col_2 = vars(depth_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(col_1 = vars(nondepth), col_2 = vars(nondepth_prc), pattern = '{1} ({2}%)') %>%
+cols_label(product = 'Product Type',
+     depth = 'Depth Users',
+     nondepth = 'Non-depth Users') %>%
+tab_footnote(
+footnote = 'Only includes nodes that are not osf4m or supplemental nodes created during the preprint process',
+locations = cells_data(
+  columns = vars(product),
+  rows = c(3,5)
+)) %>%
+  tab_footnote(
+footnote = 'Only includes supplemental nodes created during the preprint process',
+locations = cells_data(
+  columns = vars(product),
+  rows = 8
+)) %>%
+tab_row_group(
+  group = 'Exclusive Product Usage',
+  rows = 1:2
+) %>%
+tab_row_group(
+  group = 'Individual Product Usage',
+  rows = 3:8
+) %>%
+tab_row_group(
+  group = 'Multiple Product Usage',
+  rows = 9:12)
+```
 
 
 

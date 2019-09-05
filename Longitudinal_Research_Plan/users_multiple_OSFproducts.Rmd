@@ -697,6 +697,8 @@ Mode <- function(x) {
 ```
 
 
+`r round(nrow(no_product_users)/sum(user_categorization$is_active == TRUE),2)`% are not contributors or creators of any non-deleted/withdrawn content on the OSF. What do we know about these users?
+
 #### Where are they coming from?
 ```{r echo = FALSE, warning=FALSE}
 no_product_users %>%
@@ -711,8 +713,13 @@ no_product_users %>%
   kable %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
 ```
+#### Are they doing actions then taking themselves off products?
+
+Only `r round(100*nrow(no_product_users %>% filter(added_contributor > 0 | added_file > 0 | wiki_edited > 0 | updated_file > 0))/nrow(no_product_users),2)`% have done this, based on `contributor_added`, `file_updated`, `file_added`, and/or `wiki_updated` logs on non-deleted/withdrawn content. 
+
+Other possibilities for what they might be doing include only creating/contritbuting on content that was later deleted, or signign up for an account because they thought they needed to to view content. The high proportion of users with preprint and registries tags that haven't created a preprint or registration might also suggest that users think they need to sign up for an account to do something. 
+
 
 ## Potential Next Steps for more complex relationships:
 
-* What is the timecourse of the actions (e.g. for researchers who are on sharing projects and registrations, which tended to happen first and how long in between the actions)
-* Are the users in the different 'action_type' groups from particular disciplines? (infered from OSF4M and preprint services until we have better disciplinary information)
+* Are their discipline differences? (infered from OSF4M and preprint services until we have better disciplinary information)

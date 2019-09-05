@@ -11,9 +11,11 @@ Data caveats and explanations:
 
  * The data used for the analyses below goes through 6/27/19
  * Empty supplemental nodes that resulted from NPD have been removed from the data
- * The analysis only include **Non-Deleted/Withdrawn** nodes, registrations, and preprints
+ * The analysis only include **Non-Deleted/Withdrawn** nodes and registrations and published preprints
  * Supplemental preprint node that were created as part of the preprint workflow and osf4m projects are not included as OSF nodes or public storage for this analysis
- * 'Public Sharing' is measured by looking for non-registered nodes that are public and have a file in them or an add-on connected. It does **not** include osf4m or preprint supplemental nodes.
+ * 'Public Sharing' is measured by looking for *non-registration* nodes that are public and have a file in them or an add-on connected. It does **not** include osf4m or preprint supplemental nodes.
+
+The SQL code used to generate the data underlying this report can be found [here](https://github.com/CenterForOpenScience/data-science/blob/master/SQL_queries/user_activities.sql) 
 
 ```{sql, eval = FALSE, echo = FALSE}
 WITH pp_contrib AS (SELECT user_id, COUNT(preprint_id) AS number_pp, MIN(created) AS first_preprint, MAX(created) AS last_preprint

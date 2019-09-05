@@ -147,99 +147,100 @@ The table below shows the raw number and percentage of active users who have cre
 
 ```{r echo=FALSE, warning=FALSE}
 user_categorization %>%
-                                filter(is_active == TRUE) %>%
-                                summarize(created_none = sum(preprint_creator == 0 & osf4m_creator == 0 & osf_projects_creator == 0 & osf_node_creator == 0 & registrations_creator == 0 & suppnode_creator == 0),
-                                          on_none = sum(preprint_contributor == 0 & osf4m_contributor == 0 & osf_node_contributor == 0 & registrations_contributor == 0 & suppnode_contributor == 0),
-                                          user_none = sum(preprint_user == 0 & osf4m_user == 0 & osf_node_user == 0 & registrations_user == 0 & suppnode_user == 0),
-                                          created_privatestorage_only = sum(preprint_creator == 0 & osf4m_creator == 0 & private_storage_creator == 1 & public_sharing_creator == 0 & registrations_creator == 0 & suppnode_creator == 0),
-                                          on_privatestorage_only = sum(preprint_contributor == 0 & osf4m_contributor == 0 & private_storage_contributor == 1 & public_sharing_contributor == 0 & registrations_contributor == 0 & suppnode_contributor == 0),
-                                          user_privatestorage_only = sum(preprint_user == 0 & osf4m_user == 0 & private_storage_user ==1 & public_sharing_user == 0 & registrations_user == 0 & suppnode_user == 0),
-                                          created_osf4m = sum(osf4m_creator == 1),
-                                          on_osf4m= sum(osf4m_contributor == 1),
-                                          user_osf4m = sum(osf4m_user == 1),
-                                          created_preprint= sum(preprint_creator == 1),
-                                          on_preprint = sum(preprint_contributor == 1),
-                                          user_preprint= sum(preprint_user == 1),
-                                          created_suppnode = sum(suppnode_creator == 1),
-                                          on_suppnode = sum(suppnode_contributor == 1),
-                                          user_suppnode = sum(suppnode_user == 1),
-                                          created_nodes = sum(osf_projects_creator == 1 | osf_node_creator == 1),
-                                          on_nodes = sum(osf_node_contributor == 1),
-                                          user_nodes = sum(osf_node_user),
-                                          created_publicstorage = sum(public_sharing_creator == 1),
-                                          on_publicstorage = sum(public_sharing_contributor == 1),
-                                          user_publicstorage = sum(public_sharing_user == 1),
-                                          created_registrations = sum(registrations_creator == 1),
-                                          on_registrations = sum(registrations_contributor == 1),
-                                          user_registrations = sum(registrations_user == 1),
-                                          created_regpublicstorage = sum(registrations_creator == 1 & public_sharing_creator == 1),
-                                          on_regpublicstorage = sum(registrations_contributor == 1 & public_sharing_contributor == 1),
-                                          user_regpublicstorage = sum(registrations_user == 1 & public_sharing_user == 1),
-                                          created_regpreprint = sum(registrations_creator == 1 & preprint_creator == 1),
-                                          on_regpreprint = sum(registrations_contributor == 1 & preprint_contributor == 1),
-                                          user_regpreprint = sum(registrations_user == 1 & preprint_user == 1),
-                                          created_publicstoragepreprint = sum(public_sharing_creator == 1 & preprint_creator == 1),
-                                          on_publicstoragepreprint = sum(public_sharing_contributor == 1 & preprint_contributor == 1),
-                                          user_publicstoragepreprint = sum(public_sharing_user == 1 & preprint_user == 1),
-                                          created_allthree = sum(public_sharing_creator == 1 & preprint_creator == 1 & registrations_creator == 1),
-                                          on_allthree = sum(public_sharing_contributor == 1 & preprint_contributor == 1 & registrations_contributor == 1),
-                                          user_allthree = sum(public_sharing_user == 1 & preprint_user == 1 & registrations_contributor == 1)
-                                          ) %>%
-                        gather() %>%
-                        separate(key, c('type', 'product'), '_') %>%
-                        spread(type, value) %>%
-                        mutate(product = case_when(product == 'nodes' ~ 'OSF Node',
-                                                   product == 'none' ~ 'No nodes or preprints',
-                                                   product == 'osf4m' ~ 'osf4m',
-                                                   product == 'preprint' ~ 'Preprints',
-                                                   product == 'privatestorage' ~ 'Only private storage',
-                                                   product == 'publicstorage' ~ 'Public OSF node storage',
-                                                   product == 'suppnode' ~ 'Supplemental preprint node',
-                                                   product == 'registrations' ~ 'Registrations',
-                                                   product == 'regpreprint' ~ 'Registrations & Preprints',
-                                                   product == 'regpublicstorage' ~ 'Public Sharing & Registrations',
-                                                   product ==  'publicstoragepreprint' ~ 'Public Sharing & Preprints',
-                                                   product == 'allthree' ~ 'All three products')) %>%
-                        mutate(product = as_factor(product)) %>%
-                        mutate(product = fct_relevel(product, "No nodes or preprints", "osf4m", "OSF Node", "Only private storage", "Public OSF node storage", "Registrations", "Preprints", "Supplemental preprint node", "Public Sharing & Registrations", "Public Sharing & Preprints", "Registrations & Preprints", "All three products")) %>%
-                        arrange(product) %>%
-                        mutate(created_prc = round(100*created/nrow(user_categorization %>% filter(is_active == TRUE)),2),
-                               on_prc = round(100*on/nrow(user_categorization %>% filter(is_active == TRUE)),2),
-                               user_prc = round(100*user/nrow(user_categorization %>% filter(is_active == TRUE)),2)) %>%
-                        gt() %>%
-                        tab_header(
-                          title = 'Users by Product Type'
-                        ) %>%
-                        cols_merge(col_1 = vars(created), col_2 = vars(created_prc), pattern = '{1} ({2}%)') %>%
-                        cols_merge(col_1 = vars(on), col_2 = vars(on_prc), pattern = '{1} ({2}%)') %>%
-                        cols_merge(col_1 = vars(user), col_2 = vars(user_prc), pattern = '{1} ({2}%)') %>%
-                        cols_label(product = 'Product Type',
-                                   created = 'Creator',
-                                   on = 'Contributor',
-                                   user = 'Creator or Contributor') %>%
-                        tab_footnote(
-                              footnote = 'Only includes nodes that are not osf4m or supplemental nodes created during the preprint process',
-                              locations = cells_data(
-                                columns = vars(product),
-                                rows = c(3,5)
-                              )) %>%
-                                tab_footnote(
-                              footnote = 'Only includes supplemental nodes created during the preprint process',
-                              locations = cells_data(
-                                columns = vars(product),
-                                rows = 8
-                              )) %>%
-                          tab_row_group(
-                                group = 'Exclusive Product Usage',
-                                rows = 1:2
-                              ) %>%
-                            tab_row_group(
-                                group = 'Individual Product Usage',
-                                rows = 3:8
-                              ) %>%
-                              tab_row_group(
-                                group = 'Multiple Product Usage',
-                                rows = 9:12)
+  distinct(id, .keep_all = TRUE) %>%
+  filter(is_active == TRUE) %>%
+  summarize(created_none = sum(preprint_creator == 0 & osf4m_creator == 0 & osf_projects_creator == 0 & osf_node_creator == 0 & registrations_creator == 0 & suppnode_creator == 0),
+            on_none = sum(preprint_contributor == 0 & osf4m_contributor == 0 & osf_node_contributor == 0 & registrations_contributor == 0 & suppnode_contributor == 0),
+            user_none = sum(preprint_user == 0 & osf4m_user == 0 & osf_node_user == 0 & registrations_user == 0 & suppnode_user == 0),
+            created_privatestorage_only = sum(preprint_creator == 0 & osf4m_creator == 0 & private_storage_creator == 1 & public_sharing_creator == 0 & registrations_creator == 0 & suppnode_creator == 0),
+            on_privatestorage_only = sum(preprint_contributor == 0 & osf4m_contributor == 0 & private_storage_contributor == 1 & public_sharing_contributor == 0 & registrations_contributor == 0 & suppnode_contributor == 0),
+            user_privatestorage_only = sum(preprint_user == 0 & osf4m_user == 0 & private_storage_user ==1 & public_sharing_user == 0 & registrations_user == 0 & suppnode_user == 0),
+            created_osf4m = sum(osf4m_creator == 1),
+            on_osf4m= sum(osf4m_contributor == 1),
+            user_osf4m = sum(osf4m_user == 1),
+            created_preprint= sum(preprint_creator == 1),
+            on_preprint = sum(preprint_contributor == 1),
+            user_preprint= sum(preprint_user == 1),
+            created_suppnode = sum(suppnode_creator == 1),
+            on_suppnode = sum(suppnode_contributor == 1),
+            user_suppnode = sum(suppnode_user == 1),
+            created_nodes = sum(osf_projects_creator == 1 | osf_node_creator == 1),
+            on_nodes = sum(osf_node_contributor == 1),
+            user_nodes = sum(osf_node_user),
+            created_publicstorage = sum(public_sharing_creator == 1),
+            on_publicstorage = sum(public_sharing_contributor == 1),
+            user_publicstorage = sum(public_sharing_user == 1),
+            created_registrations = sum(registrations_creator == 1),
+            on_registrations = sum(registrations_contributor == 1),
+            user_registrations = sum(registrations_user == 1),
+            created_regpublicstorage = sum(registrations_creator == 1 & public_sharing_creator == 1),
+            on_regpublicstorage = sum(registrations_contributor == 1 & public_sharing_contributor == 1),
+            user_regpublicstorage = sum(registrations_user == 1 & public_sharing_user == 1),
+            created_regpreprint = sum(registrations_creator == 1 & preprint_creator == 1),
+            on_regpreprint = sum(registrations_contributor == 1 & preprint_contributor == 1),
+            user_regpreprint = sum(registrations_user == 1 & preprint_user == 1),
+            created_publicstoragepreprint = sum(public_sharing_creator == 1 & preprint_creator == 1),
+            on_publicstoragepreprint = sum(public_sharing_contributor == 1 & preprint_contributor == 1),
+            user_publicstoragepreprint = sum(public_sharing_user == 1 & preprint_user == 1),
+            created_allthree = sum(public_sharing_creator == 1 & preprint_creator == 1 & registrations_creator == 1),
+            on_allthree = sum(public_sharing_contributor == 1 & preprint_contributor == 1 & registrations_contributor == 1),
+            user_allthree = sum(public_sharing_user == 1 & preprint_user == 1 & registrations_contributor == 1)
+            ) %>%
+gather() %>%
+separate(key, c('type', 'product'), '_') %>%
+spread(type, value) %>%
+mutate(product = case_when(product == 'nodes' ~ 'OSF Node',
+                     product == 'none' ~ 'No nodes or preprints',
+                     product == 'osf4m' ~ 'osf4m',
+                     product == 'preprint' ~ 'Preprints',
+                     product == 'privatestorage' ~ 'Only private storage',
+                     product == 'publicstorage' ~ 'Public OSF node storage',
+                     product == 'suppnode' ~ 'Supplemental preprint node',
+                     product == 'registrations' ~ 'Registrations',
+                     product == 'regpreprint' ~ 'Registrations & Preprints',
+                     product == 'regpublicstorage' ~ 'Public Sharing & Registrations',
+                     product ==  'publicstoragepreprint' ~ 'Public Sharing & Preprints',
+                     product == 'allthree' ~ 'All three products')) %>%
+mutate(product = as_factor(product)) %>%
+mutate(product = fct_relevel(product, "No nodes or preprints", "osf4m", "OSF Node", "Only private storage", "Public OSF node storage", "Registrations", "Preprints", "Supplemental preprint node", "Public Sharing & Registrations", "Public Sharing & Preprints", "Registrations & Preprints", "All three products")) %>%
+arrange(product) %>%
+mutate(created_prc = round(100*created/nrow(user_categorization %>% filter(is_active == TRUE)),2),
+ on_prc = round(100*on/nrow(user_categorization %>% filter(is_active == TRUE)),2),
+ user_prc = round(100*user/nrow(user_categorization %>% filter(is_active == TRUE)),2)) %>%
+gt() %>%
+tab_header(
+title = 'Users by Product Type'
+) %>%
+cols_merge(col_1 = vars(created), col_2 = vars(created_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(col_1 = vars(on), col_2 = vars(on_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(col_1 = vars(user), col_2 = vars(user_prc), pattern = '{1} ({2}%)') %>%
+cols_label(product = 'Product Type',
+     created = 'Creator',
+     on = 'Contributor',
+     user = 'Creator or Contributor') %>%
+tab_footnote(
+footnote = 'Only includes nodes that are not osf4m or supplemental nodes created during the preprint process',
+locations = cells_data(
+  columns = vars(product),
+  rows = c(3,5)
+)) %>%
+  tab_footnote(
+footnote = 'Only includes supplemental nodes created during the preprint process',
+locations = cells_data(
+  columns = vars(product),
+  rows = 8
+)) %>%
+tab_row_group(
+  group = 'Exclusive Product Usage',
+  rows = 1:2
+) %>%
+tab_row_group(
+  group = 'Individual Product Usage',
+  rows = 3:8
+) %>%
+tab_row_group(
+  group = 'Multiple Product Usage',
+  rows = 9:12)
                         
 ```
 
@@ -249,7 +250,7 @@ The graphs below shows when the different types of users were confirmed. For the
 
 
 ```{r echo = FALSE, warning=FALSE}
- graph <- ggplot(user_categorization %>% filter(user_type == 'All three') %>% filter(is_active == 'TRUE'), aes(by_day_confirmed)) + 
+ graph <- ggplot(user_categorization %>% distinct(id, .keep_all = TRUE) %>% filter(user_type == 'All three') %>% filter(is_active == 'TRUE'), aes(by_day_confirmed)) + 
   geom_freqpoly(binwidth = 30) +
   xlab('When user was confirmed') +
   ylab('Number of users') +
@@ -259,7 +260,7 @@ The graphs below shows when the different types of users were confirmed. For the
  graph + theme(axis.text.x  = element_text(angle=45,hjust = 1,vjust = 1))
  
 
- graph2 <- ggplot(user_categorization %>% filter(is_active == 'TRUE') %>% filter(user_type != 'Only private storage'), aes(by_day_confirmed, color = user_type)) + 
+ graph2 <- ggplot(user_categorization %>% distinct(id, .keep_all = TRUE) %>% filter(is_active == 'TRUE') %>% filter(user_type != 'Only private storage'), aes(by_day_confirmed, color = user_type)) + 
   geom_freqpoly(binwidth = 30) +
   xlab('When user was confirmed') +
   ylab('Number of users') +
@@ -283,6 +284,7 @@ In general creators of registrations and supplemental nodes (thought not necessa
 
 ```{r echo = FALSE, warning=FALSE}
 creators <- user_categorization %>%
+                distinct(id, .keep_all = TRUE) %>%
                 filter(is_active == TRUE) %>%
                 select(ends_with('creator'), -osf_projects_creator)
 
@@ -333,6 +335,7 @@ The patterns in the table below look similar to the table above, but in general 
 ```{r echo = FALSE, warning=FALSE}
 
 creators_contributors <- user_categorization %>%
+                distinct(id, .keep_all = TRUE) %>%
                 filter(is_active == TRUE) %>%
                 select(ends_with('creator'), ends_with('contributor'), -c(added_contributor, osf_projects_creator))
 
@@ -384,6 +387,7 @@ Again, the pattern looks mostly similar. Two cells that increased more than othe
 ```{r echo = FALSE, warning=FALSE}
 
 users <- user_categorization %>%
+            distinct(id, .keep_all = TRUE) %>%
             filter(is_active == TRUE) %>%
             select(ends_with('user'), -depth_user)
 
@@ -614,6 +618,7 @@ We don't have a good definitive definition of 'depth user', but for this analysi
 
 ```{r echo = FALSE, warning= FALSE}
 user_categorization %>%
+  distinct(id, .keep_all = TRUE) %>%
   filter(is_active == TRUE) %>%
   group_by(depth_user) %>%
   summarize(none = sum(preprint_user == 0 & osf4m_user == 0 & osf_node_user == 0 & registrations_user == 0 & suppnode_user == 0),
@@ -686,6 +691,7 @@ tab_row_group(
 
 ```{r echo=FALSE, warning=FALSE}
 no_product_users <- user_categorization %>%
+                      distinct(id, .keep_all = TRUE) %>%
                       filter(is_active == TRUE) %>%
                       filter(preprint_user == 0 & osf4m_user == 0 & osf_node_user == 0 & registrations_user == 0 & suppnode_user == 0) %>%
                       select(is_invited, user_tag, user_origin, added_contributor, added_file, wiki_edited, updated_file, num_logs)

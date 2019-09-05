@@ -428,12 +428,27 @@ users_matrix %>%
 
 ## Does user origin matter?
 
+Currently, we apply a few user tags to users when they sign up for the OSF through a couple different routes. 
+
 This analysis is restricted to non-invited users, b/c we currently don't accurately capture how invited users entered the system. Since the patterns were mostly the same for creators vs. users, I've also only looked at the broader 'users' term (so including anyone who is creating or is a contributor on each product type)
+
+Additionally, I have only included users who actually engaged in the product that they sign-up on (e.g. users who have preprint tags must be a user of preprints to be included in the table below). For reference, the percentage of tagged users who haven't engaged with their tagged product are:
+
+* osf4m: `r round(100*sum(user_categorization$is_active == T & user_categorization$is_invited == FALSE & user_categorization$user_origin == 'meetings' & user_categorization$osf4m_user == 0)/sum(user_categorization$is_active == T & user_categorization$is_invited == FALSE & user_categorization$user_origin == 'meetings'),2)`%
+* OSF: `r round(100*sum(user_categorization$is_active == T & user_categorization$is_invited == FALSE & user_categorization$user_origin == 'OSF' & user_categorization$osf_node_user == 0)/sum(user_categorization$is_active == T & user_categorization$is_invited == FALSE & user_categorization$user_origin == 'OSF'),2)`%
+* Preprints: `r round(100*sum(user_categorization$is_active == T & user_categorization$is_invited == FALSE & user_categorization$user_origin == 'preprints' & user_categorization$preprint_user == 0)/sum(user_categorization$is_active == T & user_categorization$is_invited == FALSE & user_categorization$user_origin == 'preprints'),2)`%
+* Registries: `r round(100*sum(user_categorization$is_active == T & user_categorization$is_invited == FALSE & user_categorization$user_origin == 'registries' & user_categorization$registrations_user == 0)/sum(user_categorization$is_active == T & user_categorization$is_invited == FALSE & user_categorization$user_origin == 'registries'),2)`%
+
+
+The table below doesn't show a *great* deal of movement between services. Of particular note is that only ~24% of preprints users are also users of OSF nodes, which is much lower than the 55% found in the initial analysis for the business plan. That sample was nearly early socarxiv users, whereas this analysis includes users of many different preprint services. So, this could indicate time/services differences between transition rates from preprints to other OSF products. Though it's by far the smallest group of users so descriptives should be taken with a grain of salt, users who signed up through registries show relatively higher levels of transition to other products. 
 
 ```{r}
 user_categorization %>%
-  filter(is_active == TRUE) %>%
-  filter(is_invited == FALSE) %>%
+  filter(is_active == TRUE & is_invited == FALSE) %>%
+  filter((user_origin == 'meetings' & osf4m_user == 1) | 
+           (user_origin == 'OSF' & osf_node_user == 1) | 
+           (user_origin == 'preprints' & preprint_user == 1) | 
+           (user_origin == 'registries' & registrations_user == 1)) %>%
   group_by(user_origin) %>%
   summarize(none = sum(preprint_user == 0 & osf4m_user == 0 & osf_node_user == 0 & registrations_user == 0 & suppnode_user == 0),
             privatestorage_only = sum(preprint_user == 0 & osf4m_user == 0 & private_storage_user ==1 & public_sharing_user == 0 & registrations_user == 0 & suppnode_user == 0),
@@ -465,10 +480,10 @@ mutate(product = case_when(product == 'nodes' ~ 'OSF Node',
 mutate(product = as_factor(product)) %>%
 mutate(product = fct_relevel(product, "No nodes or preprints", "Only private storage", "osf4m", "OSF Node", "Public OSF node storage", "Registrations", "Preprints", "Supplemental preprint node", "Public Sharing & Registrations", "Public Sharing & Preprints", "Registrations & Preprints", "All three products")) %>%
 arrange(product) %>%
-mutate(meetings_prc = round(100*meetings/nrow(user_categorization %>% filter(is_active == TRUE & is_invited == FALSE & user_origin == 'meetings')),2),
- osf_prc = round(100*OSF/nrow(user_categorization %>% filter(is_active == TRUE & is_invited == FALSE & user_origin == 'OSF')),2),
- registries_prc = round(100*registries/nrow(user_categorization %>% filter(is_active == TRUE & is_invited == FALSE & user_origin == 'registries')),2),
- preprints_prc = round(100*preprints/nrow(user_categorization %>% filter(is_active == TRUE & is_invited == FALSE & user_origin == 'preprints')),2)) %>%
+mutate(meetings_prc = round(100*meetings/nrow(user_categorization %>% filter(is_active == TRUE & is_invited == FALSE & user_origin == 'meetings' & osf4m_user == 1)),2),
+ osf_prc = round(100*OSF/nrow(user_categorization %>% filter(is_active == TRUE & is_invited == FALSE & user_origin == 'OSF' & osf_node_user == 1)),2),
+ registries_prc = round(100*registries/nrow(user_categorization %>% filter(is_active == TRUE & is_invited == FALSE & user_origin == 'registries' & registrations_user == 1)),2),
+ preprints_prc = round(100*preprints/nrow(user_categorization %>% filter(is_active == TRUE & is_invited == FALSE & user_origin == 'preprints' & preprint_user == 1)),2)) %>%
 gt() %>%
 tab_header(
 title = 'Users by Product Type'

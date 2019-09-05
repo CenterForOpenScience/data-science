@@ -143,6 +143,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 						   tag_id, 
 						   preprint_id, 
 						   preprint_created, 
+						   preprint_creator,
 						   supp_node,
 						   suppnode_date_added,
 						   num_files,
@@ -165,8 +166,8 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 						   CASE WHEN preprint_id IS NOT NULL THEN 1 ELSE 0 END AS preprint_suppnode,
 						   CASE WHEN preprint_id IS NOT NULL AND
 						   		((suppnode_date_added IS NOT NULL AND preprint_created < (CASE WHEN is_fork IS FALSE THEN created ELSE forked_date END) AND 
-						   			suppnode_date_added - (CASE WHEN is_fork IS FALSE THEN created ELSE forked_date END) <= '00:05:00') OR
-						   		 (suppnode_date_added IS NULL AND preprint_created - (CASE WHEN is_fork IS FALSE THEN created ELSE forked_date END) <= '00:20:00')) THEN 1 ELSE 0 END  AS pp_workflow_suppnode,
+						   			suppnode_date_added - (CASE WHEN is_fork IS FALSE THEN created ELSE forked_date END) <= '00:05:00' AND creator_id = preprint_creator) OR
+						   		 (suppnode_date_added IS NULL AND preprint_created - (CASE WHEN is_fork IS FALSE THEN created ELSE forked_date END) <= '00:20:00' AND creator_id = preprint_creator)) THEN 1 ELSE 0 END  AS pp_workflow_suppnode,
 						   CASE WHEN LEAST(first_osf_file_created, first_addon_added) IS NOT NULL THEN 1 ELSE 0 END AS has_files,
 						   CASE WHEN is_public IS TRUE AND retraction_id IS NULL AND LEAST(first_osf_file_created, first_addon_added) IS NOT NULL THEN 1 ELSE 0 END AS public_sharing,
 						   CASE WHEN is_public IS FALSE AND retraction_id IS NULL AND LEAST(first_osf_file_created, first_addon_added) IS NOT NULL THEN 1 ELSE 0 END AS private_storage,
@@ -182,7 +183,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 						ON osf_abstractnode.id = osf4m_tags.abstractnode_id
 						
 						/* identify preprint supp nodes */
-						LEFT JOIN (SELECT id AS preprint_id, osf_preprint.created AS preprint_created, node_id AS supp_node, suppnode_date_added
+						LEFT JOIN (SELECT id AS preprint_id, osf_preprint.created AS preprint_created, node_id AS supp_node, suppnode_date_added, creator_id AS preprint_creator
 										FROM osf_preprint
 										LEFT JOIN (SELECT preprint_id, MAX(created) AS suppnode_date_added
 														FROM osf_preprintlog

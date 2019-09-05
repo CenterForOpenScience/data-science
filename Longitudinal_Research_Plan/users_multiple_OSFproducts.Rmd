@@ -489,7 +489,7 @@ action_flow_corrected <- action_flow %>%
   select(id, action1, action2, action3, action4, action5, action6)
 ```
 
-The majority of users only have creation actions within one type of product. Below is a table showing for each product, the percentage of users who have only created that product type.
+The majority of users only have creation actions within one type of product. Below is a table showing for each product, the percentage of users who have only created that product type. The high proportion of single product type creators maps onto the low conditional probabilities in the creator vs. creator table above.
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 action_flow_corrected %>%

@@ -123,7 +123,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 							WHERE type = 'osf.node' AND 
 								  is_deleted IS FALSE AND 
 								  title NOT LIKE 'Bookmarks' 
-								  AND (spam_status IS NULL OR spam_status = 4)),
+								  AND (spam_status IS NULL OR spam_status = 4 OR spam_status = 1)),
 	
 	/* for each node, build out what type it is based on the products/behaviors that have happend to it and the timeline of those */
 	node_categories AS (SELECT osf_abstractnode.id AS node_id, 
@@ -224,7 +224,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 						/* exclude bookmark nodes and quickfiles, spam nodes, deleted nodes, retracted registrations or empty suppnodes created b/c of NPD*/
 						WHERE (type LIKE 'osf.node' OR type LIKE 'osf.registration') AND 
 								title NOT LIKE 'Bookmarks' AND
-								(spam_status IS NULL OR spam_status = 4) AND 
+								(spam_status IS NULL OR spam_status = 4 OR spam_status = 1) AND 
 								is_deleted IS FALSE AND 
 								retraction_id IS NULL AND
 								osf_abstractnode.id NOT IN (/* identifying empty supp_nodes created b/c of NPD */

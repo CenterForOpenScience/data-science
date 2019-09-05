@@ -428,9 +428,7 @@ users_matrix %>%
 
 ## Does user origin matter?
 
-Currently, we apply a few user tags to users when they sign up for the OSF through a couple different routes. 
-
-This analysis is restricted to non-invited users, b/c we currently don't accurately capture how invited users entered the system. Since the patterns were mostly the same for creators vs. users, I've also only looked at the broader 'users' term (so including anyone who is creating or is a contributor on each product type)
+Currently, we apply a few user tags to users when they sign up for the OSF through a couple different routes. I've broken these tags into 4 different 'origins'. Anyone who signed up on the Registries page or the special pages for the Pre-reg challenge or the Election Pre-reg project page are marked as 'Registries', anyone who signed up on any of the preprint pages is marked as 'Preprints', anyone who had an account created when they emailed into an osf4m page is marked as 'osf4m', and anyone who does not have a tag is marked as 'OSF'. This analysis is restricted to non-invited users, b/c we currently don't accurately capture how invited users entered the system. Since the patterns were mostly the same for creators vs. users, I've also only looked at the broader 'users' term (so including anyone who is creating or is a contributor on each product type)
 
 Additionally, I have only included users who actually engaged in the product that they sign-up on (e.g. users who have preprint tags must be a user of preprints to be included in the table below). For reference, the percentage of tagged users who haven't engaged with their tagged product are:
 

@@ -21,15 +21,15 @@ storage_data <- read_csv('/Users/courtneysoderberg/Documents/data-science/Monthl
                     mutate(month = month(date, label = T),
                            year = year(date)) %>%
                     filter(year == year(as.Date(Sys.time()) - 5)) %>%
-                    mutate(total_tib = round(total/(1024^4),2),
-                           deleted_tib = round(deleted/(1024^4),2),
-                           regs_tib = round(registrations/(1024^4),2),
-                           quickfiles_tib = round(nd_quick_files/(1024^4),2),
-                           pubnode_tib = round(nd_public_nodes/(1024^4),2),
-                           privatenode_tib = round(nd_private_nodes/(1024^4),2),
-                           node_tib = round((nd_public_nodes + nd_private_nodes)/(1024^4),2),
-                           preprint_tib = round(nd_preprints/(1024^4),2),
-                           suppnode_tib = round(nd_supp_nodes/(1024^4),2),
+                    mutate(total_tib = round(total/(1024^3),2),
+                           deleted_tib = round(deleted/(1024^3),2),
+                           regs_tib = round(registrations/(1024^3),2),
+                           quickfiles_tib = round(nd_quick_files/(1024^3),2),
+                           pubnode_tib = round(nd_public_nodes/(1024^3),2),
+                           privatenode_tib = round(nd_private_nodes/(1024^3),2),
+                           node_tib = round((nd_public_nodes + nd_private_nodes)/(1024^3),2),
+                           preprint_tib = round(nd_preprints/(1024^3),2),
+                           suppnode_tib = round(nd_supp_nodes/(1024^3),2),
                            prct_del = 100*(deleted/total),
                            prct_regs = 100*(registrations/total),
                            prct_quickfiles = 100*(nd_quick_files/total),
@@ -126,7 +126,7 @@ rbind(raw_storage %>% arrange(Type), diff_storage %>% arrange(Type)) %>%
     rows = 5:8
   ) %>%
   tab_source_note(
-    source_note = "Storage displayed in Terabytes"
+    source_note = "Storage displayed in Gigabytes"
   ) %>%
   tab_footnote(
     footnote = 'Includes preprint supp nodes',
@@ -156,7 +156,7 @@ rbind(raw_product_storage %>% arrange(Type), diff_product_storage %>% arrange(Ty
     rows = 5:8
   ) %>%
   tab_source_note(
-    source_note = "Storage displayed in Terabytes"
+    source_note = "Storage displayed in Gigabytes"
   ) %>%
   tab_footnote(
       footnote = 'Includes preprint supp nodes',
@@ -198,6 +198,7 @@ data_graph$storage_type <- fct_relevel(data_graph$storage_type, c('Public Nodes'
 graph  <- plot_ly(data_graph, x = ~date, y = ~ perc_of_total, color =  ~storage_type, colors='Spectral',
                        type = 'scatter', mode = 'line') %>%
                 layout(xaxis = list(title = "",
+                                    nticks = nrow(storage_data),
                                     tickformat = '%b %y'),
                        yaxis = list(title = "Percentage of Total Storage"))
 

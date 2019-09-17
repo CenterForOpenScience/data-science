@@ -1,6 +1,6 @@
 
 /* get WB id for each file uploaded to osf_storage */
-WITH view_links AS (SELECT json_extract_path_text(params::json, 'urls', 'view') AS view_link, id, node_id, original_node_id, date
+WITH view_links AS (SELECT json_extract_path_text(params::json, 'urls', 'view') AS view_link, logs.id AS log_id, node_id, original_node_id, date
 						FROM osf_abstractnode
 						LEFT JOIN (SELECT *
 									FROM osf_nodelog
@@ -8,7 +8,7 @@ WITH view_links AS (SELECT json_extract_path_text(params::json, 'urls', 'view') 
 									LIMIT 10000) AS logs
 						ON osf_abstractnode.id = logs.node_id
 						WHERE is_deleted IS FALSE AND title NOT LIKE 'Bookmarks' AND type = 'osf.node'),
-	wb_ids AS (SELECT id, view_link, reverse(split_part(reverse(view_link), '/', 2)) AS wb_id, node_id, date
+	wb_ids AS (SELECT log_id, view_link, reverse(split_part(reverse(view_link), '/', 2)) AS wb_id, node_id, date
 					FROM view_links
 					WHERE node_id = original_node_id)
 

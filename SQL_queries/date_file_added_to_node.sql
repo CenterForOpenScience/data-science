@@ -10,14 +10,34 @@ WITH view_links AS (SELECT json_extract_path_text(params::json, 'urls', 'view') 
 						WHERE is_deleted IS FALSE AND title NOT LIKE 'Bookmarks' AND type = 'osf.node'),
 	wb_ids AS (SELECT log_id, view_link, reverse(split_part(reverse(view_link), '/', 2)) AS wb_id, node_id, date
 					FROM view_links
-					WHERE node_id = original_node_id)
+					WHERE node_id = original_node_id),
+	moved_view_links AS (SELECT json_extract_path_text(params::json, 'destination', 'path') AS wb_path,
+						   json_extract_path_text(params::json, 'destination', 'nid') AS destination_guid,
+						   json_extract_path_text(params::json, 'destination', 'addon') AS addon_type, 
+						   json_extract_path_text(params::json, 'sourcec', 'kind') AS source_type, 
+						   json_extract_path_text(params::json, 'destination', 'kind') AS destination_type, 
+						   json_extract_path_text(params::json, 'destination', 'children') AS file_or_folder,  
+						   moved_logs.id AS moved_log_id, node_id AS moved_node_id, original_node_id AS moved_original_node_id, date AS moved_log_date, params 
+						FROM osf_abstractnode
+						LEFT JOIN (SELECT *
+									FROM osf_nodelog
+									WHERE action = 'addon_file_moved'
+									LIMIT 1000) AS moved_logs
+						ON osf_abstractnode.id = moved_logs.node_id),
+	moved_wb_ids AS (SELECT *, BTRIM(each_etag ->> 'path', '/') AS path
+						FROM moved_view_links
+						cross join json_array_elements(file_or_folder::json) each_etag
+						WHERE addon_type = 'OSF Storage' AND destination_type = 'folder' AND file_or_folder IS NOT NULL)
 
 /* join up with basefilenode table on GUIDs to compare log dates and file created dates */
-SELECT node_id, wb_ids.date AS nodelog_date, wb_id, type, name, created, modified, copied_from_id
+SELECT node_id, wb_ids.date AS nodelog_date, wb_id, type, name, created, modified, 
+		copied_from_id, path, moved_log_id, moved_node_id, moved_original_node_id, moved_log_date
 	FROM osf_basefilenode
-	FULL OUTER JOIN wb_ids
+	LEFT JOIN wb_ids
 	ON osf_basefilenode._id = wb_ids.wb_id AND osf_basefilenode.target_object_id = wb_ids.node_id
-	WHERE target_content_type_id = 30;
+	LEFT JOIN moved_wb_ids
+	ON osf_basefilenode._id = moved_wb_ids.path AND osf_basefilenode.target_object_id = moved_wb_ids.moved_node_id
+	WHERE target_content_type_id = 30 AND osf_basefilenode.type = 'osf.osfstoragefile';
 
 
 

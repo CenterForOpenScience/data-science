@@ -24,19 +24,26 @@ WITH view_links AS (SELECT json_extract_path_text(params::json, 'urls', 'view') 
 									WHERE action = 'addon_file_moved'
 									LIMIT 1000) AS moved_logs
 						ON osf_abstractnode.id = moved_logs.node_id),
-	moved_wb_ids AS (SELECT *, BTRIM(each_etag ->> 'path', '/') AS path
+	moved_wb_folder_ids AS (SELECT *, BTRIM(each_etag ->> 'path', '/') AS path
 						FROM moved_view_links
 						cross join json_array_elements(file_or_folder::json) each_etag
-						WHERE addon_type = 'OSF Storage' AND destination_type = 'folder' AND file_or_folder IS NOT NULL)
+						WHERE addon_type = 'OSF Storage' AND file_or_folder IS NOT NULL),
+	moved_wb_nonfolder_ids AS (SELECT *, BTRIM('path', '/') AS path
+						FROM moved_view_links
+						WHERE addon_type = 'OSF Storage' AND file_or_folder IS NULL)
 
 /* join up with basefilenode table on GUIDs to compare log dates and file created dates */
-SELECT node_id, wb_ids.date AS nodelog_date, wb_id, type, name, created, modified, 
-		copied_from_id, path, moved_log_id, moved_node_id, moved_original_node_id, moved_log_date
+SELECT node_id, wb_ids.date AS nodelog_date, wb_id, type, name, created, modified, copied_from_id, 
+		moved_wb_folder_ids.path AS folder_moved_path, moved_wb_nonfolder_ids.path AS nonfolder_moved_path, 
+		moved_wb_folder_ids.moved_log_id, moved_wb_folder_ids.moved_node_id, moved_wb_folder_ids.moved_original_node_id, moved_wb_folder_ids.moved_log_date,
+		moved_wb_nonfolder_ids.moved_log_id, moved_wb_nonfolder_ids.moved_node_id, moved_wb_nonfolder_ids.moved_original_node_id, moved_wb_nonfolder_ids.moved_log_date
 	FROM osf_basefilenode
 	LEFT JOIN wb_ids
 	ON osf_basefilenode._id = wb_ids.wb_id AND osf_basefilenode.target_object_id = wb_ids.node_id
-	LEFT JOIN moved_wb_ids
-	ON osf_basefilenode._id = moved_wb_ids.path AND osf_basefilenode.target_object_id = moved_wb_ids.moved_node_id
+	LEFT JOIN moved_wb_folder_ids
+	ON osf_basefilenode._id = moved_wb_folder_ids.path AND osf_basefilenode.target_object_id = moved_wb_folder_ids.moved_node_id
+	LEFT JOIN moved_wb_nonfolder_ids
+	ON osf_basefilenode._id = moved_wb_nonfolder_ids.path AND osf_basefilenode.target_object_id = moved_wb_nonfolder_ids.moved_node_id
 	WHERE target_content_type_id = 30 AND osf_basefilenode.type = 'osf.osfstoragefile';
 
 

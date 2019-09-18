@@ -14,14 +14,12 @@ WITH view_links AS (SELECT json_extract_path_text(params::json, 'urls', 'view') 
 	moved_view_links AS (SELECT json_extract_path_text(params::json, 'destination', 'path') AS wb_path,
 						   json_extract_path_text(params::json, 'destination', 'nid') AS destination_guid,
 						   json_extract_path_text(params::json, 'destination', 'addon') AS addon_type, 
-						   json_extract_path_text(params::json, 'sourcec', 'kind') AS source_type, 
-						   json_extract_path_text(params::json, 'destination', 'kind') AS destination_type, 
 						   json_extract_path_text(params::json, 'destination', 'children') AS file_or_folder,  
-						   moved_logs.id AS moved_log_id, node_id AS moved_node_id, original_node_id AS moved_original_node_id, date AS moved_log_date, params 
+						   moved_logs.id AS moved_log_id, node_id AS moved_node_id, original_node_id AS moved_original_node_id, date AS moved_log_date, params, action 
 						FROM osf_abstractnode
 						LEFT JOIN (SELECT *
 									FROM osf_nodelog
-									WHERE action = 'addon_file_moved'
+									WHERE (action = 'addon_file_moved' OR  action = 'addon_file_copied') AND node_id != 203576 AND node_id != 16756
 									LIMIT 1000) AS moved_logs
 						ON osf_abstractnode.id = moved_logs.node_id),
 	moved_wb_folder_ids AS (SELECT *, BTRIM(each_etag ->> 'path', '/') AS path

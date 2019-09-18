@@ -56,3 +56,23 @@ SELECT *, each_etag ->> 'path' AS path
 	FROM view_links
 	cross join json_array_elements(file_or_folder::json) each_etag
 	WHERE addon_type = 'OSF Storage' AND destination_type = 'folder' AND file_or_folder IS NOT NULL;
+
+
+/* get WB id for copied files */
+WITH copied_links AS (SELECT json_extract_path_text(params::json, 'destination', 'path') AS wb_path,
+						   json_extract_path_text(params::json, 'destination', 'nid') AS destination_guid,
+						   json_extract_path_text(params::json, 'destination', 'addon') AS addon_type, 
+						   json_extract_path_text(params::json, 'destination', 'children') AS file_or_folder,  
+						   id, node_id, original_node_id, date, params 
+						FROM osf_nodelog
+						WHERE action = 'addon_file_copied' AND node_id != 203576 AND node_id != 16756),
+	non_folder_paths AS (SELECT *, BTRIM(wb_path, '/') AS path
+						FROM copied_links
+						WHERE addon_type = 'OSF Storage' AND file_or_folder IS NULL),
+	fold_paths AS (SELECT *, BTRIM(each_etag ->> 'path', '/') AS path
+						FROM copied_links
+						cross join json_array_elements(file_or_folder::json) each_etag
+						WHERE addon_type = 'OSF Storage' AND file_or_folder IS NOT NULL)
+
+
+

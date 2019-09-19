@@ -7,7 +7,8 @@ WITH view_links AS (SELECT json_extract_path_text(params::json, 'urls', 'view') 
 									WHERE action = 'osf_storage_file_added' OR action = 'file_added'
 									LIMIT 10000) AS logs
 						ON osf_abstractnode.id = logs.node_id
-						WHERE is_deleted IS FALSE AND title NOT LIKE 'Bookmarks' AND type = 'osf.node'),
+						WHERE is_deleted IS FALSE AND title NOT LIKE 'Bookmarks' AND type = 'osf.node' AND
+							node_id != 203576 AND node_id != 16756),
 	wb_ids AS (SELECT log_id, view_link, reverse(split_part(reverse(view_link), '/', 2)) AS wb_id, node_id, date
 					FROM view_links
 					WHERE node_id = original_node_id),
@@ -22,7 +23,9 @@ WITH view_links AS (SELECT json_extract_path_text(params::json, 'urls', 'view') 
 									FROM osf_nodelog
 									WHERE (action = 'addon_file_moved' OR  action = 'addon_file_copied') AND node_id != 203576 AND node_id != 16756
 									LIMIT 1000) AS moved_logs
-						ON osf_abstractnode.id = moved_logs.node_id),
+						ON osf_abstractnode.id = moved_logs.node_id 
+						WHERE is_deleted IS FALSE AND title NOT LIKE 'Bookmarks' AND type = 'osf.node' AND
+							node_id != 203576 AND node_id != 16756),
 	moved_wb_folder_ids AS (SELECT *, BTRIM(each_etag ->> 'path', '/') AS path
 						FROM moved_view_links
 						cross join json_array_elements(file_or_folder::json) each_etag
@@ -44,7 +47,8 @@ SELECT node_id, wb_ids.date AS nodelog_date, wb_id, type, name, created, modifie
 	ON osf_basefilenode._id = moved_wb_folder_ids.path AND osf_basefilenode.target_object_id = moved_wb_folder_ids.moved_node_id
 	LEFT JOIN moved_wb_nonfolder_ids
 	ON osf_basefilenode._id = moved_wb_nonfolder_ids.path AND osf_basefilenode.target_object_id = moved_wb_nonfolder_ids.moved_node_id
-	WHERE target_content_type_id = 30 AND osf_basefilenode.type = 'osf.osfstoragefile';
+	WHERE target_content_type_id = 30 AND osf_basefilenode.type = 'osf.osfstoragefile' AND 
+		node_id != 203576 AND node_id != 16756;
 
 
 

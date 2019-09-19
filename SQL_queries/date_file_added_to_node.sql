@@ -29,10 +29,10 @@ WITH view_links AS (SELECT json_extract_path_text(params::json, 'urls', 'view') 
 	moved_wb_folder_ids AS (SELECT *, BTRIM(each_etag ->> 'path', '/') AS path
 						FROM moved_view_links
 						cross join json_array_elements(file_or_folder::json) each_etag
-						WHERE addon_type = 'OSF Storage' AND file_or_folder IS NOT NULL),
+						WHERE addon_type = 'OSF Storage' AND file_or_folder IS NOT NULL AND destination_guid != source_guid),
 	moved_wb_nonfolder_ids AS (SELECT *, BTRIM('path', '/') AS path
 						FROM moved_view_links
-						WHERE addon_type = 'OSF Storage' AND file_or_folder IS NULL)
+						WHERE addon_type = 'OSF Storage' AND file_or_folder IS NULL AND destination_guid != source_guid)	
 
 /* join up with basefilenode table on GUIDs to compare log dates and file created dates */
 SELECT node_id, wb_ids.date AS nodelog_date, wb_id, osf_basefilenode.type, name, osf_basefilenode.created, osf_basefilenode.modified, copied_from_id, 

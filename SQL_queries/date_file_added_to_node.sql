@@ -13,6 +13,7 @@ WITH view_links AS (SELECT json_extract_path_text(params::json, 'urls', 'view') 
 					WHERE node_id = original_node_id),
 	moved_view_links AS (SELECT json_extract_path_text(params::json, 'destination', 'path') AS wb_path,
 						   json_extract_path_text(params::json, 'destination', 'nid') AS destination_guid,
+						   json_extract_path_text(params::json, 'source', 'nid') AS destination_guid,
 						   json_extract_path_text(params::json, 'destination', 'addon') AS addon_type, 
 						   json_extract_path_text(params::json, 'destination', 'children') AS file_or_folder,  
 						   moved_logs.id AS moved_log_id, node_id AS moved_node_id, original_node_id AS moved_original_node_id, date AS moved_log_date, params, action 
@@ -34,7 +35,8 @@ WITH view_links AS (SELECT json_extract_path_text(params::json, 'urls', 'view') 
 SELECT node_id, wb_ids.date AS nodelog_date, wb_id, type, name, created, modified, copied_from_id, 
 		moved_wb_folder_ids.path AS folder_moved_path, moved_wb_nonfolder_ids.path AS nonfolder_moved_path, 
 		moved_wb_folder_ids.moved_log_id, moved_wb_folder_ids.moved_node_id, moved_wb_folder_ids.moved_original_node_id, moved_wb_folder_ids.moved_log_date,
-		moved_wb_nonfolder_ids.moved_log_id, moved_wb_nonfolder_ids.moved_node_id, moved_wb_nonfolder_ids.moved_original_node_id, moved_wb_nonfolder_ids.moved_log_date
+		moved_wb_nonfolder_ids.moved_log_id, moved_wb_nonfolder_ids.moved_node_id, moved_wb_nonfolder_ids.moved_original_node_id, moved_wb_nonfolder_ids.moved_log_date,
+		moved_wb_folder_ids.destination_guid, moved_wb_folder_ids.source_guid, moved_wb_nonfolder_ids.destination_guid, moved_wb_nonfolder_ids.source_guid
 	FROM osf_basefilenode
 	LEFT JOIN wb_ids
 	ON osf_basefilenode._id = wb_ids.wb_id AND osf_basefilenode.target_object_id = wb_ids.node_id

@@ -8,7 +8,10 @@ WITH view_links AS (SELECT json_extract_path_text(params::json, 'urls', 'view') 
 									LIMIT 10000) AS logs
 						ON osf_abstractnode.id = logs.node_id
 						WHERE is_deleted IS FALSE AND title NOT LIKE 'Bookmarks' AND type = 'osf.node' AND
-							node_id != 203576 AND node_id != 16756),
+							node_id != 203576 AND node_id != 16756 AND 
+							creator_id NOT IN(38706, 44674, 45859, 29901, 60863, 41245, 8559, 17491, 5322, 40861, 69259, 69181, 69833, 
+								70258, 70262, 10310, 49223, 53835, 55925, 47949, 1599, 2187, 32702, 57637, 99653, 17756, 49847, 117933,
+								129785, 9991, 28225, 32238, 76344, 36859, 208328, 207423)),
 	wb_ids AS (SELECT log_id, view_link, reverse(split_part(reverse(view_link), '/', 2)) AS wb_id, node_id, date
 					FROM view_links
 					WHERE node_id = original_node_id),
@@ -25,7 +28,10 @@ WITH view_links AS (SELECT json_extract_path_text(params::json, 'urls', 'view') 
 									LIMIT 5000) AS moved_logs
 						ON osf_abstractnode.id = moved_logs.node_id 
 						WHERE is_deleted IS FALSE AND title NOT LIKE 'Bookmarks' AND type = 'osf.node' AND
-							node_id != 203576 AND node_id != 16756),
+							node_id != 203576 AND node_id != 16756 AND 
+							creator_id NOT IN(38706, 44674, 45859, 29901, 60863, 41245, 8559, 17491, 5322, 40861, 69259, 69181, 69833, 
+								70258, 70262, 10310, 49223, 53835, 55925, 47949, 1599, 2187, 32702, 57637, 99653, 17756, 49847, 117933,
+								129785, 9991, 28225, 32238, 76344, 36859, 208328, 207423)),
 	moved_wb_folder_ids AS (SELECT *, BTRIM(each_etag ->> 'path', '/') AS path
 						FROM moved_view_links
 						cross join json_array_elements(file_or_folder::json) each_etag

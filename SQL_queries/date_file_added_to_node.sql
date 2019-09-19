@@ -14,7 +14,7 @@ WITH view_links AS (SELECT json_extract_path_text(params::json, 'urls', 'view') 
 					WHERE node_id = original_node_id),
 	moved_view_links AS (SELECT json_extract_path_text(params::json, 'destination', 'path') AS wb_path,
 						   json_extract_path_text(params::json, 'destination', 'nid') AS destination_guid,
-						   json_extract_path_text(params::json, 'source', 'nid') AS destination_guid,
+						   json_extract_path_text(params::json, 'source', 'nid') AS source_guid,
 						   json_extract_path_text(params::json, 'destination', 'addon') AS addon_type, 
 						   json_extract_path_text(params::json, 'destination', 'children') AS file_or_folder,  
 						   moved_logs.id AS moved_log_id, node_id AS moved_node_id, original_node_id AS moved_original_node_id, date AS moved_log_date, params, action 

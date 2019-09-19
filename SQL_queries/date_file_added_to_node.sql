@@ -22,7 +22,7 @@ WITH view_links AS (SELECT json_extract_path_text(params::json, 'urls', 'view') 
 						LEFT JOIN (SELECT *
 									FROM osf_nodelog
 									WHERE (action = 'addon_file_moved' OR  action = 'addon_file_copied') AND node_id != 203576 AND node_id != 16756
-									LIMIT 1000) AS moved_logs
+									LIMIT 5000) AS moved_logs
 						ON osf_abstractnode.id = moved_logs.node_id 
 						WHERE is_deleted IS FALSE AND title NOT LIKE 'Bookmarks' AND type = 'osf.node' AND
 							node_id != 203576 AND node_id != 16756),
@@ -35,12 +35,14 @@ WITH view_links AS (SELECT json_extract_path_text(params::json, 'urls', 'view') 
 						WHERE addon_type = 'OSF Storage' AND file_or_folder IS NULL)
 
 /* join up with basefilenode table on GUIDs to compare log dates and file created dates */
-SELECT node_id, wb_ids.date AS nodelog_date, wb_id, type, name, created, modified, copied_from_id, 
+SELECT node_id, wb_ids.date AS nodelog_date, wb_id, osf_basefilenode.type, name, osf_basefilenode.created, osf_basefilenode.modified, copied_from_id, 
 		moved_wb_folder_ids.path AS folder_moved_path, moved_wb_nonfolder_ids.path AS nonfolder_moved_path, 
 		moved_wb_folder_ids.moved_log_id, moved_wb_folder_ids.moved_node_id, moved_wb_folder_ids.moved_original_node_id, moved_wb_folder_ids.moved_log_date,
 		moved_wb_nonfolder_ids.moved_log_id, moved_wb_nonfolder_ids.moved_node_id, moved_wb_nonfolder_ids.moved_original_node_id, moved_wb_nonfolder_ids.moved_log_date,
 		moved_wb_folder_ids.destination_guid, moved_wb_folder_ids.source_guid, moved_wb_nonfolder_ids.destination_guid, moved_wb_nonfolder_ids.source_guid
-	FROM osf_basefilenode
+	FROM osf_abstractnode
+	LEFT JOIN osf_basefilenode
+	ON osf_abstractnode.id = osf_basefilenode.target_object_id
 	LEFT JOIN wb_ids
 	ON osf_basefilenode._id = wb_ids.wb_id AND osf_basefilenode.target_object_id = wb_ids.node_id
 	LEFT JOIN moved_wb_folder_ids
@@ -48,6 +50,7 @@ SELECT node_id, wb_ids.date AS nodelog_date, wb_id, type, name, created, modifie
 	LEFT JOIN moved_wb_nonfolder_ids
 	ON osf_basefilenode._id = moved_wb_nonfolder_ids.path AND osf_basefilenode.target_object_id = moved_wb_nonfolder_ids.moved_node_id
 	WHERE target_content_type_id = 30 AND osf_basefilenode.type = 'osf.osfstoragefile' AND 
+		is_deleted IS FALSE AND osf_abstractnode.type = 'osf.node' AND title NOT LIKE 'Bookmarks' AND
 		node_id != 203576 AND node_id != 16756;
 
 

@@ -30,7 +30,7 @@ WITH view_links AS (SELECT json_extract_path_text(params::json, 'urls', 'view') 
 						FROM moved_view_links
 						cross join json_array_elements(file_or_folder::json) each_etag
 						WHERE addon_type = 'OSF Storage' AND file_or_folder IS NOT NULL AND destination_guid != source_guid),
-	moved_wb_nonfolder_ids AS (SELECT *, BTRIM('path', '/') AS path
+	moved_wb_nonfolder_ids AS (SELECT *, BTRIM(wb_path, '/') AS path
 						FROM moved_view_links
 						WHERE addon_type = 'OSF Storage' AND file_or_folder IS NULL AND destination_guid != source_guid)	
 

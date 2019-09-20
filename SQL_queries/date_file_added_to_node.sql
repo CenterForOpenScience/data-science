@@ -57,7 +57,10 @@ SELECT node_id, wb_ids.date AS nodelog_date, wb_id, osf_basefilenode.type, name,
 	ON osf_basefilenode._id = moved_wb_nonfolder_ids.path AND osf_basefilenode.target_object_id = moved_wb_nonfolder_ids.moved_node_id
 	WHERE target_content_type_id = 30 AND osf_basefilenode.type = 'osf.osfstoragefile' AND 
 		is_deleted IS FALSE AND osf_abstractnode.type = 'osf.node' AND title NOT LIKE 'Bookmarks' AND
-		node_id != 203576 AND node_id != 16756;
+		node_id != 203576 AND node_id != 16756 AND 
+		creator_id NOT IN(38706, 44674, 45859, 29901, 60863, 41245, 8559, 17491, 5322, 40861, 69259, 69181, 69833, 
+			70258, 70262, 10310, 49223, 53835, 55925, 47949, 1599, 2187, 32702, 57637, 99653, 17756, 49847, 117933,
+			129785, 9991, 28225, 32238, 76344, 36859, 208328, 207423);
 
 
 

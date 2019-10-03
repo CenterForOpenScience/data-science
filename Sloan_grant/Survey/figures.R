@@ -60,9 +60,9 @@ preprint_cred <- preprint_cred %>%
 
 cred_preprints<- expression(atop("When assessing the credibility of a preprint", paste("how important would it be to have each of the following pieces of information?")))
 pdf("icon_cred.pdf", width=12.5, height=10)
-plot(likert(as.data.frame(preprint_cred)), ordered=T, text.size = 4) + 
+plot(likert(as.data.frame(preprint_cred)), ordered=T) + 
   ggtitle(cred_preprints)+
-  theme(plot.title = element_text(hjust = 0.5, size = 16), axis.text = element_text(size = 12), legend.title = element_blank(), legend.text=element_text(size=10))
+  theme(plot.title = element_text(hjust = 0.5), legend.title = element_blank())
 dev.off()
 
 

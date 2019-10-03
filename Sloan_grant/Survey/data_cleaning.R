@@ -582,7 +582,17 @@ survey_data <- survey_data %>%
                                      discipline == 'Engineering' ~ 'Engineering',
                                      discipline == 'Medicine' ~ 'Medicine and Health Sciences',
                                      discipline == 'Law' ~ 'Law'))
-      
+
+# cleaned career stage
+survey_data <- survey_data %>%
+  mutate(acad_career_stage = case_when(position == 'Graduate Student' ~ 'Grad Student',
+                                       position == 'Post doc' ~ 'Post doc',
+                                       position == 'Assistant Professor, or equivalent' ~ 'Assist Prof',
+                                       position == 'Associate Professor, or equivalent' ~ 'Assoc Prof',
+                                       position == 'Professor, or equivalent' ~ 'Full Prof',
+                                       grepl('^doctora', position_7_TEXT, ignore.case = T) | grepl('phd student', position_7_TEXT, ignore.case = T) | grepl('phd candidate', position_7_TEXT, ignore.case = T) ~ 'Grad Student',
+                                       grepl('^full professor', position_7_TEXT, ignore.case = T) ~ 'Full Prof'))
+
 write_csv(survey_data, 'cleaned_data.csv')    
 
 

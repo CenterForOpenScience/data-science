@@ -31,7 +31,7 @@ survey_data <- read_csv(here::here('cleaned_data.csv'), col_types = cols(.defaul
 
 ## Overall icons importance
 preprint_cred <- survey_data %>%
-  select(preprint_cred1_1:preprint_cred5_3)
+  dplyr::select(preprint_cred1_1:preprint_cred5_3)
 
 choices  <- c('Not at all important', 'Slightly important', 'Moderately important', 'Very important', 'Extremely important')
 
@@ -53,7 +53,7 @@ colnames(preprint_cred) <- c(preprint_cred1_1 = "Information about an author's p
                              preprint_cred4_4 = "Links to any pre-registrations or pre-analysis plans for the reported studies provided by the author(s)",
                              preprint_cred5_1 = "Information about whether independent groups (e.g. non-authors, preprint services) could access the linked data, code, or materials",
                              preprint_cred5_2 = "Information about whether independent groups could reproduce the reported findings",
-                             preprint_cred5_3 = "Information about whether independent groups found that the findings were robust to variations in the statistical models (e.g., different covariates or exclusion rules)")
+                             preprint_cred5_3 = "Information about whether independent groups found that the findings were robust to variations in the statistical models (e.g., different covariates or exclusion rules) ")
 
 preprint_cred <- preprint_cred %>%
   mutate_all(factor, levels=1:5, labels=choices, ordered=TRUE)
@@ -69,7 +69,7 @@ dev.off()
 ## Overall service credibilitys
 
 service_cred <- survey_data %>%
-  select(services_cred1_1:service_credible4_5)
+  dplyr::select(services_cred1_1:service_credible4_5)
 
 choices <- c('Decrease a lot', "Moderately decrease", "Slightly decrease", "Neither decrease nor increase", "Slightly increase", "Moderately increase", "Increase a lot")
 

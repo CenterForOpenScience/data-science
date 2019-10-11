@@ -35,25 +35,25 @@ preprint_cred <- survey_data %>%
 
 choices  <- c('Not at all important', 'Slightly important', 'Moderately important', 'Very important', 'Extremely important')
 
-colnames(preprint_cred) <- c(preprint_cred1_1 = "Author's previous work",
-                             preprint_cred1_2 = "Author's institution",
-                             preprint_cred1_3 = "Professional identity links",
-                             preprint_cred1_4 = "COI disclosures",
-                             preprint_cred1_5 = "Author's level of open scholarship",
-                             preprint_cred2_1 = "Funders of research",
-                             preprint_cred2_2 = "Preprint submitted to a journal",
-                             preprint_cred2_3 = "Usage metrics",
-                             preprint_cred2_4 = "Citations of preprints",
-                             preprintcred3_1 = "Anonymous comments",
-                             preprintcred3_2 = "Identified comments",
-                             preprintcred3_3 = "Simplified endorsements",
-                             preprint_cred4_1 = "Link to study data",
-                             preprint_cred4_2 = "Link to study analysis scripts",
-                             preprint_cred4_3 = "Link to materials",
-                             preprint_cred4_4 = "Link to pre-reg",
-                             preprint_cred5_1 = "Info about indep groups accessing linked info",
-                             preprint_cred5_2 = "Info about indep group reproductions",
-                             preprint_cred5_3 = "Info about indep robustness checks")
+colnames(preprint_cred) <- c(preprint_cred1_1 = "Information about an author's previous work",
+                             preprint_cred1_2 = "Institutional information of the author(s)",
+                             preprint_cred1_3 = "Links to author’s professional identities through services such as ORCID or Google Scholar",
+                             preprint_cred1_4 = "Disclosure statement about conflicts of interest for the author(s)",
+                             preprint_cred1_5 = "Information showing author(s) general levels of transparency and open scholarship (e.g., frequency of data sharing)",
+                             preprint_cred2_1 = "Information about the funder(s) of the research",
+                             preprint_cred2_2 = "Indication of whether the preprint has been submitted to a journal",
+                             preprint_cred2_3 = "Usage metrics about the preprint (e.g., views, downloads, media mentions)",
+                             preprint_cred2_4 = "Citations of the preprint in other research papers, policy briefs, or other reports",
+                             preprintcred3_1 = "Information about anonymous users’ thoughts about the preprint (e.g. comments)",
+                             preprintcred3_2 = "Information about identified users’ thoughts about the preprint (e.g. comments)",
+                             preprintcred3_3 = "Information about endorsements by independent users in a simplified format (e.g. thumbs-up/thumbs-down on the preprint)",
+                             preprint_cred4_1 = "Links to any available study data provided by the author(s)",
+                             preprint_cred4_2 = "Links to any available analysis scripts/code/files provided by the author(s)",
+                             preprint_cred4_3 = "Links to any available research materials provided by the author(s)",
+                             preprint_cred4_4 = "Links to any pre-registrations or pre-analysis plans for the reported studies provided by the author(s)",
+                             preprint_cred5_1 = "Information about whether independent groups (e.g. non-authors, preprint services) could access the linked data, code, or materials",
+                             preprint_cred5_2 = "Information about whether independent groups could reproduce the reported findings",
+                             preprint_cred5_3 = "Information about whether independent groups found that the findings were robust to variations in the statistical models (e.g., different covariates or exclusion rules)")
 
 preprint_cred <- preprint_cred %>%
   mutate_all(factor, levels=1:5, labels=choices, ordered=TRUE)

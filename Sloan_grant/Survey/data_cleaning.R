@@ -8,31 +8,30 @@ library(osfr)
 osf_retrieve_file("https://osf.io/q4zf8/") %>% 
   osf_download(overwrite = T)
 
-survey_data_choices <- read_csv(here('choice_data.csv'), col_types = cols(.default = col_factor(),
+survey_data_choices <- read_csv(here::here('choice_data.csv'), col_types = cols(.default = col_factor(),
                                                                  ResponseId = col_character(),
                                                                  position_7_TEXT = col_character(), 
                                                                  discipline = col_character(),
                                                                  discipline_specific = col_character(),
                                                                  discipline_other = col_character(),
                                                                  how_heard = col_character())) %>%
-                            select(ResponseId, familiar, favor_use, preprints_submitted, preprints_used, position, discipline, country)
+                            select(ResponseId, familiar, preprints_submitted, preprints_used, position, discipline, country)
 
 osf_retrieve_file("https://osf.io/xnbhu/") %>% 
   osf_download(overwrite = T)
 
-survey_data_numeric <- read_csv(here('numeric_data.csv')) %>%
-                            select(-c(familiar, favor_use, preprints_submitted, preprints_used, position, discipline, country))
+survey_data_numeric <- read_csv(here::here('numeric_data.csv')) %>%
+                            select(-c(familiar, preprints_submitted, preprints_used, position, discipline, country))
 
 osf_retrieve_file("https://osf.io/7ery8/") %>% 
   osf_download(overwrite = T)
 
-hdi_data <- read_csv(here('hdi_2017_data.csv'), col_types =cols(country = col_factor(), HDI_2017 = col_number())) %>% 
+hdi_data <- read_csv(here::here('hdi_2017_data.csv'), col_types =cols(country = col_factor(), HDI_2017 = col_number())) %>% 
                             select(country, HDI_2017)
 
 ### merging data and recoding favor levels
 survey_data <- left_join(survey_data_numeric, survey_data_choices, by = 'ResponseId') %>%
                     mutate(familiar = fct_rev(familiar), 
-                           favor_use = fct_relevel(favor_use, c('Very much oppose', 'Moderately oppose', 'Slightly oppose', 'Neither oppose nor favor', 'Slightly favor', 'Moderately favor', 'Very much favor')),
                            preprints_used = fct_relevel(preprints_used, c('No', 'Yes, once', 'Yes, a few times', 'Yes, many times', 'Not sure')),
                            preprints_submitted = fct_relevel(preprints_submitted, c('No', 'Yes, once', 'Yes, a few times', 'Yes, many times', 'Not sure')),
                            discipline = case_when(discipline == 'Click to write Choice 23' ~ 'Medicine',
@@ -45,10 +44,11 @@ hdi_data <- hdi_data %>%
                                HDI_2017 < .555 ~ 'low',
                                TRUE ~ NA_character_))
 
-survey_data <- left_join(survey_data, hdi_data, by = 'country')
+survey_data <- left_join(survey_data, hdi_data, by = 'country') %>%
+                  select(-c(Progress, Finished, RecordedDate, DistributionChannel, UserLanguage, `Duration (in seconds)`))
                   
 
-
+# cleaned discipline
 
 ## bepress tier 3 recoding
 survey_data <- survey_data %>%

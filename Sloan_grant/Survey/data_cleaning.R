@@ -46,6 +46,12 @@ hdi_data <- hdi_data %>%
 
 survey_data <- left_join(survey_data, hdi_data, by = 'country') %>%
                   select(-c(Progress, Finished, RecordedDate, DistributionChannel, UserLanguage, `Duration (in seconds)`))
+
+#only keep responses with at least one answered question
+survey_data <- survey_data %>%
+                  mutate(missing_qs = rowSums(is.na(survey_data))) %>%
+                  filter(missing_qs < 49)
+                  
                   
 
 # cleaned discipline

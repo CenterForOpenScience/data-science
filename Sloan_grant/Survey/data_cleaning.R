@@ -592,6 +592,18 @@ survey_data <- survey_data %>%
                                      discipline == 'Medicine' ~ 'Medicine and Health Sciences',
                                      discipline == 'Law' ~ 'Law'))
 
+##add collapsed discipline categories
+survey_data <- survey_data %>%
+                  mutate(discipline_collapsed = case_when(bepress_tier2 == 'Psychology' ~ 'Psychology',
+                                                bepress_tier1 == 'Social and Behavioral Sciences' ~ 'Other Social Sciences',
+                                                bepress_tier1 == 'Life Sciences' ~ 'Life Sciences (Biology)',
+                                                bepress_tier1 == 'Medicine and Health Sciences' ~ 'Medicine and Health Sciences',
+                                                bepress_tier1 == 'Physical Sciences and Mathematics' ~ 'Physical Sciences and Mathematics',
+                                                bepress_tier1 == 'Engineering' ~ 'Engineering',
+                                                bepress_tier1 == 'Law' | bepress_tier1 == 'Business' | bepress_tier1 == 'Arts and Humanities' | bepress_tier1 == 'Education' ~ 'Other',
+                                                TRUE ~ NA_character_))
+
+
 # cleaned career stage
 survey_data <- survey_data %>%
   mutate(acad_career_stage = case_when(position == 'Graduate Student' ~ 'Grad Student',

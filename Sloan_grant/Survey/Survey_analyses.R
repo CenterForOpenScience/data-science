@@ -72,3 +72,16 @@ survey_data %>%
 survey_data %>% 
   group_by(hdi_level) %>% 
   tally()
+
+#### correlates of favorability ####
+r_and_cis <- survey_data %>%
+  select(starts_with('preprint_cred'), favor_use) %>%
+  corr.test(adjust = 'none')
+
+r_and_cis$ci %>%
+  rownames_to_column(var = 'correlation') %>%
+  filter(grepl('fvr_s', correlation)) %>%
+  column_to_rownames('correlation') %>%
+  select(-p) %>%
+  round(digits = 2)
+  

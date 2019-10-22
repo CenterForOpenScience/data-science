@@ -3,6 +3,8 @@ library(osfr)
 library(tidyverse)
 library(likert)
 library(here)
+library(skimr)
+library(gt)
 
 ## reading in data
 osf_retrieve_file("https://osf.io/86upq/") %>% 
@@ -66,6 +68,80 @@ plot(likert(as.data.frame(preprint_cred)), ordered=T) +
   ggtitle(cred_preprints)+
   theme(plot.title = element_text(hjust = 0.5), legend.title = element_blank())
 dev.off()
+
+# table by academic discipline
+
+preprintcred_means_by_position <- survey_data %>%
+  select(-c(consent, HDI_2017)) %>%
+  group_by(acad_career_stage) %>%
+  skim_to_wide() %>%
+  rename(question = variable) %>%
+  select(acad_career_stage, question, complete, mean, sd) %>%
+  filter(grepl('preprint', question)) %>%
+  filter(!is.na(mean)) %>%
+  mutate(mean = as.numeric(mean),
+         sd = as.numeric(sd),
+         complete = as.numeric(complete)) %>%
+  gather(variable, value, -(question:acad_career_stage)) %>% 
+  unite(temp, acad_career_stage, variable) %>% 
+  spread(temp, value) %>%
+  mutate(var_name = case_when(question == 'preprint_cred1_1' ~ "Author's previous work",
+                              question == 'preprint_cred1_2' ~ "Author's institution",
+                              question == 'preprint_cred1_3' ~ "Professional identity links",
+                              question == 'preprint_cred1_4' ~ "COI disclosures",
+                              question == 'preprint_cred1_5' ~ "Author's level of open scholarship",
+                              question == 'preprint_cred2_1' ~ "Funders of research",
+                              question == 'preprint_cred2_2' ~ "Preprint submitted to a journal",
+                              question == 'preprint_cred2_3' ~ "Usage metrics",
+                              question == 'preprint_cred2_4' ~ "Citations of preprints",
+                              question == 'preprintcred3_1' ~ "Anonymous comments",
+                              question == 'preprintcred3_2' ~ "Identified comments",
+                              question == 'preprintcred3_3' ~ "Simplified endorsements",
+                              question == 'preprint_cred4_1' ~ "Link to study data",
+                              question == 'preprint_cred4_2' ~ "Link to study analysis scripts",
+                              question == 'preprint_cred4_3' ~ "Link to materials",
+                              question == 'preprint_cred4_4' ~ "Link to pre-reg",
+                              question == 'preprint_cred5_1' ~ "Info about indep groups accessing linked info",
+                              question == 'preprint_cred5_2' ~ "Info about indep group reproductions",
+                              question == 'preprint_cred5_3' ~ "Info about indep robustness checks",
+                              TRUE ~ 'Courtney missed a question')) %>%
+  select(var_name, starts_with('Grad'), starts_with('Post'), starts_with('Assist'), starts_with('Assoc'), starts_with('Full'))
+
+#building table
+preprintcred_means_by_position %>% 
+  gt() %>%
+  tab_header(title = 'Career Stage') %>%
+  tab_source_note(source_note = 'Response Scale: 1 - Not at all important, 2 - Slightly important, 3 - Moderately important, 4 - Very Important, 5 - Extremely Important') %>%
+  tab_source_note(source_note = "Missing Data: Respondents who listed 'other' or who skipped the question not included" ) %>%
+  cols_hide(columns = vars(`Grad Student_complete`, `Post doc_complete`, `Assist Prof_complete`,`Assoc Prof_complete`, `Full Prof_complete` )) %>%
+  data_color(
+    columns = vars(`Grad Student_mean`,`Post doc_mean`,`Assist Prof_mean`, `Assoc Prof_mean`, `Full Prof_mean`),
+    colors = scales::col_numeric(
+      palette = paletteer::paletteer_d(
+        package = "RColorBrewer",
+        palette = "BrBG"
+      ),
+      domain = c(1, 5))
+  ) %>%
+  cols_merge(col_1 = vars(`Grad Student_mean`), col_2 = vars(`Grad Student_sd`), pattern = '{1} ({2})') %>%
+  cols_merge(col_1 = vars(`Post doc_mean`), col_2 = vars(`Post doc_sd`), pattern = '{1} ({2})') %>%
+  cols_merge(col_1 = vars(`Assist Prof_mean`), col_2 = vars(`Assist Prof_sd`), pattern = '{1} ({2})') %>%
+  cols_merge(col_1 = vars(`Assoc Prof_mean`), col_2 = vars(`Assoc Prof_sd`), pattern = '{1} ({2})') %>%
+  cols_merge(col_1 = vars(`Full Prof_mean`), col_2 = vars(`Full Prof_sd`), pattern = '{1} ({2})') %>%
+  tab_spanner(label = 'Grad Student', columns = 'Grad Student_mean') %>%
+  tab_spanner(label = 'Post doc', columns = 'Post doc_mean') %>%
+  tab_spanner(label = 'Assist Prof', columns = 'Assist Prof_mean') %>%
+  tab_spanner(label = 'Assoc Prof', columns = 'Assoc Prof_mean') %>%
+  tab_spanner(label = 'Full Prof', columns = 'Full Prof_mean') %>%
+  cols_align(align = 'center', columns = ends_with('mean')) %>%
+  cols_label(var_name = 'Potential Icon',
+             `Grad Student_mean` = paste0('n = ', min(preprintcred_means_by_position$`Grad Student_complete`),'-', max(preprintcred_means_by_position$`Grad Student_complete`)),
+             `Post doc_mean` = paste0('n = ',min(preprintcred_means_by_position$`Post doc_complete`),'-', max(preprintcred_means_by_position$`Post doc_complete`)),
+             `Assist Prof_mean` = paste0('n = ',min(preprintcred_means_by_position$`Assist Prof_complete`),'-', max(preprintcred_means_by_position$`Assist Prof_complete`)),
+             `Assoc Prof_mean` = paste0('n = ',min(preprintcred_means_by_position$`Assoc Prof_complete`),'-', max(preprintcred_means_by_position$`Assoc Prof_complete`)),
+             `Full Prof_mean` = paste0('n = ',min(preprintcred_means_by_position$`Full Prof_complete`),'-', max(preprintcred_means_by_position$`Full Prof_complete`)))
+
+
 
 
 ## Overall service credibilitys

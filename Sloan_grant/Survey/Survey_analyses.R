@@ -2,6 +2,7 @@
 library(osfr)
 library(tidyverse)
 library(here)
+library(psych)
 
 ## reading in data
 osf_retrieve_file("https://osf.io/86upq/") %>% 
@@ -73,6 +74,7 @@ survey_data %>%
   group_by(hdi_level) %>% 
   tally()
 
+
 #### correlates of favorability ####
 r_and_cis <- survey_data %>%
   select(starts_with('preprint_cred'), favor_use) %>%
@@ -84,4 +86,27 @@ r_and_cis$ci %>%
   column_to_rownames('correlation') %>%
   select(-p) %>%
   round(digits = 2)
-  
+
+
+#### exploratory factor analysis ####
+
+credibilty_qs <- survey_data %>%
+  dplyr::select(ResponseId,starts_with('preprint_cred')) %>%
+  column_to_rownames('ResponseId')
+
+fa.parallel(credibilty_qs)
+
+fa6 <- fa(credibilty_qs, nfactors = 6, rotate = 'oblimin') 
+fa6
+fa.diagram(fa6)
+
+fa5 <- fa(credibilty_qs, nfactors = 5, rotate = 'oblimin') 
+fa5
+fa.diagram(fa5)
+
+fa3 <- fa(credibilty_qs, nfactors = 3, rotate = 'oblimin') 
+fa3
+fa.diagram(fa3)
+
+
+

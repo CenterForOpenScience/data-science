@@ -33,7 +33,13 @@ survey_data <- read_csv(here::here('cleaned_data.csv'), col_types = cols(.defaul
                        preprints_used = fct_relevel(preprints_used, c('Not sure', 'No', 'Yes, once', 'Yes, a few times', 'Yes, many times')),
                        preprints_submitted = fct_relevel(preprints_submitted, c('Not sure', 'No', 'Yes, once', 'Yes, a few times', 'Yes, many times')),
                        familiar = fct_relevel(familiar, c('Not familiar at all', 'Slightly familiar', 'Moderately familiar', 'Very familiar', 'Extremely familiar')),
-                       acad_career_stage = fct_relevel(acad_career_stage, c('Grad Student', 'Post doc', 'Assist Prof', 'Assoc Prof', 'Full Prof')))
+                       acad_career_stage = fct_relevel(acad_career_stage, c('Grad Student', 'Post doc', 'Assist Prof', 'Assoc Prof', 'Full Prof'))) %>%
+                mutate(hdi_level = fct_explicit_na(hdi_level, '(Missing)'),
+                       preprints_used = fct_explicit_na(preprints_used, '(Missing)'),
+                       preprints_submitted = fct_explicit_na(preprints_submitted, '(Missing)'),
+                       familiar = fct_explicit_na(familiar, '(Missing)'),
+                       acad_career_stage = fct_explicit_na(acad_career_stage, '(Missing)'),
+                       discipline_collapsed = fct_explicit_na(discipline_collapsed, '(Missing)'))
 
 #### basic sample characteristics ####
 
@@ -107,6 +113,10 @@ fa.diagram(fa5)
 fa3 <- fa(credibilty_qs, nfactors = 3, rotate = 'oblimin') 
 fa3
 fa.diagram(fa3)
+
+
+#### by academic position analysis ####
+
 
 
 

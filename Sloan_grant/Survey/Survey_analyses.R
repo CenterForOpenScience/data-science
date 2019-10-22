@@ -28,3 +28,42 @@ survey_data <- read_csv(here::here('cleaned_data.csv'), col_types = cols(.defaul
                                                                          how_heard = col_character(),
                                                                          hdi_level = col_factor(),
                                                                          age = col_character()))
+
+#### basic sample characteristics ####
+
+# total sample
+nrow(survey_data)
+
+# familiarity level of sample
+survey_data %>% group_by(familiar) %>% tally()
+
+# favorability level of sample
+survey_data %>% 
+  group_by(favor_use) %>% 
+  tally()
+
+100*sum(survey_data$favor_use < 0, na.rm = T)/nrow(survey_data) #percentage unfavorable
+100*sum(survey_data$favor_use == 0, na.rm = T)/nrow(survey_data) #percentage neutral
+100*sum(survey_data$favor_use > 0, na.rm = T)/nrow(survey_data) #percentage favorable
+
+# preprint usage
+survey_data %>% 
+  group_by(preprints_submitted) %>% 
+  tally()
+
+survey_data %>% 
+  group_by(preprints_used) %>% 
+  tally()
+
+# demographics #
+survey_data %>% 
+  group_by(acad_career_stage) %>% 
+  tally()
+
+survey_data %>% 
+  group_by(discipline_collapsed) %>% 
+  tally()
+
+survey_data %>% 
+  group_by(hdi_level) %>% 
+  tally()

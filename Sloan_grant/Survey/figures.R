@@ -9,25 +9,27 @@ osf_retrieve_file("https://osf.io/86upq/") %>%
   osf_download(overwrite = T)
 
 survey_data <- read_csv(here::here('cleaned_data.csv'), col_types = cols(.default = col_number(),
+                                                                         StartDate = col_datetime(format = '%m/%d/%y %H:%M'),
+                                                                         EndDate = col_datetime(format = '%m/%d/%y %H:%M'),
                                                                          ResponseId = col_character(),
                                                                          position_7_TEXT = col_character(), 
                                                                          familiar = col_factor(),
-                                                                         favor_use = col_factor(),
                                                                          preprints_submitted = col_factor(),
                                                                          preprints_used = col_factor(),
                                                                          position = col_factor(),
                                                                          acad_career_stage = col_factor(),
                                                                          country = col_factor(),
+                                                                         continent = col_factor(),
                                                                          discipline = col_character(),
                                                                          discipline_specific = col_character(),
                                                                          discipline_other = col_character(),
                                                                          bepress_tier1 = col_character(),
                                                                          bepress_tier2 = col_character(),
                                                                          bepress_tier3 = col_character(),
+                                                                         discipline_collapsed = col_factor(),
                                                                          how_heard = col_character(),
-                                                                         hdi_level = col_character(),
-                                                                         UserLanguage = col_character(),
-                                                                         DistributionChannel = col_character()))
+                                                                         hdi_level = col_factor(),
+                                                                         age = col_character()))
 
 ## Overall icons importance
 preprint_cred <- survey_data %>%
@@ -44,9 +46,9 @@ colnames(preprint_cred) <- c(preprint_cred1_1 = "Information about an author's p
                              preprint_cred2_2 = "Indication of whether the preprint has been submitted to a journal",
                              preprint_cred2_3 = "Usage metrics about the preprint (e.g., views, downloads, media mentions)",
                              preprint_cred2_4 = "Citations of the preprint in other research papers, policy briefs, or other reports",
-                             preprintcred3_1 = "Information about anonymous users’ thoughts about the preprint (e.g. comments)",
-                             preprintcred3_2 = "Information about identified users’ thoughts about the preprint (e.g. comments)",
-                             preprintcred3_3 = "Information about endorsements by independent users in a simplified format (e.g. thumbs-up/thumbs-down on the preprint)",
+                             preprint_cred3_1 = "Information about anonymous users’ thoughts about the preprint (e.g. comments)",
+                             preprint_cred3_2 = "Information about identified users’ thoughts about the preprint (e.g. comments)",
+                             preprint_cred3_3 = "Information about endorsements by independent users in a simplified format (e.g. thumbs-up/thumbs-down on the preprint)",
                              preprint_cred4_1 = "Links to any available study data provided by the author(s)",
                              preprint_cred4_2 = "Links to any available analysis scripts/code/files provided by the author(s)",
                              preprint_cred4_3 = "Links to any available research materials provided by the author(s)",

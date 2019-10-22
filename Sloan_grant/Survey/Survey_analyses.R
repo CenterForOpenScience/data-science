@@ -27,7 +27,12 @@ survey_data <- read_csv(here::here('cleaned_data.csv'), col_types = cols(.defaul
                                                                          discipline_collapsed = col_factor(),
                                                                          how_heard = col_character(),
                                                                          hdi_level = col_factor(),
-                                                                         age = col_character()))
+                                                                         age = col_character())) %>%
+                mutate(hdi_level = fct_relevel(hdi_level, c('low', 'medium', 'high', 'very high')),
+                       preprints_used = fct_relevel(preprints_used, c('Not sure', 'No', 'Yes, once', 'Yes, a few times', 'Yes, many times')),
+                       preprints_submitted = fct_relevel(preprints_submitted, c('Not sure', 'No', 'Yes, once', 'Yes, a few times', 'Yes, many times')),
+                       familiar = fct_relevel(familiar, c('Not familiar at all', 'Slightly familiar', 'Moderately familiar', 'Very familiar', 'Extremely familiar')),
+                       acad_career_stage = fct_relevel(acad_career_stage, c('Grad Student', 'Post doc', 'Assist Prof', 'Assoc Prof', 'Full Prof')))
 
 #### basic sample characteristics ####
 

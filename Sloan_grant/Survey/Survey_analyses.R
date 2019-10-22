@@ -19,6 +19,7 @@ survey_data <- read_csv(here::here('cleaned_data.csv'), col_types = cols(.defaul
                                                                          position = col_factor(),
                                                                          acad_career_stage = col_factor(),
                                                                          country = col_factor(),
+                                                                         continent = col_factor(),
                                                                          discipline = col_character(),
                                                                          discipline_specific = col_character(),
                                                                          discipline_other = col_character(),
@@ -47,7 +48,9 @@ survey_data <- read_csv(here::here('cleaned_data.csv'), col_types = cols(.defaul
 nrow(survey_data)
 
 # familiarity level of sample
-survey_data %>% group_by(familiar) %>% tally()
+survey_data %>% 
+  group_by(familiar) %>% 
+  tally()
 
 # favorability level of sample
 survey_data %>% 
@@ -79,6 +82,11 @@ survey_data %>%
 survey_data %>% 
   group_by(hdi_level) %>% 
   tally()
+
+survey_data %>% 
+  group_by(continent) %>% 
+  tally()
+
 
 
 #### correlates of favorability ####

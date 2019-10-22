@@ -35,7 +35,10 @@ survey_data <- left_join(survey_data_numeric, survey_data_choices, by = 'Respons
                            preprints_used = fct_relevel(preprints_used, c('No', 'Yes, once', 'Yes, a few times', 'Yes, many times', 'Not sure')),
                            preprints_submitted = fct_relevel(preprints_submitted, c('No', 'Yes, once', 'Yes, a few times', 'Yes, many times', 'Not sure')),
                            discipline = case_when(discipline == 'Click to write Choice 23' ~ 'Medicine',
-                                                  TRUE ~ discipline)) 
+                                                  TRUE ~ discipline)) %>%
+                    rename(preprint_cred3_1 = preprintcred3_1,
+                           preprint_cred3_2 = preprintcred3_2,
+                           preprint_cred3_3 = preprintcred3_3)
 
 hdi_data <- hdi_data %>%
   mutate(hdi_level = case_when(HDI_2017 >= .8 ~ 'very high',

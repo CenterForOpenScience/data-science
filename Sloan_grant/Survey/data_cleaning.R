@@ -2,6 +2,7 @@ library(tidyverse)
 library(lubridate)
 library(here)
 library(osfr)
+library(countrycode)
 
 ###importing data
 
@@ -38,7 +39,14 @@ survey_data <- left_join(survey_data_numeric, survey_data_choices, by = 'Respons
                                                   TRUE ~ discipline)) %>%
                     rename(preprint_cred3_1 = preprintcred3_1,
                            preprint_cred3_2 = preprintcred3_2,
-                           preprint_cred3_3 = preprintcred3_3)
+                           preprint_cred3_3 = preprintcred3_3) %>%
+                    mutate(continent = countrycode(sourcevar = country, origin = 'country.name', destination = 'continent'),
+                           continent = case_when(grepl('Canada', country) | grepl('United States of America', country) | grepl('Mexico', country) |
+                                                   grepl('Grenada', country) | grepl('Guatemala', country) | grepl('Cuba', country) |
+                                                   grepl('Jamaica', country) | grepl('Costa Rica', country) | grepl('Nicaragua', country) |
+                                                   grepl('Dominican Republic', country) ~ 'North America',
+                                                 continent == 'Americas' ~ 'South America',
+                                                 TRUE ~ continent))
 
 hdi_data <- hdi_data %>%
   mutate(hdi_level = case_when(HDI_2017 >= .8 ~ 'very high',

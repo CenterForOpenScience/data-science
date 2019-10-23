@@ -135,10 +135,7 @@ credibility_data_long <- survey_data %>%
 
 # magnitude of between position vs. between Q differences
 
-
-position_model <- lmer(response ~ acad_career_stage + question + acad_career_stage:question + (1|ResponseId), credibility_data_anova)
-summary(position_model)
-
+position_model <- lmer(response ~ acad_career_stage + question + acad_career_stage:question + (1|ResponseId), credibility_data_long)
 anova_output <- anova(position_model)
 
 academic_gespartial <- ges.partial.SS.mix(dfm = anova_output[1, 3], dfe = anova_output[1, 4], ssm = anova_output[1, 1], sss = (anova_output[1, 1] * anova_output[1, 4])/(anova_output[1, 3] * anova_output[1, 5]), sse = (anova_output[2, 1] * anova_output[2, 4])/(anova_output[2, 3] * anova_output[2, 5]), Fvalue = anova_output[1, 5], a = .05)
@@ -152,4 +149,4 @@ question_gespartial$ges
 question_gespartial$geslow
 question_gespartial$geshigh
 
-
+#### by discipline analysis ####

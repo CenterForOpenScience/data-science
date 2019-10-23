@@ -143,6 +143,80 @@ preprintcred_means_by_position %>%
 
 
 
+# table by academic discipline
+
+preprintcred_means_by_discipline <-survey_data %>%
+  select(-c(consent, HDI_2017)) %>%
+  group_by(discipline_collapsed) %>%
+  skim_to_wide() %>%
+  rename(question = variable) %>%
+  select(discipline_collapsed, question, complete, mean, sd) %>%
+  filter(grepl('preprint', question)) %>%
+  filter(!is.na(mean)) %>%
+  mutate(mean = as.numeric(mean),
+         sd = as.numeric(sd),
+         complete = as.numeric(complete)) %>%
+  gather(variable, value, -(question:discipline_collapsed)) %>% 
+  unite(temp, discipline_collapsed, variable) %>% 
+  spread(temp, value) %>%
+  mutate(var_name = case_when(question == 'preprint_cred1_1' ~ "Author's previous work",
+                              question == 'preprint_cred1_2' ~ "Author's institution",
+                              question == 'preprint_cred1_3' ~ "Professional identity links",
+                              question == 'preprint_cred1_4' ~ "COI disclosures",
+                              question == 'preprint_cred1_5' ~ "Author's level of open scholarship",
+                              question == 'preprint_cred2_1' ~ "Funders of research",
+                              question == 'preprint_cred2_2' ~ "Preprint submitted to a journal",
+                              question == 'preprint_cred2_3' ~ "Usage metrics",
+                              question == 'preprint_cred2_4' ~ "Citations of preprints",
+                              question == 'preprintcred3_1' ~ "Anonymous comments",
+                              question == 'preprintcred3_2' ~ "Identified comments",
+                              question == 'preprintcred3_3' ~ "Simplified endorsements",
+                              question == 'preprint_cred4_1' ~ "Link to study data",
+                              question == 'preprint_cred4_2' ~ "Link to study analysis scripts",
+                              question == 'preprint_cred4_3' ~ "Link to materials",
+                              question == 'preprint_cred4_4' ~ "Link to pre-reg",
+                              question == 'preprint_cred5_1' ~ "Info about indep groups accessing linked info",
+                              question == 'preprint_cred5_2' ~ "Info about indep group reproductions",
+                              question == 'preprint_cred5_3' ~ "Info about indep robustness checks",
+                              TRUE ~ 'Courtney missed a variable')) %>%
+  select(var_name, starts_with('Psychology'), starts_with('Other Social'), starts_with('Life'), starts_with('Medicine'), starts_with('Physical'))
+
+#building table
+preprintcred_means_by_discipline  %>% 
+  gt() %>%
+  tab_header(title = 'Credibility of Preprints by Discipline') %>%
+  tab_source_note(source_note = 'Response Scale: 1 - Not at all important, 2 - Slightly important, 3 - Moderately important, 4 - Very Important, 5 - Extremely Important') %>%
+  tab_source_note(source_note = "Missing Info: Repondents who listed their discipline as Business, Law, Education, Engineering, Arts and Humanities, or who skipped the question are excluded for simplicity") %>%
+  cols_hide(columns = ends_with('complete')) %>%
+  data_color(
+    columns = ends_with('mean'),
+    colors = scales::col_numeric(
+      palette = paletteer::paletteer_d(
+        package = "RColorBrewer",
+        palette = "BrBG"
+      ),
+      domain = c(1, 5))
+  ) %>%
+  cols_merge(col_1 = vars(Psychology_mean), col_2 = vars(Psychology_sd), pattern = '{1} ({2})') %>%
+  cols_merge(col_1 = vars(`Life Sciences (Biology)_mean`), col_2 = vars(`Life Sciences (Biology)_sd`), pattern = '{1} ({2})') %>%
+  cols_merge(col_1 = vars(`Other Social Sciences_mean`), col_2 = vars(`Other Social Sciences_sd`), pattern = '{1} ({2})') %>%
+  cols_merge(col_1 = vars(`Physical Sciences and Mathematics_mean`), col_2 = vars(`Physical Sciences and Mathematics_sd`), pattern = '{1} ({2})') %>%
+  cols_merge(col_1 = vars(`Medicine and Health Sciences_mean`), col_2 = vars(`Medicine and Health Sciences_sd`), pattern = '{1} ({2})') %>%
+  tab_spanner(label = 'Psychology', columns = 'Psychology_mean') %>%
+  tab_spanner(label = 'Life Sci (Bio)', columns = 'Life Sciences (Biology)_mean') %>%
+  tab_spanner(label = 'Med & Health Sci', columns = 'Medicine and Health Sciences_mean') %>%
+  tab_spanner(label = 'Other Soc Sci', columns = 'Other Social Sciences_mean') %>%
+  tab_spanner(label = 'Phys Sci & Math', columns = 'Physical Sciences and Mathematics_mean') %>%
+  cols_align(align = 'center', columns = ends_with('mean')) %>%
+  cols_label(var_name = 'Potential Icon',
+             Psychology_mean = paste0('n = ', min(preprintcred_means_by_discipline$Psychology_complete),'-', max(preprintcred_means_by_discipline$Psychology_complete)),
+             `Life Sciences (Biology)_mean` = paste0('n = ',min(preprintcred_means_by_discipline$`Life Sciences (Biology)_complete`),'-', max(preprintcred_means_by_discipline$`Life Sciences (Biology)_complete`)),
+             `Physical Sciences and Mathematics_mean` = paste0('n = ',min(preprintcred_means_by_discipline$`Physical Sciences and Mathematics_complete`),'-', max(preprintcred_means_by_discipline$`Physical Sciences and Mathematics_complete`)),
+             `Medicine and Health Sciences_mean` = paste0('n = ',min(preprintcred_means_by_discipline$`Medicine and Health Sciences_complete`),'-', max(preprintcred_means_by_discipline$`Medicine and Health Sciences_complete`)),
+             `Other Social Sciences_mean` = paste0('n = ',min(preprintcred_means_by_discipline$`Other Social Sciences_complete`),'-', max(preprintcred_means_by_discipline$`Other Social Sciences_complete`)))
+
+
+
 
 ## Overall service credibilitys
 

@@ -87,9 +87,20 @@ survey_data %>%
 
 survey_data %>% 
   group_by(continent) %>% 
-  tally()
+  tally() %>%
+  arrange(desc(n))
 
+survey_data %>% 
+  filter(continent == 'North America') %>%
+  group_by(country) %>% 
+  tally() %>%
+  arrange(desc(n))
 
+survey_data %>% 
+  filter(continent == 'Europe') %>%
+  group_by(country) %>% 
+  tally() %>%
+  arrange(desc(n))
 
 #### correlates of favorability ####
 r_and_cis <- survey_data %>%

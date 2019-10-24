@@ -196,4 +196,4 @@ question_gespartial$geshigh
 
 
 # by group measurement invariance
-measurementInvariance(model = base_model, data = survey_data, group = 'discipline_collapsed')
+measurementInvariance(model = base_model, data = survey_data %>% filter(discipline_collapsed != 'Other' & discipline_collapsed != 'Engineering'), group = 'discipline_collapsed')

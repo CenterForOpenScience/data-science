@@ -6,6 +6,7 @@ library(psych)
 library(MOTE)
 library(lmerTest)
 library(lavaan)
+library(semTools)
 
 ## reading in data
 osf_retrieve_file("https://osf.io/86upq/") %>% 
@@ -169,9 +170,12 @@ base_model <- 'traditional =~ preprint_cred1_1 + preprint_cred1_2 + preprint_cre
                other    =~ preprint_cred1_4 + preprint_cred2_1
                usage   =~ preprint_cred2_3 + preprint_cred2_4'
 
-fit <- cfa(base_model, data = credibilty_qs)
+fit <- cfa(base_model, data = survey_data)
 summary(fit, fit.measures = T)
 
+
+# by group measurement invariance
+measurementInvariance(model = base_model, data = survey_data, group = 'acad_career_stage')
 
 #### by discipline analysis ####
 discipline_model <- lmer(response ~ acad_career_stage + question + acad_career_stage:question + (1|ResponseId), credibility_data_long %>% filter(discipline_collapsed != 'Other' & discipline_collapsed != 'Engineering'))
@@ -189,3 +193,7 @@ discipline_gespartial$geshigh
 question_gespartial$ges
 question_gespartial$geslow
 question_gespartial$geshigh
+
+
+# by group measurement invariance
+measurementInvariance(model = base_model, data = survey_data, group = 'discipline_collapsed')

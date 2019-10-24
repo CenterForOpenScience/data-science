@@ -51,10 +51,22 @@ survey_data <- read_csv(here::here('cleaned_data.csv'), col_types = cols(.defaul
 # total sample
 nrow(survey_data)
 
+# attrition rate
+test <- survey_data %>%
+  select(starts_with('preprint_cred'), starts_with('service')) %>%
+  mutate(missing_var = rowSums(is.na(.)))
+
+survey_data %>%
+  pivot_longer(-ResponseId, names_to = 'question', values_to = 'response')
+
 # familiarity level of sample
 survey_data %>% 
   group_by(familiar) %>% 
   tally()
+
+
+100*sum(survey_data$familiar == 'Extremely familiar' | survey_data$familiar == 'Very familiar', na.rm = T)/nrow(survey_data) #percentage familiar
+100*sum(survey_data$familiar == 'Not familiar at all', na.rm = T)/nrow(survey_data) #percentage unfamiliar
 
 # favorability level of sample
 survey_data %>% 
@@ -66,6 +78,8 @@ survey_data %>%
 100*sum(survey_data$favor_use > 0, na.rm = T)/nrow(survey_data) #percentage favorable
 
 # preprint usage
+100* sum(survey_data$preprints_used == 'Yes, many times' | survey_data$preprints_used == 'Yes, a few times' | survey_data$preprints_submitted == 'Yes, many times' | survey_data$preprints_submitted == 'Yes, a few times', na.rm = T)/nrow(survey_data)
+
 survey_data %>% 
   group_by(preprints_submitted) %>% 
   tally()
@@ -73,6 +87,9 @@ survey_data %>%
 survey_data %>% 
   group_by(preprints_used) %>% 
   tally()
+
+100*sum(survey_data$preprints_used == 'Yes, many times' | survey_data$preprints_used == 'Yes, a few times' , na.rm = T)/nrow(survey_data) #percentage unfamiliar
+100*sum(survey_data$preprints_submitted == 'Yes, many times' | survey_data$preprints_submitted == 'Yes, a few times' , na.rm = T)/nrow(survey_data) #percentage unfamiliar
 
 # demographics #
 survey_data %>% 
@@ -172,7 +189,6 @@ base_model <- 'traditional =~ preprint_cred1_1 + preprint_cred1_2 + preprint_cre
 
 fit <- cfa(base_model, data = survey_data)
 summary(fit, fit.measures = T)
-
 
 # by group measurement invariance
 position_models <- cfa(model = base_model, data = survey_data, group = 'acad_career_stage')

@@ -175,6 +175,9 @@ summary(fit, fit.measures = T)
 
 
 # by group measurement invariance
+position_models <- cfa(model = base_model, data = survey_data, group = 'acad_career_stage')
+summary(position_models, fit.measures = T)
+
 measurementInvariance(model = base_model, data = survey_data, group = 'acad_career_stage')
 
 #### by discipline analysis ####
@@ -196,4 +199,7 @@ question_gespartial$geshigh
 
 
 # by group measurement invariance
+discipline_models <- cfa(model = base_model, data = survey_data %>% filter(discipline_collapsed != 'Other' & discipline_collapsed != 'Engineering'), group = 'discipline_collapsed')
+summary(discipline_models , fit.measures = T)
+
 measurementInvariance(model = base_model, data = survey_data %>% filter(discipline_collapsed != 'Other' & discipline_collapsed != 'Engineering'), group = 'discipline_collapsed')

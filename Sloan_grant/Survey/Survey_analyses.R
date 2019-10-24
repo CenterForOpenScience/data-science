@@ -5,6 +5,7 @@ library(here)
 library(psych)
 library(MOTE)
 library(lmerTest)
+library(lavaan)
 
 ## reading in data
 osf_retrieve_file("https://osf.io/86upq/") %>% 
@@ -159,6 +160,18 @@ academic_gespartial$geshigh
 question_gespartial$ges
 question_gespartial$geslow
 question_gespartial$geshigh
+
+# measurement invariance of factor model across positions
+base_model <- 'traditional =~ preprint_cred1_1 + preprint_cred1_2 + preprint_cred1_3
+               open_icons =~ preprint_cred4_1 + preprint_cred4_2 + preprint_cred4_3 + preprint_cred4_4
+               verifications =~ preprint_cred5_1 + preprint_cred5_2 + preprint_cred5_3
+               opinions =~ preprint_cred3_1 + preprint_cred3_2 + preprint_cred3_3
+               other    =~ preprint_cred1_4 + preprint_cred2_1
+               usage   =~ preprint_cred2_3 + preprint_cred2_4'
+
+fit <- cfa(base_model, data = credibilty_qs)
+summary(fit, fit.measures = T)
+
 
 #### by discipline analysis ####
 discipline_model <- lmer(response ~ acad_career_stage + question + acad_career_stage:question + (1|ResponseId), credibility_data_long %>% filter(discipline_collapsed != 'Other' & discipline_collapsed != 'Engineering'))

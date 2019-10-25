@@ -139,14 +139,43 @@ r_and_cis$ci %>%
 
 
 #### correlates of preprint use/submission ####
+r_and_cis_used <- survey_data %>% 
+  mutate(preprints_used = as.numeric(preprints_used)) %>%
+  select(starts_with('preprint_cred'), preprints_used) %>%
+  corr.test(adjust = 'none', method = 'spearman')
+
+r_and_cis_used$ci %>%
+  rownames_to_column(var = 'correlation') %>%
+  filter(grepl('prpr', correlation)) %>%
+  select(-p) %>%
+  column_to_rownames('correlation') %>%
+  round(digits = 2) %>%
+  rownames_to_column(var = 'correlation') %>%
+  arrange(r)
+
+r_and_cis_submitted <- survey_data %>% 
+  mutate(preprints_submitted = as.numeric(preprints_submitted)) %>%
+  select(starts_with('preprint_cred'), preprints_submitted) %>%
+  corr.test(adjust = 'none', method = 'spearman')
+
+r_and_cis_submitted$ci %>%
+  rownames_to_column(var = 'correlation') %>%
+  filter(grepl('prpr', correlation)) %>%
+  select(-p) %>%
+  column_to_rownames('correlation') %>%
+  round(digits = 2) %>%
+  rownames_to_column(var = 'correlation') %>%
+  arrange(r)
+
 backward_diff <- matrix(c(-3/4, 1/4, 1/4, 1/4,
                            -1/2, -1/2, 1/2, 1/2,
                             -1/4, -1/4, -1/4, 3/4), ncol = 3)
 
 contrasts(survey_data$preprints_used) <- backward_diff
+contrasts(survey_data$preprints_submitted) <- backward_diff
 
 regression_fun <- function(question) {
-  form <- paste(question, "~ preprints_used")
+  form <- paste(question, "~ preprints_used + preprints_submitted")
   lm(as.formula(form), data = survey_data)
 }
 
@@ -156,7 +185,7 @@ models <- vars %>%
             set_names() %>%
             map(regression_fun)
 
-map_dfr(models, tidy, conf.int = T, .id = "variable")
+model_parameters <- map_dfr(models, tidy, conf.int = T, .id = "variable")
 
 
 #### exploratory factor analysis ####

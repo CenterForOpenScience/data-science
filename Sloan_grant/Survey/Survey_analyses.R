@@ -131,9 +131,26 @@ r_and_cis <- survey_data %>%
 r_and_cis$ci %>%
   rownames_to_column(var = 'correlation') %>%
   filter(grepl('fvr_s', correlation)) %>%
-  column_to_rownames('correlation') %>%
   select(-p) %>%
-  round(digits = 2)
+  column_to_rownames('correlation') %>%
+  round(digits = 2) %>%
+  rownames_to_column(var = 'correlation') %>%
+  arrange(r)
+
+
+#### correlates of preprint use/submission ####
+backward_diff <- matrix(c(-3/4, 1/4, 1/4, 1/4,
+                           -1/2, -1/2, 1/2, 1/2,
+                            -1/4, -1/4, -1/4, 3/4), ncol = 3)
+
+regression_fun <- function(question) {
+  form <- paste(question, "~ preprints_used")
+  lm(as.formula(form), data = survey_data)
+}
+
+
+
+
 
 
 #### exploratory factor analysis ####
@@ -156,6 +173,9 @@ fa3 <- fa(credibilty_qs, nfactors = 3, rotate = 'oblimin')
 fa3
 fa.diagram(fa3)
 
+fa2 <- fa(credibilty_qs, nfactors = 2, rotate = 'oblimin') 
+fa2
+fa.diagram(fa2)
 
 #### by academic position analysis ####
 

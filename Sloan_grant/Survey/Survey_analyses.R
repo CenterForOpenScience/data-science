@@ -96,29 +96,31 @@ survey_data %>%
   group_by(acad_career_stage) %>% 
   tally()
 
-survey_data %>% 
-  group_by(discipline_collapsed) %>% 
-  tally()
+100*sum(survey_data$acad_career_stage == 'Grad Student' | survey_data$acad_career_stage == 'Post doc' , na.rm = T)/nrow(survey_data) #percentage unfamiliar
+100*sum(grepl('Prof', survey_data$acad_career_stage))/nrow(survey_data) #percentage unfamiliar
+100*sum(is.na(survey_data$acad_career_stage))/nrow(survey_data) #percentage unfamiliar
+
 
 survey_data %>% 
+  group_by(bepress_tier1) %>%
+  summarize(n = n(), percentage = 100*n/nrow(survey_data))
+
+100*sum(survey_data$discipline_collapsed == 'Psychology', na.rm = T)/sum(survey_data$bepress_tier1 == 'Social and Behavioral Sciences', na.rm = T)
+
+# country related variables
+survey_data %>% 
   group_by(hdi_level) %>% 
-  tally()
+  summarize(n = n(), percentage = 100*n/nrow(survey_data))
 
 survey_data %>% 
   group_by(continent) %>% 
-  tally() %>%
+  summarize(n = n(), percentage = 100*n/nrow(survey_data)) %>%
   arrange(desc(n))
 
 survey_data %>% 
   filter(continent == 'North America') %>%
   group_by(country) %>% 
-  tally() %>%
-  arrange(desc(n))
-
-survey_data %>% 
-  filter(continent == 'Europe') %>%
-  group_by(country) %>% 
-  tally() %>%
+  summarize(n = n(), percentage = 100*n/nrow(survey_data)) %>%
   arrange(desc(n))
 
 #### correlates of favorability ####

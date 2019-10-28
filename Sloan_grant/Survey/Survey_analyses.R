@@ -7,6 +7,8 @@ library(MOTE)
 library(lmerTest)
 library(lavaan)
 library(semTools)
+library(broom)
+library(tidyLPA)
 
 ## reading in data
 osf_retrieve_file("https://osf.io/86upq/") %>% 
@@ -287,3 +289,46 @@ discipline_models <- cfa(model = base_model, data = survey_data %>% filter(disci
 summary(discipline_models , fit.measures = T)
 
 measurementInvariance(model = base_model, data = survey_data %>% filter(discipline_collapsed != 'Other' & discipline_collapsed != 'Engineering'), group = 'discipline_collapsed')
+
+
+##LPA models
+items_scores_test <- survey_data %>%
+  select(starts_with('preprint_cred')) %>%
+  single_imputation() %>%
+  estimate_profiles(1:8,
+                    variances = c("equal", "varying", "equal", "varying"),
+                    covariances = c("zero", "zero", "equal", "varying")) %>%
+  compare_solutions(statistics = c("AIC", "BIC"))
+
+items_37 <- survey_data %>%
+  select(starts_with('preprint_cred')) %>%
+  single_imputation() %>%
+  estimate_profiles(7,
+                    variances = c("equal"),
+                    covariances = c("equal"))
+
+items_37 %>% plot_profiles()
+
+factor_scores_test <- survey_data %>%
+  select(starts_with('fct')) %>%
+  single_imputation() %>%
+  estimate_profiles(1:8,
+                    variances = c("equal", "varying", "equal", "varying"),
+                    covariances = c("zero", "zero", "equal", "varying")) %>%
+  compare_solutions(statistics = c("AIC", "BIC"))
+
+factor_62 <- survey_data %>%
+  select(starts_with('fct')) %>%
+  single_imputation() %>%
+  estimate_profiles(2,
+                    variances = c("varying"),
+                    covariances = c("varying"))
+
+factor_38 <- survey_data %>%
+  select(starts_with('fct')) %>%
+  single_imputation() %>%
+  estimate_profiles(8,
+                    variances = c("equal"),
+                    covariances = c("equal"))
+
+factor_38 %>% plot_profiles()

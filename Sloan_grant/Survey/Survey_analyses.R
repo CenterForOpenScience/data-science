@@ -214,6 +214,7 @@ fa.diagram(fa2)
 
 # create factor variables
 survey_data <- survey_data %>%
+                rowwise() %>%
                 mutate(fct1 = mean(c(preprint_cred4_2, preprint_cred4_1, preprint_cred4_3, preprint_cred4_4), na.rm = T),
                        fct2 = mean(c(preprint_cred5_2, preprint_cred5_3, preprint_cred5_1), na.rm = T),
                        fct3 = mean(c(preprint_cred3_1, preprint_cred3_2, preprint_cred3_3), na.rm = T),

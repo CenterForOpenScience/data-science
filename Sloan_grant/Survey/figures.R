@@ -254,5 +254,22 @@ plot(likert(as.data.frame(service_cred)), ordered=T) + ggtitle(service_preprints
   theme(plot.title = element_text(hjust = 0.5), legend.title = element_blank())
 dev.off()
 
+# use/submissions of preprints by discipline
+survey_data %>%
+    mutate(preprints_used = fct_rev(preprints_used)) %>%
+    group_by(discipline_collapsed, preprints_used) %>%
+    tally() %>%
+    filter(!is.na(preprints_used), discipline_collapsed != 'Other', discipline_collapsed != '(Missing)') %>%
+    ggplot(aes(fill = preprints_used, x = discipline_collapsed, y = n)) +
+    geom_bar(position = 'fill', stat = 'identity') +
+    coord_flip()
 
-
+survey_data %>%
+  mutate(preprints_submitted = fct_rev(preprints_submitted)) %>%
+  group_by(discipline_collapsed, preprints_submitted) %>%
+  tally() %>%
+  filter(!is.na(preprints_submitted), discipline_collapsed != 'Other', discipline_collapsed != '(Missing)') %>%
+  ggplot(aes(fill = preprints_submitted, x = discipline_collapsed, y = n)) +
+  geom_bar(position = 'fill', stat = 'identity') +
+  coord_flip() +
+  scale_fill_manual(values = wes_palette("IsleofDogs2"))

@@ -5,6 +5,8 @@ library(likert)
 library(here)
 library(skimr)
 library(gt)
+library(wesanderson)
+library(ggridges)
 
 ## reading in data
 osf_retrieve_file("https://osf.io/86upq/") %>% 
@@ -275,6 +277,13 @@ survey_data %>%
   coord_flip() +
   scale_fill_manual(values = wes_palette("IsleofDogs2"))
 
+
+# favor-use by discipline
+survey_data %>%
+  filter(discipline_collapsed != 'Other' & discipline_collapsed != '(Missing)') %>%
+  ggplot(aes(x = favor_use, y = discipline_collapsed)) +
+  geom_density_ridges()
+
 # use/submissions of preprints by academic career stage
 survey_data %>%
   mutate(preprints_used = fct_rev(preprints_used)) %>%
@@ -295,3 +304,10 @@ survey_data %>%
   geom_bar(position = 'fill', stat = 'identity') +
   coord_flip() +
   scale_fill_manual(values = wes_palette("IsleofDogs2"))
+
+
+# favor-use by career stage
+survey_data %>%
+  filter(acad_career_stage != '(Missing)') %>%
+  ggplot(aes(x = favor_use, y = acad_career_stage)) +
+  geom_density_ridges()

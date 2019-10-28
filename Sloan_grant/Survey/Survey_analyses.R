@@ -175,7 +175,7 @@ contrasts(survey_data$preprints_used) <- backward_diff
 contrasts(survey_data$preprints_submitted) <- backward_diff
 
 regression_fun <- function(question) {
-  form <- paste(question, "~ preprints_used + preprints_submitted")
+  form <- paste(question, "~ favor_use + preprints_used + preprints_submitted")
   lm(as.formula(form), data = survey_data)
 }
 
@@ -211,6 +211,16 @@ fa.diagram(fa3)
 fa2 <- fa(credibilty_qs, nfactors = 2, rotate = 'oblimin') 
 fa2
 fa.diagram(fa2)
+
+# create factor variables
+survey_data <- survey_data %>%
+                mutate(fct1 = mean(c(preprint_cred4_2, preprint_cred4_1, preprint_cred4_3, preprint_cred4_4), na.rm = T),
+                       fct2 = mean(c(preprint_cred5_2, preprint_cred5_3, preprint_cred5_1), na.rm = T),
+                       fct3 = mean(c(preprint_cred3_1, preprint_cred3_2, preprint_cred3_3), na.rm = T),
+                       fct4 = mean(c(preprint_cred1_4, preprint_cred2_1), na.rm = T),
+                       fct5 = mean(c(preprint_cred2_3, preprint_cred2_4), na.rm = T),
+                       fct6 = mean(c(preprint_cred1_2, preprint_cred1_1, preprint_cred1_3), na.rm = T))
+
 
 #### by academic position analysis ####
 

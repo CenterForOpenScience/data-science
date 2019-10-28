@@ -282,7 +282,7 @@ survey_data %>%
 survey_data %>%
   filter(discipline_collapsed != 'Other' & discipline_collapsed != '(Missing)') %>%
   ggplot(aes(x = favor_use, y = discipline_collapsed)) +
-  geom_density_ridges()
+  stat_density_ridges(quantile_lines = T)
 
 # use/submissions of preprints by academic career stage
 survey_data %>%
@@ -310,4 +310,4 @@ survey_data %>%
 survey_data %>%
   filter(acad_career_stage != '(Missing)') %>%
   ggplot(aes(x = favor_use, y = acad_career_stage)) +
-  geom_density_ridges()
+  stat_density_ridges(quantile_lines = T)

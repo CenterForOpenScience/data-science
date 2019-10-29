@@ -9,6 +9,7 @@ library(lavaan)
 library(semTools)
 library(broom)
 library(tidyLPA)
+library(semPlot)
 
 ## reading in data
 osf_retrieve_file("https://osf.io/86upq/") %>% 
@@ -139,6 +140,12 @@ r_and_cis$ci %>%
   rownames_to_column(var = 'correlation') %>%
   arrange(r)
 
+# does favoring use correlate with use and/or submission?
+rcis_favor_use <- survey_data %>%
+  mutate(preprints_used = as.numeric(preprints_used)-1,
+         preprints_submitted = as.numeric(preprints_submitted)-1) %>%
+  select(preprints_used, preprints_submitted, favor_use) %>%
+  corr.test(adjust = 'none', method = 'spearman')
 
 #### correlates of preprint use/submission ####
 r_and_cis_used <- survey_data %>% 
@@ -225,6 +232,25 @@ survey_data <- survey_data %>%
                        fct6 = mean(c(preprint_cred1_2, preprint_cred1_1, preprint_cred1_3), na.rm = T))
 
 
+#### SEM model of favorability on 6 factors ####
+favor_use_model <- 'traditional =~ preprint_cred1_1 + preprint_cred1_2 + preprint_cred1_3
+               open_icons =~ preprint_cred4_1 + preprint_cred4_2 + preprint_cred4_3 + preprint_cred4_4
+               verifications =~ preprint_cred5_1 + preprint_cred5_2 + preprint_cred5_3
+               opinions =~ preprint_cred3_1 + preprint_cred3_2 + preprint_cred3_3
+               other    =~ preprint_cred1_4 + preprint_cred2_1
+               usage   =~ preprint_cred2_3 + preprint_cred2_4
+
+traditional ~ favor_use
+open_icons ~ favor_use
+verifications ~ favor_use
+opinions ~ favor_use
+other ~ favor_use
+usage ~ favor_use'
+
+favoruse_fit <- cfa(favor_use_model, survey_data)
+summary(favoruse_fit, fit.measures=TRUE)
+
+semPaths(favoruse_fit)
 #### by academic position analysis ####
 
 credibility_data_long <- survey_data %>%

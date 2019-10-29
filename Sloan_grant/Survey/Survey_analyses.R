@@ -46,7 +46,6 @@ survey_data <- read_csv(here::here('cleaned_data.csv'), col_types = cols(.defaul
                        acad_career_stage = fct_relevel(acad_career_stage, c('Grad Student', 'Post doc', 'Assist Prof', 'Assoc Prof', 'Full Prof'))) %>%
                 mutate(hdi_level = fct_explicit_na(hdi_level, '(Missing)'),
                        familiar = fct_explicit_na(familiar, '(Missing)'),
-                       acad_career_stage = fct_explicit_na(acad_career_stage, '(Missing)'),
                        discipline_collapsed = fct_explicit_na(discipline_collapsed, '(Missing)'))
 
 #### basic sample characteristics ####
@@ -292,6 +291,35 @@ base_model <- 'traditional =~ preprint_cred1_1 + preprint_cred1_2 + preprint_cre
 
 fit <- cfa(base_model, data = survey_data)
 summary(fit, fit.measures = T)
+
+# sem model 
+
+backward_diff <- matrix(c(-4/5, 1/5, 1/5, 1/5, 1/5,
+                          -3/5, -3/5, 2/5, 2/5, 2/5,
+                          -2/5, -2/5, -2/5, 3/5, 3/5,
+                          -1/5, -1/5, -1/5, -1/5, 4/5), ncol = 4)
+
+contrasts(sem_data$acad_career_stage) <- backward_diff
+
+career_model <- 'traditional =~ preprint_cred1_1 + preprint_cred1_2 + preprint_cred1_3
+               open_icons =~ preprint_cred4_1 + preprint_cred4_2 + preprint_cred4_3 + preprint_cred4_4
+               verifications =~ preprint_cred5_1 + preprint_cred5_2 + preprint_cred5_3
+               opinions =~ preprint_cred3_1 + preprint_cred3_2 + preprint_cred3_3
+               other    =~ preprint_cred1_4 + preprint_cred2_1
+               usage   =~ preprint_cred2_3 + preprint_cred2_4
+
+traditional ~ acad_career_stage
+open_icons ~ acad_career_stage
+verifications ~ acad_career_stage
+opinions ~ acad_career_stage
+other ~ acad_career_stage
+usage ~ acad_career_stage'
+
+career_fit <- cfa(career_model, sem_data)
+summary(career_fit, fit.measures=TRUE)
+
+parameterEstimates(career_fit, ci = T, level = .95, standardized = T) %>%
+  filter(op == '~')
 
 # by group measurement invariance
 position_models <- cfa(model = base_model, data = survey_data, group = 'acad_career_stage')

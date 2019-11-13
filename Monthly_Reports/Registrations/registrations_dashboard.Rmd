@@ -10,10 +10,33 @@ library(flexdashboard)
 library(plotly)
 library(tidyverse)
 library(osfr)
+library(highcharter)
 
 ##data imports
 
-form_data <- read_csv('form_type_monthly.csv')
+form_data <- read_csv('/Users/courtneysoderberg/form_type_monthly.csv')
+
+
+
+
+
+```
+
+Row {data-height=350}
+-----------------------------------------------------------------------
+
+### Chart 1
+
+```{r}
+
+```
+
+Row {.tabset data-height=650}
+-----------------------------------------------------------------------
+
+### Number of Each Type
+
+```{r}
 
 top_forms <- form_data %>%
                 group_by(name) %>%
@@ -28,37 +51,31 @@ form_data %>%
   mutate(form = case_when(name %in% top_forms[1:n] ~ name, 
                               TRUE ~ "Other")) %>%
   ungroup() %>%
-  mutate(date = date(paste0(year, '-', month, '-01'))) %>%
   group_by(date, form) %>%
   summarise(reg_events = sum(reg_events), retract_events = sum(retract_events), net_events = sum(net_events)) %>%
   hchart(., type = 'line',
          hcaes(x = date,
                y = net_events,
                group = form))
-
 ```
 
-Column {data-width=650}
------------------------------------------------------------------------
+### Perc of Each Type
+```{r}
+form_data %>%
+  group_by(name) %>%
+  mutate(form = case_when(name %in% top_forms[1:n] ~ name, 
+                              TRUE ~ "Other")) %>%
+  ungroup() %>%
+  group_by(date, form) %>%
+  summarise(reg_events = sum(reg_events), retract_events = sum(retract_events), net_events = sum(net_events)) %>%
+  hchart(., type = 'column',
+         hcaes(x = date,
+               y = net_events,
+               group = form))
+```
 
-### Chart A
+### Chart 2 Tab 3
 
 ```{r}
 
 ```
-
-Column {data-width=350}
------------------------------------------------------------------------
-
-### Chart B
-
-```{r}
-
-```
-
-### Chart C
-
-```{r}
-
-```
-

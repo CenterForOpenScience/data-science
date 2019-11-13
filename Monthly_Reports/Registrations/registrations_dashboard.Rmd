@@ -1,0 +1,64 @@
+---
+title: "Registration Report"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: row
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(plotly)
+library(tidyverse)
+library(osfr)
+
+##data imports
+
+form_data <- read_csv('form_type_monthly.csv')
+
+top_forms <- form_data %>%
+                group_by(name) %>%
+                summarize(total_regs = sum(reg_events)) %>%
+                arrange(desc(total_regs)) %>%
+                pull(name)
+
+n <- 5
+
+form_data %>%
+  group_by(name) %>%
+  mutate(form = case_when(name %in% top_forms[1:n] ~ name, 
+                              TRUE ~ "Other")) %>%
+  ungroup() %>%
+  mutate(date = date(paste0(year, '-', month, '-01'))) %>%
+  group_by(date, form) %>%
+  summarise(reg_events = sum(reg_events), retract_events = sum(retract_events), net_events = sum(net_events)) %>%
+  hchart(., type = 'line',
+         hcaes(x = date,
+               y = net_events,
+               group = form))
+
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+
+```
+
+### Chart C
+
+```{r}
+
+```
+

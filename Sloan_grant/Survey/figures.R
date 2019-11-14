@@ -264,8 +264,9 @@ survey_data %>%
     mutate(preprints_used = fct_rev(preprints_used)) %>%
     group_by(discipline_collapsed, preprints_used) %>%
     tally() %>%
+    mutate(perc = round(100*n/sum(n),2)) %>%
     filter(!is.na(preprints_used), discipline_collapsed != 'Other', discipline_collapsed != '(Missing)', preprints_used != 'Not sure') %>%
-    ggplot(aes(fill = preprints_used, x = discipline_collapsed, y = n)) +
+    ggplot(aes(fill = preprints_used, x = discipline_collapsed, y = perc)) +
     geom_col(position = 'dodge') +
     coord_flip() +
     guides(fill = guide_legend(reverse = TRUE)) +
@@ -275,8 +276,9 @@ survey_data %>%
   mutate(preprints_submitted = fct_rev(preprints_submitted)) %>%
   group_by(discipline_collapsed, preprints_submitted) %>%
   tally() %>%
+  mutate(perc = round(100*n/sum(n),2)) %>%
   filter(!is.na(preprints_submitted), discipline_collapsed != 'Other', discipline_collapsed != '(Missing)', preprints_submitted != 'Not sure') %>%
-  ggplot(aes(fill = preprints_submitted, x = discipline_collapsed, y = n)) +
+  ggplot(aes(fill = preprints_submitted, x = discipline_collapsed, y = perc)) +
   geom_col(position = 'dodge') +
   coord_flip() +
   guides(fill = guide_legend(reverse = TRUE)) +
@@ -295,8 +297,9 @@ survey_data %>%
   mutate(preprints_used = fct_rev(preprints_used)) %>%
   group_by(acad_career_stage, preprints_used) %>%
   tally() %>%
+  mutate(perc = round(100*n/sum(n),2)) %>%
   filter(!is.na(preprints_used), acad_career_stage != '(Missing)', preprints_used != 'Not sure') %>%
-  ggplot(aes(fill = preprints_used, x = acad_career_stage, y = n)) +
+  ggplot(aes(fill = preprints_used, x = acad_career_stage, y = perc)) +
   geom_col(position = 'dodge') +
   coord_flip() +
   guides(fill = guide_legend(reverse = TRUE)) +
@@ -306,8 +309,9 @@ survey_data %>%
   mutate(preprints_submitted = fct_rev(preprints_submitted)) %>%
   group_by(acad_career_stage, preprints_submitted) %>%
   tally() %>%
+  mutate(perc = round(100*n/sum(n),2)) %>%
   filter(!is.na(preprints_submitted), acad_career_stage != '(Missing)', preprints_submitted != 'Not sure') %>%
-  ggplot(aes(fill = preprints_submitted, x = acad_career_stage, y = n)) +
+  ggplot(aes(fill = preprints_submitted, x = acad_career_stage, y = perc)) +
   geom_col(position = 'dodge') +
   coord_flip() +
   guides(fill = guide_legend(reverse = TRUE)) +

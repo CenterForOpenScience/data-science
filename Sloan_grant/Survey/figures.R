@@ -263,7 +263,7 @@ survey_data %>%
     tally() %>%
     filter(!is.na(preprints_used), discipline_collapsed != 'Other', discipline_collapsed != '(Missing)') %>%
     ggplot(aes(fill = preprints_used, x = discipline_collapsed, y = n)) +
-    geom_bar(position = 'fill', stat = 'identity') +
+    geom_col(position = 'dodge') +
     coord_flip() +
     scale_fill_manual(values = wes_palette("IsleofDogs2"))
 
@@ -273,7 +273,7 @@ survey_data %>%
   tally() %>%
   filter(!is.na(preprints_submitted), discipline_collapsed != 'Other', discipline_collapsed != '(Missing)') %>%
   ggplot(aes(fill = preprints_submitted, x = discipline_collapsed, y = n)) +
-  geom_bar(position = 'fill', stat = 'identity') +
+  geom_col(position = 'dodge') +
   coord_flip() +
   scale_fill_manual(values = wes_palette("IsleofDogs2"))
 
@@ -292,7 +292,7 @@ survey_data %>%
   tally() %>%
   filter(!is.na(preprints_used), acad_career_stage != '(Missing)') %>%
   ggplot(aes(fill = preprints_used, x = acad_career_stage, y = n)) +
-  geom_bar(position = 'fill', stat = 'identity') +
+  geom_col(position = 'dodge') +
   coord_flip() +
   scale_fill_manual(values = wes_palette("IsleofDogs2"))
 
@@ -302,7 +302,7 @@ survey_data %>%
   tally() %>%
   filter(!is.na(preprints_submitted), acad_career_stage != '(Missing)') %>%
   ggplot(aes(fill = preprints_submitted, x = acad_career_stage, y = n)) +
-  geom_bar(position = 'fill', stat = 'identity') +
+  geom_col(position = 'dodge') +
   coord_flip() +
   scale_fill_manual(values = wes_palette("IsleofDogs2"))
 

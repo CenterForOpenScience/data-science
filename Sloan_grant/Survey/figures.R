@@ -33,7 +33,10 @@ survey_data <- read_csv(here::here('cleaned_data.csv'), col_types = cols(.defaul
                                                                          discipline_collapsed = col_factor(),
                                                                          how_heard = col_character(),
                                                                          hdi_level = col_factor(),
-                                                                         age = col_character()))
+                                                                         age = col_character())) %>%
+                  mutate(acad_career_stage = fct_relevel(acad_career_stage, 'Full Prof', 'Assoc Prof', 'Assist Prof', 'Post doc', 'Grad Student'),
+                         preprints_used = fct_relevel(preprints_used, 'No', 'Yes, once', 'Yes, a few times', 'Yes, many times', 'Not sure'),
+                         preprints_submitted = fct_relevel(preprints_submitted, 'No', 'Yes, once', 'Yes, a few times', 'Yes, many times', 'Not sure'))
 
 ## Overall icons importance
 preprint_cred <- survey_data %>%

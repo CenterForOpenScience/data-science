@@ -284,6 +284,7 @@ survey_data %>%
   ggplot(aes(x = favor_use, y = discipline_collapsed)) +
   stat_density_ridges(quantile_lines = T)
 
+
 # use/submissions of preprints by academic career stage
 survey_data %>%
   mutate(preprints_used = fct_rev(preprints_used)) %>%

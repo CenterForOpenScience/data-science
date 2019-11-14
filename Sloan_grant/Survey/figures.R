@@ -268,6 +268,7 @@ survey_data %>%
     filter(!is.na(preprints_used), discipline_collapsed != 'Other', discipline_collapsed != '(Missing)', preprints_used != 'Not sure') %>%
     ggplot(aes(fill = preprints_used, x = discipline_collapsed, y = perc)) +
     geom_col(position = 'dodge') +
+    geom_text(aes(label = perc), size = 4, position = position_dodge(width = 1), hjust= -.1) +
     coord_flip() +
     guides(fill = guide_legend(reverse = TRUE)) +
     scale_fill_manual(values = wes_palette("IsleofDogs2"))
@@ -313,6 +314,7 @@ survey_data %>%
   filter(!is.na(preprints_submitted), acad_career_stage != '(Missing)', preprints_submitted != 'Not sure') %>%
   ggplot(aes(fill = preprints_submitted, x = acad_career_stage, y = perc)) +
   geom_col(position = 'dodge') +
+  geom_text(aes(label = perc), size = 4, position = position_dodge(width = 1), hjust= -.1) +
   coord_flip() +
   guides(fill = guide_legend(reverse = TRUE)) +
   scale_fill_manual(values = wes_palette("IsleofDogs2"))

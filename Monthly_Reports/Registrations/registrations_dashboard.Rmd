@@ -61,7 +61,12 @@ fewer_forms_data %>%
   hchart(., type = 'line',
          hcaes(x = date,
                y = net_events,
-               group = form))
+               group = form)) %>%
+  hc_exporting(
+    enabled = TRUE, filename="reg_form_counts", 
+              formAttributes=list(target="_blank"),
+               buttons=list(contextButton=list(
+               text="Export", theme=list(fill="transparent"))))
 ```
 
 ### Perc of Each Type
@@ -90,5 +95,7 @@ Row
 ```{r}
 fewer_forms_data %>%
   select(date, name, form, reg_events, retract_events, net_events) %>%
-  datatable
+  datatable(extensions = 'Buttons',  
+            options = list(dom = 'Bfrtip', buttons = list( list(extend = 'collection', buttons = list(list(extend='csv',filename='reg_form_counts.csv'),
+                                                                 list(extend='excel', filename = 'reg_form_counts.xlsx') ),text="Download"))))
 ```

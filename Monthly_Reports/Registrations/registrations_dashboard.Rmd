@@ -2,7 +2,9 @@
 title: "Registration Report"
 output: 
   flexdashboard::flex_dashboard:
+    vertical_layout: scroll
     orientation: row
+    theme: bootstrap
 ---
 
 ```{r setup, include=FALSE}
@@ -68,7 +70,7 @@ form_data %>%
   ungroup() %>%
   group_by(date, form) %>%
   summarise(reg_events = sum(reg_events), retract_events = sum(retract_events), net_events = sum(net_events)) %>%
-  hchart(., type = 'column',
+  hchart(., type = 'line',
          hcaes(x = date,
                y = net_events,
                group = form))

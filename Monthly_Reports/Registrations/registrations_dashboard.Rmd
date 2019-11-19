@@ -19,19 +19,31 @@ library(DT)
 
 form_data <- read_csv('/Users/courtneysoderberg/form_type_monthly.csv')
 
-
-
-
-
 ```
 
-Row {data-height=350}
------------------------------------------------------------------------
+Row {data-height=175}
+-------------------------------------
 
-### Chart 1
+
+### New Top-level Registrations {.value-box}
 
 ```{r}
+valueBox(value = form_data %>% group_by(date) %>% summarize(total = sum(reg_events)) %>% slice(1L) %>% select(total),
+    icon = "fa-pencil")
+```
 
+### New Top-Level Embargoed Registrations  {.value-box}
+
+```{r}
+valueBox(value = 15,
+    icon = "fa-user-secret")
+```
+
+### New Top-Level Registration Withdrawals {.value-box}
+
+```{r}
+valueBox(value = form_data %>% group_by(date) %>% summarize(total = sum(retract_events)) %>% slice(1L) %>% select(total),
+    icon = "fa-trash")
 ```
 
 Row {.tabset data-height=650}
@@ -78,7 +90,7 @@ form_data %>%
   ungroup() %>%
   group_by(date, form) %>%
   summarise(reg_events = sum(reg_events), retract_events = sum(retract_events), net_events = sum(net_events)) %>%
-  hchart(., type = 'line',
+  hchart(., type = 'column',
          hcaes(x = date,
                y = net_events,
                group = form))

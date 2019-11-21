@@ -6,7 +6,7 @@ library(here)
 library(skimr)
 library(gt)
 library(wesanderson)
-library(ggridges)
+library(corrplot)
 
 ## reading in data
 osf_retrieve_file("https://osf.io/86upq/") %>% 
@@ -335,3 +335,56 @@ career_stage <- survey_data %>%
   select(-ResponseId)
 
 plot(likert(as.data.frame(career_stage)))
+
+# correlation favor-use/use/submissions and credibility questions
+correlations <- survey_data %>%
+  select(favor_use, preprints_used, preprints_submitted, starts_with('preprint_cred')) %>%
+  mutate(preprints_used = as.numeric(preprints_used),
+         preprints_submitted = as.numeric(preprints_submitted)) %>%
+  cor(use = 'pairwise.complete.obs', method = 'spearman')
+
+as.data.frame(correlations[4:22, 1:3]) %>%
+  rownames_to_column('question') %>% 
+  mutate(var_name = case_when(question == 'preprint_cred1_1' ~ "Author's previous work",
+                              question == 'preprint_cred1_2' ~ "Author's institution",
+                              question == 'preprint_cred1_3' ~ "Professional identity links",
+                              question == 'preprint_cred1_4' ~ "COI disclosures",
+                              question == 'preprint_cred1_5' ~ "Author's level of open scholarship",
+                              question == 'preprint_cred2_1' ~ "Funders of research",
+                              question == 'preprint_cred2_2' ~ "Preprint submitted to a journal",
+                              question == 'preprint_cred2_3' ~ "Usage metrics",
+                              question == 'preprint_cred2_4' ~ "Citations of preprints",
+                              question == 'preprint_cred3_1' ~ "Anonymous comments",
+                              question == 'preprint_cred3_2' ~ "Identified comments",
+                              question == 'preprint_cred3_3' ~ "Simplified endorsements",
+                              question == 'preprint_cred4_1' ~ "Link to study data",
+                              question == 'preprint_cred4_2' ~ "Link to study analysis scripts",
+                              question == 'preprint_cred4_3' ~ "Link to materials",
+                              question == 'preprint_cred4_4' ~ "Link to pre-reg",
+                              question == 'preprint_cred5_1' ~ "Info about indep groups accessing linked info",
+                              question == 'preprint_cred5_2' ~ "Info about indep group reproductions",
+                              question == 'preprint_cred5_3' ~ "Info about indep robustness checks",
+                              TRUE ~ 'Courtney missed a variable')) %>%
+  select(-question) %>%
+  gt(rowname_col = 'var_name') %>%
+  fmt_number(everything(), decimals = 2) %>%
+  data_color(
+    columns = vars(favor_use,preprints_used,preprints_submitted),
+    colors = scales::col_numeric(
+      palette = paletteer::paletteer_d(
+        package = "RColorBrewer",
+        palette = "BrBG"
+      ),
+      domain = c(-1, 1))
+  ) %>%
+  cols_label(
+    favor_use = 'Favor use',
+    preprints_used = 'View/Downloaded Preprints',
+    preprints_submitted = 'Submitted Preprints'
+  ) %>%
+  cols_align(align = 'center')
+  
+  
+  
+
+

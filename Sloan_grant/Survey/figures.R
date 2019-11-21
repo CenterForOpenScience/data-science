@@ -337,13 +337,19 @@ career_stage <- survey_data %>%
 plot(likert(as.data.frame(career_stage)))
 
 # correlation favor-use/use/submissions and credibility questions
-correlations <- survey_data %>%
-  select(favor_use, preprints_used, preprints_submitted, starts_with('preprint_cred')) %>%
+correlations1 <- survey_data %>%
+  select(preprints_used, preprints_submitted, starts_with('preprint_cred')) %>%
   mutate(preprints_used = as.numeric(preprints_used),
          preprints_submitted = as.numeric(preprints_submitted)) %>%
   cor(use = 'pairwise.complete.obs', method = 'spearman')
 
-as.data.frame(correlations[4:22, 1:3]) %>%
+correlations2 <- survey_data %>%
+  select(favor_use, starts_with('preprint_cred')) %>%
+  cor(use = 'pairwise.complete.obs')
+
+correlations <- cbind(correlations1[3:21, 1:2], correlations2[2:20, 1])
+
+as.data.frame(correlations) %>%
   rownames_to_column('question') %>% 
   mutate(var_name = case_when(question == 'preprint_cred1_1' ~ "Author's previous work",
                               question == 'preprint_cred1_2' ~ "Author's institution",
@@ -369,7 +375,7 @@ as.data.frame(correlations[4:22, 1:3]) %>%
   gt(rowname_col = 'var_name') %>%
   fmt_number(everything(), decimals = 2) %>%
   data_color(
-    columns = vars(favor_use,preprints_used,preprints_submitted),
+    columns = vars(V3,preprints_used,preprints_submitted),
     colors = scales::col_numeric(
       palette = paletteer::paletteer_d(
         package = "RColorBrewer",
@@ -378,7 +384,7 @@ as.data.frame(correlations[4:22, 1:3]) %>%
       domain = c(-1, 1))
   ) %>%
   cols_label(
-    favor_use = 'Favor use',
+    V3 = 'Favor use',
     preprints_used = 'View/Downloaded Preprints',
     preprints_submitted = 'Submitted Preprints'
   ) %>%

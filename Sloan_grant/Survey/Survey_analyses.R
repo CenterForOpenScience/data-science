@@ -66,19 +66,6 @@ round(100 * sum(survey_data$missing_qs < 54 & survey_data$Progress != 100)/sum(s
 #number who answered at least 1 question after consent
 sum(survey_data$missing_qs < 54)
 
-# attrition rate
-test <- survey_data %>%
-  select(starts_with('preprint_cred'), starts_with('service')) %>%
-  mutate(missing_var = rowSums(is.na(.)))
-
-survey_data %>%
-  pivot_longer(-ResponseId, names_to = 'question', values_to = 'response')
-
-
-
-
-
-
 
 # familiarity level of sample
 survey_data %>% 

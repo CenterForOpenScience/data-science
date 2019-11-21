@@ -15,7 +15,7 @@ library(semPlot)
 osf_retrieve_file("https://osf.io/86upq/") %>% 
   osf_download(overwrite = T)
 
-survey_data <- read_csv(here::here('cleaned_data.csv'), col_types = cols(.default = col_number(),
+survey_data <- read_csv(here::here('/Documents/data-science/Sloan_grant/Survey/cleaned_data.csv'), col_types = cols(.default = col_number(),
                                                                          StartDate = col_datetime(format = '%m/%d/%y %H:%M'),
                                                                          EndDate = col_datetime(format = '%m/%d/%y %H:%M'),
                                                                          ResponseId = col_character(),
@@ -46,12 +46,22 @@ survey_data <- read_csv(here::here('cleaned_data.csv'), col_types = cols(.defaul
                        acad_career_stage = fct_relevel(acad_career_stage, c('Grad Student', 'Post doc', 'Assist Prof', 'Assoc Prof', 'Full Prof'))) %>%
                 mutate(hdi_level = fct_explicit_na(hdi_level, '(Missing)'),
                        familiar = fct_explicit_na(familiar, '(Missing)'),
-                       discipline_collapsed = fct_explicit_na(discipline_collapsed, '(Missing)'))
+                       discipline_collapsed = fct_explicit_na(discipline_collapsed, '(Missing)')) %>%
+                mutate(missing_qs = rowSums(is.na(survey_data)))
+
+
+
 
 #### basic sample characteristics ####
 
-# total sample
+# total sample who consented
 nrow(survey_data)
+
+#percentage of respondents who only consented
+round(100*sum(survey_data$missing_qs == 54)/nrow(survey_data), 2)
+
+#for those who answered 1 question, attrition rate
+round(100 * sum(survey_data$missing_qs < 54 & survey_data$Progress != 100)/sum(survey_data$missing_qs < 54), 2)
 
 # attrition rate
 test <- survey_data %>%
@@ -60,6 +70,12 @@ test <- survey_data %>%
 
 survey_data %>%
   pivot_longer(-ResponseId, names_to = 'question', values_to = 'response')
+
+
+
+
+
+
 
 # familiarity level of sample
 survey_data %>% 

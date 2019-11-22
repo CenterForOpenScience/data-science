@@ -131,20 +131,6 @@ survey_data %>%
   summarize(n = n(), percentage = 100*n/nrow(survey_data)) %>%
   arrange(desc(n))
 
-#### correlates of favorability ####
-r_and_cis <- survey_data %>%
-  select(starts_with('preprint_cred'), favor_use) %>%
-  corr.test(adjust = 'none')
-
-r_and_cis$ci %>%
-  rownames_to_column(var = 'correlation') %>%
-  filter(grepl('fvr_s', correlation)) %>%
-  select(-p) %>%
-  column_to_rownames('correlation') %>%
-  round(digits = 2) %>%
-  rownames_to_column(var = 'correlation') %>%
-  arrange(r)
-
 # does favoring use correlate with use and/or submission?
 rcis_favor_use <- survey_data %>%
   mutate(preprints_used = as.numeric(preprints_used)-1,
@@ -152,34 +138,6 @@ rcis_favor_use <- survey_data %>%
   select(preprints_used, preprints_submitted, favor_use) %>%
   corr.test(adjust = 'none', method = 'spearman')
 
-#### correlates of preprint use/submission ####
-r_and_cis_used <- survey_data %>% 
-  mutate(preprints_used = as.numeric(preprints_used)) %>%
-  select(starts_with('preprint_cred'), preprints_used) %>%
-  corr.test(adjust = 'none', method = 'spearman')
-
-r_and_cis_used$ci %>%
-  rownames_to_column(var = 'correlation') %>%
-  filter(grepl('prpr', correlation)) %>%
-  select(-p) %>%
-  column_to_rownames('correlation') %>%
-  round(digits = 2) %>%
-  rownames_to_column(var = 'correlation') %>%
-  arrange(r)
-
-r_and_cis_submitted <- survey_data %>% 
-  mutate(preprints_submitted = as.numeric(preprints_submitted)) %>%
-  select(starts_with('preprint_cred'), preprints_submitted) %>%
-  corr.test(adjust = 'none', method = 'spearman')
-
-r_and_cis_submitted$ci %>%
-  rownames_to_column(var = 'correlation') %>%
-  filter(grepl('prpr', correlation)) %>%
-  select(-p) %>%
-  column_to_rownames('correlation') %>%
-  round(digits = 2) %>%
-  rownames_to_column(var = 'correlation') %>%
-  arrange(r)
 
 backward_diff <- matrix(c(-3/4, 1/4, 1/4, 1/4,
                            -1/2, -1/2, 1/2, 1/2,

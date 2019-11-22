@@ -49,9 +49,6 @@ survey_data <- read_csv(here::here('/Documents/data-science/Sloan_grant/Survey/c
                        discipline_collapsed = fct_explicit_na(discipline_collapsed, '(Missing)')) %>%
                 mutate(missing_qs = rowSums(is.na(survey_data)))
 
-
-
-
 #### basic sample characteristics ####
 
 # total sample who consented
@@ -137,28 +134,6 @@ rcis_favor_use <- survey_data %>%
          preprints_submitted = as.numeric(preprints_submitted)-1) %>%
   select(preprints_used, preprints_submitted, favor_use) %>%
   corr.test(adjust = 'none', method = 'spearman')
-
-
-backward_diff <- matrix(c(-3/4, 1/4, 1/4, 1/4,
-                           -1/2, -1/2, 1/2, 1/2,
-                            -1/4, -1/4, -1/4, 3/4), ncol = 3)
-
-contrasts(survey_data$preprints_used) <- backward_diff
-contrasts(survey_data$preprints_submitted) <- backward_diff
-
-regression_fun <- function(question) {
-  form <- paste(question, "~ favor_use + preprints_used + preprints_submitted")
-  lm(as.formula(form), data = survey_data)
-}
-
-vars <- names(survey_data)[6:24]
-
-models <- vars %>%
-            set_names() %>%
-            map(regression_fun)
-
-model_parameters <- map_dfr(models, tidy, conf.int = T, .id = "variable")
-
 
 #### exploratory factor analysis ####
 

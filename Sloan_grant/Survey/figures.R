@@ -300,11 +300,12 @@ discipline_favor <- survey_data %>%
                     mutate(favor_use = as.factor(favor_use),
                            favor_use = fct_recode(favor_use, `Very unfavorable` = '-3', `Somewhat unfavorable` = '-2', `Slightly unfavorable` = '-1', `Neither unfavorable nor favorable` = '0', `Slightly favorable` = '1', `Somewhat favorable` = '2', `Very favorable`= '3')) %>% 
                     select(favor_use, discipline_collapsed, ResponseId) %>% 
-                    filter(!is.na(discipline_collapsed) & discipline_collapsed != 'Other') %>%
+                    filter(!is.na(discipline_collapsed) & discipline_collapsed != 'Other' & discipline_collapsed != '(Missing)') %>%
                     pivot_wider(names_from = discipline_collapsed, values_from = favor_use, id_cols = ResponseId) %>%
                     select(-ResponseId)
 
-plot(likert(as.data.frame(discipline_favor)))
+plot(likert(as.data.frame(discipline_favor)), text.size = 4) +
+  theme(legend.title = element_blank(), legend.text=element_text(size=12), axis.text = element_text(size = 12))
   
 
 # use/submissions of preprints by academic career stage
@@ -353,7 +354,8 @@ career_stage <- survey_data %>%
   pivot_wider(names_from = acad_career_stage, values_from = favor_use, id_cols = ResponseId) %>%
   select(-ResponseId)
 
-plot(likert(as.data.frame(career_stage)))
+plot(likert(as.data.frame(career_stage)), text.size = 4) +
+  theme(legend.title = element_blank(), legend.text=element_text(size=12), axis.text = element_text(size = 12))
 
 # correlation favor-use/use/submissions and credibility questions
 correlations1 <- survey_data %>%

@@ -264,10 +264,17 @@ survey_data %>%
     filter(!is.na(preprints_used), discipline_collapsed != 'Other', discipline_collapsed != '(Missing)', preprints_used != 'Not sure') %>%
     ggplot(aes(fill = preprints_used, x = discipline_collapsed, y = perc)) +
     geom_col(position = 'dodge') +
-    geom_text(aes(label = perc), size = 4, position = position_dodge(width = 1), hjust= -.1) +
+    geom_text(aes(label = perc), size = 4, position = position_dodge(width = 1), hjust= -.2) +
     coord_flip() +
     guides(fill = guide_legend(reverse = TRUE)) +
-    scale_fill_manual(values = wes_palette("IsleofDogs2"))
+    scale_fill_manual(values = wes_palette("IsleofDogs2")) +
+    theme(legend.text=element_text(size=12), legend.title = element_blank(),
+          axis.text = element_text(size = 12), axis.title.y = element_blank(),
+          axis.title.x = element_text(size = 12))  +
+    scale_y_continuous(limits = c(0, 55), breaks = c(0, 10, 20, 30, 40, 50)) +
+    labs(y = 'Percentage of Respondents')
+    
+    
 
 survey_data %>%
   mutate(preprints_submitted = fct_rev(preprints_submitted)) %>%
@@ -303,9 +310,16 @@ survey_data %>%
   filter(!is.na(preprints_used), acad_career_stage != '(Missing)', preprints_used != 'Not sure') %>%
   ggplot(aes(fill = preprints_used, x = acad_career_stage, y = perc)) +
   geom_col(position = 'dodge') +
+  geom_text(aes(label = perc), size = 4, position = position_dodge(width = 1), hjust= -.2) +
   coord_flip() +
   guides(fill = guide_legend(reverse = TRUE)) +
-  scale_fill_manual(values = wes_palette("IsleofDogs2"))
+  scale_fill_manual(values = wes_palette("IsleofDogs2")) +
+  theme(legend.text=element_text(size=12), legend.title = element_blank(),
+        axis.text = element_text(size = 12), axis.title.y = element_blank(),
+        axis.title.x = element_text(size = 12))  +
+  scale_y_continuous(limits = c(0, 50), breaks = c(0, 10, 20, 30, 40, 50)) +
+  labs(y = 'Percentage of Respondents')
+
 
 survey_data %>%
   mutate(preprints_submitted = fct_rev(preprints_submitted)) %>%
@@ -315,10 +329,14 @@ survey_data %>%
   filter(!is.na(preprints_submitted), acad_career_stage != '(Missing)', preprints_submitted != 'Not sure') %>%
   ggplot(aes(fill = preprints_submitted, x = acad_career_stage, y = perc)) +
   geom_col(position = 'dodge') +
-  geom_text(aes(label = perc), size = 4, position = position_dodge(width = 1), hjust= -.1) +
   coord_flip() +
   guides(fill = guide_legend(reverse = TRUE)) +
-  scale_fill_manual(values = wes_palette("IsleofDogs2"))
+  scale_fill_manual(values = wes_palette("IsleofDogs2")) +
+  theme(legend.text=element_text(size=12), legend.title = element_blank(),
+        axis.text = element_text(size = 12), axis.title.y = element_blank(),
+        axis.title.x = element_text(size = 12))  +
+  scale_y_continuous(limits = c(0, 65), breaks = c(0, 10, 20, 30, 40, 50, 60)) +
+  labs(y = 'Percentage of Respondents')
 
 
 # favor-use by career stage

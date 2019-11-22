@@ -60,18 +60,18 @@ colnames(preprint_cred) <- c(preprint_cred1_1 = "Author's previous work",
                              preprint_cred4_2 = "Links to any available analysis scripts",
                              preprint_cred4_3 = "Links to any available materials",
                              preprint_cred4_4 = "Links to any pre-registrations or pre-analysis plans",
-                             preprint_cred5_1 = "Info about independent groups accessing linked info",
-                             preprint_cred5_2 = "Info about independent reproductions",
-                             preprint_cred5_3 = "Info about independent robustness checks")
+                             preprint_cred5_1 = "Info about whether indep groups could access linked info",
+                             preprint_cred5_2 = "Info about indep reproductions",
+                             preprint_cred5_3 = "Info about indep robustness checks")
 
 preprint_cred <- preprint_cred %>%
   mutate_all(factor, levels=1:5, labels=choices, ordered=TRUE)
 
 cred_preprints<- expression(atop("When assessing the credibility of a preprint", paste("how important would it be to have each of the following pieces of information?")))
 pdf("icon_cred.pdf", width=12.5, height=10)
-plot(likert(as.data.frame(preprint_cred)), ordered=T) + 
+plot(likert(as.data.frame(preprint_cred)), ordered=T, text.size = 4) + 
   ggtitle(cred_preprints)+
-  theme(plot.title = element_text(hjust = 0.5), legend.title = element_blank())
+  theme(plot.title = element_text(hjust = 0.5), legend.title = element_blank(), legend.text=element_text(size=12), axis.text = element_text(size = 12))
 dev.off()
 
 # table by academic discipline

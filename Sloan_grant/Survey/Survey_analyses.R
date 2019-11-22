@@ -135,6 +135,49 @@ rcis_favor_use <- survey_data %>%
   select(preprints_used, preprints_submitted, favor_use) %>%
   corr.test(adjust = 'none', method = 'spearman')
 
+
+### initial career/disicpline analyses ###
+
+credibility_data_long <- survey_data %>%
+  dplyr::select(ResponseId, starts_with('preprint_cred'), discipline_collapsed, acad_career_stage) %>%
+  drop_na() %>%
+  pivot_longer(cols = starts_with('preprint_cred'), names_to = 'question', values_to = 'response') %>%
+  mutate(question = as.factor(question))
+
+# by discipline analysis #
+discipline_model <- lmer(response ~ discipline_collapsed + question + discipline_collapsed:question + (1|ResponseId), credibility_data_long %>% filter(discipline_collapsed != 'Other' & discipline_collapsed != 'Engineering'))
+anova_output <- anova(discipline_model)
+
+
+discipline_gespartial <- ges.partial.SS.mix(dfm = anova_output[1, 3], dfe = anova_output[1, 4], ssm = anova_output[1, 1], sss = (anova_output[1, 1] * anova_output[1, 4])/(anova_output[1, 3] * anova_output[1, 5]), sse = (anova_output[2, 1] * anova_output[2, 4])/(anova_output[2, 3] * anova_output[2, 5]), Fvalue = anova_output[1, 5], a = .05)
+question_gespartial <- ges.partial.SS.mix(dfm = anova_output[2, 3], dfe = anova_output[2, 4], ssm = anova_output[2, 1], sss = (anova_output[1, 1] * anova_output[1, 4])/(anova_output[1, 3] * anova_output[1, 5]), sse = (anova_output[2, 1] * anova_output[2, 4])/(anova_output[2, 3] * anova_output[2, 5]), Fvalue = anova_output[2, 5], a = .05)
+
+
+discipline_gespartial$ges
+discipline_gespartial$geslow
+discipline_gespartial$geshigh
+
+question_gespartial$ges
+question_gespartial$geslow
+question_gespartial$geshigh
+
+# by academic position analysis #
+
+position_model <- lmer(response ~ acad_career_stage + question + acad_career_stage:question + (1|ResponseId), credibility_data_long)
+anova_output <- anova(position_model)
+
+academic_gespartial <- ges.partial.SS.mix(dfm = anova_output[1, 3], dfe = anova_output[1, 4], ssm = anova_output[1, 1], sss = (anova_output[1, 1] * anova_output[1, 4])/(anova_output[1, 3] * anova_output[1, 5]), sse = (anova_output[2, 1] * anova_output[2, 4])/(anova_output[2, 3] * anova_output[2, 5]), Fvalue = anova_output[1, 5], a = .05)
+question_gespartial <- ges.partial.SS.mix(dfm = anova_output[2, 3], dfe = anova_output[2, 4], ssm = anova_output[2, 1], sss = (anova_output[1, 1] * anova_output[1, 4])/(anova_output[1, 3] * anova_output[1, 5]), sse = (anova_output[2, 1] * anova_output[2, 4])/(anova_output[2, 3] * anova_output[2, 5]), Fvalue = anova_output[2, 5], a = .05)
+
+academic_gespartial$ges
+academic_gespartial$geslow
+academic_gespartial$geshigh
+
+question_gespartial$ges
+question_gespartial$geslow
+question_gespartial$geshigh
+
+
 #### exploratory factor analysis ####
 
 credibilty_qs <- survey_data %>%
@@ -183,29 +226,7 @@ parameterEstimates(favoruse_fit, ci = T, level = .95, standardized = T) %>%
 
 semPaths(favoruse_fit)
 
-#### by academic position analysis ####
 
-credibility_data_long <- survey_data %>%
-  dplyr::select(ResponseId, starts_with('preprint_cred'), discipline_collapsed, acad_career_stage) %>%
-  drop_na() %>%
-  pivot_longer(cols = starts_with('preprint_cred'), names_to = 'question', values_to = 'response') %>%
-  mutate(question = as.factor(question))
-
-# magnitude of between position vs. between Q differences
-
-position_model <- lmer(response ~ acad_career_stage + question + acad_career_stage:question + (1|ResponseId), credibility_data_long)
-anova_output <- anova(position_model)
-
-academic_gespartial <- ges.partial.SS.mix(dfm = anova_output[1, 3], dfe = anova_output[1, 4], ssm = anova_output[1, 1], sss = (anova_output[1, 1] * anova_output[1, 4])/(anova_output[1, 3] * anova_output[1, 5]), sse = (anova_output[2, 1] * anova_output[2, 4])/(anova_output[2, 3] * anova_output[2, 5]), Fvalue = anova_output[1, 5], a = .05)
-question_gespartial <- ges.partial.SS.mix(dfm = anova_output[2, 3], dfe = anova_output[2, 4], ssm = anova_output[2, 1], sss = (anova_output[1, 1] * anova_output[1, 4])/(anova_output[1, 3] * anova_output[1, 5]), sse = (anova_output[2, 1] * anova_output[2, 4])/(anova_output[2, 3] * anova_output[2, 5]), Fvalue = anova_output[2, 5], a = .05)
-
-academic_gespartial$ges
-academic_gespartial$geslow
-academic_gespartial$geshigh
-
-question_gespartial$ges
-question_gespartial$geslow
-question_gespartial$geshigh
 
 # measurement invariance of factor model across positions
 base_model <- 'traditional =~ preprint_cred1_1 + preprint_cred1_2 + preprint_cred1_3
@@ -255,23 +276,6 @@ position_models <- cfa(model = base_model, data = survey_data, group = 'acad_car
 summary(position_models, fit.measures = T)
 
 measurementInvariance(model = base_model, data = survey_data, group = 'acad_career_stage')
-
-#### by discipline analysis ####
-discipline_model <- lmer(response ~ acad_career_stage + question + acad_career_stage:question + (1|ResponseId), credibility_data_long %>% filter(discipline_collapsed != 'Other' & discipline_collapsed != 'Engineering'))
-anova_output <- anova(discipline_model)
-
-
-discipline_gespartial <- ges.partial.SS.mix(dfm = anova_output[1, 3], dfe = anova_output[1, 4], ssm = anova_output[1, 1], sss = (anova_output[1, 1] * anova_output[1, 4])/(anova_output[1, 3] * anova_output[1, 5]), sse = (anova_output[2, 1] * anova_output[2, 4])/(anova_output[2, 3] * anova_output[2, 5]), Fvalue = anova_output[1, 5], a = .05)
-question_gespartial <- ges.partial.SS.mix(dfm = anova_output[2, 3], dfe = anova_output[2, 4], ssm = anova_output[2, 1], sss = (anova_output[1, 1] * anova_output[1, 4])/(anova_output[1, 3] * anova_output[1, 5]), sse = (anova_output[2, 1] * anova_output[2, 4])/(anova_output[2, 3] * anova_output[2, 5]), Fvalue = anova_output[2, 5], a = .05)
-
-
-discipline_gespartial$ges
-discipline_gespartial$geslow
-discipline_gespartial$geshigh
-
-question_gespartial$ges
-question_gespartial$geslow
-question_gespartial$geshigh
 
 
 # by group measurement invariance

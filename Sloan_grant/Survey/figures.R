@@ -74,8 +74,8 @@ plot(likert(as.data.frame(preprint_cred)), ordered=T, text.size = 4) +
   theme(plot.title = element_text(hjust = 0.5), legend.title = element_blank(), legend.text=element_text(size=12), axis.text = element_text(size = 12))
 dev.off()
 
-# table by academic discipline
 
+# table by academic discipline
 preprintcred_means_by_position <- survey_data %>%
   select(-c(consent, HDI_2017)) %>%
   group_by(acad_career_stage) %>%
@@ -116,8 +116,6 @@ preprintcred_means_by_position <- survey_data %>%
 preprintcred_means_by_position %>% 
   gt() %>%
   tab_header(title = 'Career Stage') %>%
-  tab_source_note(source_note = 'Response Scale: 1 - Not at all important, 2 - Slightly important, 3 - Moderately important, 4 - Very Important, 5 - Extremely Important') %>%
-  tab_source_note(source_note = "Missing Data: Respondents who listed 'other' or who skipped the question not included" ) %>%
   cols_hide(columns = vars(`Grad Student_complete`, `Post doc_complete`, `Assist Prof_complete`,`Assoc Prof_complete`, `Full Prof_complete` )) %>%
   data_color(
     columns = vars(`Grad Student_mean`,`Post doc_mean`,`Assist Prof_mean`, `Assoc Prof_mean`, `Full Prof_mean`),
@@ -190,8 +188,6 @@ preprintcred_means_by_discipline <-survey_data %>%
 preprintcred_means_by_discipline  %>% 
   gt() %>%
   tab_header(title = 'Credibility of Preprints by Discipline') %>%
-  tab_source_note(source_note = 'Response Scale: 1 - Not at all important, 2 - Slightly important, 3 - Moderately important, 4 - Very Important, 5 - Extremely Important') %>%
-  tab_source_note(source_note = "Missing Info: Repondents who listed their discipline as Business, Law, Education, Engineering, Arts and Humanities, or who skipped the question are excluded for simplicity") %>%
   cols_hide(columns = ends_with('complete')) %>%
   data_color(
     columns = ends_with('mean'),

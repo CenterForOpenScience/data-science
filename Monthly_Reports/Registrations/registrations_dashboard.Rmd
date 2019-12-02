@@ -14,10 +14,13 @@ library(tidyverse)
 library(osfr)
 library(highcharter)
 library(DT)
+library(here)
 
 ##data imports
 
-form_data <- read_csv('/Users/courtneysoderberg/form_type_monthly.csv')
+form_data <- read_csv(here::here('Monthly_Reports/Registrations/form_type_monthly.csv'))
+total_regs <- read_csv(here::here('Monthly_Reports/Registrations/monthly_total_regs.csv'))
+
 
 ```
 
@@ -28,28 +31,42 @@ Row {data-height=175}
 ### New Top-level Registrations {.value-box}
 
 ```{r}
-valueBox(value = form_data %>% group_by(date) %>% summarize(total = sum(reg_events)) %>% slice(1L) %>% select(total),
+valueBox(value = total_regs %>% arrange(desc(keen.timestamp)) %>% slice(1L) %>% select(monthly_diff_total),
     icon = "fa-pencil")
 ```
 
 ### New Top-Level Embargoed Registrations  {.value-box}
 
 ```{r}
-valueBox(value = 15,
+valueBox(value = total_regs %>% arrange(desc(keen.timestamp)) %>% slice(1L) %>% select(monthly_diff_embargo),
     icon = "fa-user-secret")
 ```
 
 ### New Top-Level Registration Withdrawals {.value-box}
 
 ```{r}
-valueBox(value = form_data %>% group_by(date) %>% summarize(total = sum(retract_events)) %>% slice(1L) %>% select(total),
+valueBox(value = total_regs %>% arrange(desc(keen.timestamp)) %>% slice(1L) %>% select(monthly_diff_withdraws),
     icon = "fa-trash")
 ```
 
 Row {.tabset data-height=650}
 -----------------------------------------------------------------------
 
-### Number of Each Type
+### Total Registrations
+```{r}
+total_regs %>%
+  mutate(keen.timestamp = as.Date(keen.timestamp)) %>%
+  hchart(., type = 'line',
+         hcaes(x = keen.timestamp,
+               y = monthly_diff_total)) %>%
+  hc_exporting(
+    enabled = TRUE, filename="reg_form_counts", 
+              formAttributes=list(target="_blank"),
+               buttons=list(contextButton=list(
+               text="Export", theme=list(fill="transparent"))))
+```
+
+### Registrations by Form Type
 
 ```{r}
 
@@ -79,27 +96,6 @@ fewer_forms_data %>%
               formAttributes=list(target="_blank"),
                buttons=list(contextButton=list(
                text="Export", theme=list(fill="transparent"))))
-```
-
-### Perc of Each Type
-```{r}
-form_data %>%
-  group_by(name) %>%
-  mutate(form = case_when(name %in% top_forms[1:n] ~ name, 
-                              TRUE ~ "Other")) %>%
-  ungroup() %>%
-  group_by(date, form) %>%
-  summarise(reg_events = sum(reg_events), retract_events = sum(retract_events), net_events = sum(net_events)) %>%
-  hchart(., type = 'column',
-         hcaes(x = date,
-               y = net_events,
-               group = form))
-```
-
-### Chart 2 Tab 3
-
-```{r}
-
 ```
 
 Row

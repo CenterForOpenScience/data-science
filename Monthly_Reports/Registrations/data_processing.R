@@ -47,7 +47,5 @@ last_month_data <- read_csv(file_name) %>%
                       mutate(date = date(paste0(year, '-', month, '-01')))
 
 monthly_data <- rbind(monthly_data, last_month_data)
-write_csv(monthly_data, 'form_type_monthly.csv')
-
-osf_upload()
+write_csv(monthly_data, here::here('Monthly_Reports/Registrations/', 'form_type_monthly.csv'))
 

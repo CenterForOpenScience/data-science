@@ -15,13 +15,20 @@ library(osfr)
 library(highcharter)
 library(DT)
 library(here)
+library(googlesheets4)
 
 ##data imports
 
-form_data <- read_csv(here::here('Monthly_Reports/Registrations/form_type_monthly.csv'))
-total_regs <- read_csv(here::here('Monthly_Reports/Registrations/monthly_total_regs.csv'))
+form_data <- read_csv(here::here('Monthly_Reports/Registrations/form_type_monthly.csv')) 
+total_regs <- read_csv(here::here('Monthly_Reports/Registrations/monthly_total_regs.csv')) %>%
+                    mutate(keen.timestamp = as.Date(keen.timestamp))
+reg_targets <- read_sheet('https://docs.google.com/spreadsheets/d/1b7Rgo_tdUvNmmjO_EUIn_e3ZJfecVDiycBN_d9HoEB4/') %>%
+                  select(date, registered_projects.targets) %>%
+                  mutate(date = as.Date(date))
 
-
+# merge projects and actuals
+total_regs <- total_regs %>%
+                left_join(reg_targets, by = c('keen.timestamp' = 'date'))
 ```
 
 Row {data-height=175}
@@ -54,11 +61,13 @@ Row {.tabset data-height=650}
 
 ### Total Registrations
 ```{r}
-total_regs %>%
-  mutate(keen.timestamp = as.Date(keen.timestamp)) %>%
+total_regs %>% 
+  select(keen.timestamp, registered_projects.monthly_diff, registered_projects.targets) %>% 
+  pivot_longer(cols = starts_with('registered'), names_to = 'type', names_prefix = 'registered_projects.', values_to = 'count') %>%
   hchart(., type = 'line',
          hcaes(x = keen.timestamp,
-               y = monthly_diff_total)) %>%
+               y = count,
+               group = type)) %>%
   hc_exporting(
     enabled = TRUE, filename="reg_form_counts", 
               formAttributes=list(target="_blank"),

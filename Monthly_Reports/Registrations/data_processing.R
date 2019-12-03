@@ -14,7 +14,7 @@ read_sheet('https://docs.google.com/spreadsheets/d/1ti6iEgjvr-hXyMT5NwCNfAg-PJac
     group_by(year_month) %>%
     filter(keen.timestamp == max(keen.timestamp)) %>%
     ungroup() %>%
-    mutate(monthly_diff_total = registered_projects.total - lag(registered_projects.total),
+    mutate(registered_projects.monthly_diff = registered_projects.total - lag(registered_projects.total),
            monthly_diff_withdraws = registered_projects.withdrawn - lag(registered_projects.withdrawn),
            monthly_diff_embargo = registered_projects.embargoed_v2 - lag(registered_projects.embargoed_v2)) %>%
     write_csv(here::here('Monthly_Reports/Registrations/', 'monthly_total_regs.csv'))

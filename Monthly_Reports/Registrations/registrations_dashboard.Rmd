@@ -71,6 +71,8 @@ total_regs %>%
          hcaes(x = keen.timestamp,
                y = count,
                group = type)) %>%
+  hc_tooltip(table = TRUE, sort = TRUE) %>% 
+  hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
   hc_xAxis(title = list(text = "")) %>%
   hc_yAxis(title = list(text = "Net Registrations (Regs - Withdraws)")) %>%
   hc_exporting(
@@ -105,6 +107,8 @@ fewer_forms_data %>%
          hcaes(x = date,
                y = net_events,
                group = form)) %>%
+  hc_tooltip(table = TRUE, sort = TRUE) %>% 
+  hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
   hc_xAxis(title = list(text = "")) %>%
   hc_yAxis(title = list(text = "Net Registrations (Regs - Withdraws)")) %>%
   hc_exporting(

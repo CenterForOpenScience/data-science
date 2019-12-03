@@ -65,10 +65,14 @@ Row {.tabset data-height=650}
 total_regs %>% 
   select(keen.timestamp, registered_projects.monthly_diff, registered_projects.targets) %>% 
   pivot_longer(cols = starts_with('registered'), names_to = 'type', names_prefix = 'registered_projects.', values_to = 'count') %>%
+  mutate(type = case_when(type == 'monthly_diff' ~ 'Registrations',
+                          type == 'targets' ~ 'Target')) %>%
   hchart(., type = 'line',
          hcaes(x = keen.timestamp,
                y = count,
                group = type)) %>%
+  hc_xAxis(title = list(text = "")) %>%
+  hc_yAxis(title = list(text = "Net Registrations (Regs - Withdraws)")) %>%
   hc_exporting(
     enabled = TRUE, filename="reg_form_counts", 
               formAttributes=list(target="_blank"),
@@ -101,6 +105,8 @@ fewer_forms_data %>%
          hcaes(x = date,
                y = net_events,
                group = form)) %>%
+  hc_xAxis(title = list(text = "")) %>%
+  hc_yAxis(title = list(text = "Net Registrations (Regs - Withdraws)")) %>%
   hc_exporting(
     enabled = TRUE, filename="reg_form_counts", 
               formAttributes=list(target="_blank"),

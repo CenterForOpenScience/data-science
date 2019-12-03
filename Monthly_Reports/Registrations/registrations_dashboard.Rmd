@@ -38,8 +38,9 @@ Row {data-height=175}
 ### New Top-level Registrations {.value-box}
 
 ```{r}
-valueBox(value = total_regs %>% arrange(desc(keen.timestamp)) %>% slice(1L) %>% select(monthly_diff_total),
-    icon = "fa-pencil")
+valueBox(value = total_regs %>% arrange(desc(keen.timestamp)) %>% slice(1L) %>% select(registered_projects.monthly_diff),
+    icon = "fa-pencil",
+    color = ifelse(total_regs %>% arrange(desc(keen.timestamp)) %>% slice(1L) %>% select(registered_projects.monthly_diff) < (total_regs %>% arrange(desc(keen.timestamp)) %>% slice(1L) %>% select(registered_projects.targets)) * .9, 'warning', 'primary'))
 ```
 
 ### New Top-Level Embargoed Registrations  {.value-box}

@@ -23,6 +23,7 @@ library(kableExtra)
 library(osfr)
 library(here)
 library(ggalluvial)
+library(plotly)
 
 knitr::opts_chunk$set(fig.width=12, fig.height=8) 
 ```
@@ -73,7 +74,7 @@ projects_by_product <- node_data %>%
                                       suppnode = max(preprint_suppnode),
                                       first_reg = if(all(is.na(first_reg))) NA else min(first_reg, na.rm = TRUE),
                                       first_file = if(all(is.na(first_file))) NA else min(first_file, na.rm = TRUE),
-                                      first_public = if(all(is.na(date_made_public))) NA else max(date_made_public, na.rm = TRUE),
+                                      first_public = if(all(is.na(date_made_public))) NA else min(date_made_public, na.rm = TRUE),
                                       first_reg = as_datetime(first_reg)) %>%
                             mutate(products = case_when(has_file > 0 & shared_file == 0 & registered == 0 ~ 'OSF_privatefiles_only',
                                                           shared_file ==1 & registered == 0 ~ 'OSF_sharingfiles_only',
@@ -99,8 +100,7 @@ all_dates <- projects_by_product %>%
                 left_join(content_logs, by = 'root_id')
 ```
 
-```{r}
-library(plotly) 
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 
 action_flow <- projects_by_product %>%
                         filter(project_created > '2015-05-01') %>%   #file creation dates only accurate after May 1st, 2015
@@ -191,7 +191,7 @@ p <- plot_ly(
 
 For this analysis, I removed projects that were OSF4M projects.
 
-```{r}
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 
 project_timeline <- projects_by_product %>%
   filter(project_created > '2015-05-01') %>%
@@ -269,7 +269,7 @@ time_estimates <- project_timeline %>%
 
 ```
 
-```{r}
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 ggplot(project_timeline %>% filter(time_action2 > 1), aes(time_action2, color = action2)) +
   geom_freqpoly(binwidth = 200) +
   scale_x_continuous('Days Between Project Created and Next Action',
@@ -283,7 +283,7 @@ ggplot(project_timeline %>% filter(time_action2 > 1), aes(time_action2, color = 
 
 The table below shows the number of projects that have each of the actions. These numbers are not mutually exclusive. So, if a project shares a file and has a registration, it will count towards all three totals.
 
-```{r echo = FALSE}
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 atleast_one_pubnode <- nrow(node_data %>% group_by(root_id) %>% summarize(num_public_nodes = sum(is_public == TRUE)) %>% filter(num_public_nodes > 0))
 
 aggregate_data <- projects_by_product %>%
@@ -307,7 +307,7 @@ sharing_registered <- projects_by_product %>% filter(shared_file ==1 & registere
 
 The graph shows the number of top-level projects that were created each month that either *only* share files, *only* have a registration, do both of these things, are private and have files but no registration, or do none of these things. So, these numbers are mutually exclusive and will not exactly match the number in the table above, which are not mutually exclusive.
 
-```{r echo = FALSE}
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 
  graph <- ggplot(projects_by_product, aes(pc_by_day, color = products)) + 
   geom_freqpoly(binwidth = 30) +
@@ -323,7 +323,7 @@ The graph shows the number of top-level projects that were created each month th
 
 #### Last log:
 
-```{r echo = FALSE}
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 
 ## forked projects have logs from original project as well, so will see log dates that happened before project creation date. Moving all those to 0 so only see logs that happened after fork event for forked projects
 
@@ -337,7 +337,7 @@ all_dates <- all_dates %>%
 
 ```
 
-```{r echo=FALSE}
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 ##time in days from project creation to the last log on the project
 ggplot(all_dates %>% filter(!is.na(project_to_lastlog)), aes(project_to_lastlog)) +
   geom_freqpoly(binwidth = 10) +
@@ -400,7 +400,7 @@ ggplot(all_dates %>% filter(!is.na(project_to_lastlog)) %>% filter(project_to_la
 
 #### Last content addition log
 
-```{r echo = FALSE}
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 ##time in days from project creation to the last log on the project
 ggplot(all_dates %>% filter(!is.na(project_to_lastcontentadd)), aes(project_to_lastcontentadd)) +
   geom_freqpoly(binwidth = 10) +
@@ -436,7 +436,7 @@ ggplot(all_dates %>% filter(!is.na(project_to_lastcontentadd)) %>% filter(projec
   scale_y_continuous('Number of Top Level Projects')
 ```
 
-```{r}
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 ## the basefilenod table is showing incorrect creation dates for files from before
 
 later_project <- all_dates %>%

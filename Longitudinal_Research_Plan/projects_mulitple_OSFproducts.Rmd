@@ -275,11 +275,12 @@ time_estimates <- project_timeline %>%
 ```
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
-ggplot(project_timeline %>% filter(time_action2 > 1), aes(time_action2, color = action2)) +
-  geom_freqpoly(binwidth = 200) +
+ggplot(project_timeline %>% filter(time_action2 > 1), aes(time_action2)) +
+  facet_wrap(~action2) +
+  geom_histogram(binwidth = 50) +
   scale_x_continuous('Days Between Project Created and Next Action',
-                     breaks = round(seq(0, 1460, by = 90),1)) +
-  scale_y_continuous('Numebr of Top Level Projects', breaks = round(seq(0, 150000, by = 5000),1))
+                     breaks = round(seq(0, 1460, by = 180),1)) +
+  scale_y_log10('Number of Top Level Projects')
 ```
 
 

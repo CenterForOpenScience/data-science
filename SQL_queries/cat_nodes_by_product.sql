@@ -215,7 +215,7 @@ SELECT osf_abstractnode.id AS node_id,
 					SUM(CASE WHEN osf_nodelog.action LIKE 'wiki_updated' THEN 1 ELSE 0 END) num_wiki_edits,
 					SUM(CASE WHEN osf_nodelog.action LIKE 'pointer_created' THEN 1 ELSE 0 END) num_links_added,
 					SUM(CASE WHEN osf_nodelog.action LIKE 'pointer_removed' THEN 1 ELSE 0 END) num_links_removed,
-					SUM(CASE WHEN osf_nodelog.action = 'addon_file_copied' OR osf_nodelog.action = 'addon_file_moved' THEN 1 ELSE 0 END) num_copy_moves,
+					SUM(CASE WHEN osf_nodelog.action = 'addon_file_copied' OR osf_nodelog.action = 'addon_file_moved' THEN 1 ELSE 0 END) num_copy_moves
 				FROM osf_nodelog
 				WHERE action = 'made_public' OR action = 'pointer_created' OR action = 'pointer_removed' OR action = 'wiki_updated' OR action = 'addon_file_copied' OR action = 'addon_file_moved'
 				GROUP BY node_id) as public_dates

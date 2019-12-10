@@ -58,9 +58,11 @@ all_logs <- read_csv('/Users/courtneysoderberg/Downloads/logs_per_node.csv')
 projects_by_product <- node_data %>%
                             filter(type == 'osf.node' & is_deleted == FALSE) %>%
                             group_by(root_id) %>%
-                            mutate(registered = case_when(any(registered == TRUE) ~ 1, all(registered == FALSE) ~ 0)) %>%
+                            mutate(registered = case_when(any(registered == TRUE) ~ 1, all(registered == FALSE) ~ 0),
+                                   is_fork = case_when(any(is_fork == TRUE) ~ 1)) %>%
                             summarize(nodes_in_project = n(),
                                       has_file = max(has_files), 
+                                      is_fork = max(is_fork),
                                       shared_file = max(public_sharing), 
                                       registered = max(registered), 
                                       project_created = min(created),
@@ -71,7 +73,7 @@ projects_by_product <- node_data %>%
                                       suppnode = max(preprint_suppnode),
                                       first_reg = if(all(is.na(first_reg))) NA else min(first_reg, na.rm = TRUE),
                                       first_file = if(all(is.na(first_file))) NA else min(first_file, na.rm = TRUE),
-                                      first_public = if(all(is.na(date_made_public))) NA else min(date_made_public, na.rm = TRUE),
+                                      last_public = if(all(is.na(date_made_public))) NA else max(date_made_public, na.rm = TRUE),
                                       first_reg = as_datetime(first_reg)) %>%
                             mutate(products = case_when(has_file > 0 & shared_file == 0 & registered == 0 ~ 'OSF_privatefiles_only',
                                                           shared_file ==1 & registered == 0 ~ 'OSF_sharingfiles_only',
@@ -245,14 +247,34 @@ project_timeline <- projects_by_product %>%
                                 action3 == 'None' & action2 == 'Upload File' ~ days_create_files,
                                 action4 == 'None' & action3 == 'Registered'~ days_create_reg,
                                 action4 == 'None' & action3 == 'Made Public' ~ days_create_public,
-                                action4 == 'None' & action3 == 'Upload File' ~ days_create_files))
+                                action4 == 'None' & action3 == 'Upload File' ~ days_create_files,
+                                action4 == 'Made Public' ~ days_create_public,
+                                action4 == 'Registered' ~ days_create_reg,
+                                action4 == 'Upload File' ~ days_create_files))
 
+time_estimates <- project_timeline %>% 
+                        group_by(action1, action2, action3, action4) %>% 
+                        summarize(avg_til2 = round(mean(time_action2),2),
+                                  sd_til2 = round(sd(time_action2),2),
+                                  median_til2 = round(median(time_action2),2),
+                                  avg_til3 = round(mean(time_action3),2),
+                                  sd_til3 = round(sd(time_action3),2),
+                                  median_til3 = round(median(time_action3),2),
+                                  avg_til4 = round(mean(time_action4),2),
+                                  sd_til4 = round(sd(time_action4),2),
+                                  median_til4 = round(median(time_action4),2),
+                                  avg_overtime = round(mean(total_time),2),
+                                  sd_overtime = round(sd(total_time),2),
+                                  median_overtime = round(median(total_time),2))
 
+```
 
-
-
-
-
+```{r}
+ggplot(project_timeline %>% filter(time_action2 > 1), aes(time_action2, color = action2)) +
+  geom_freqpoly(binwidth = 200) +
+  scale_x_continuous('Days Between Project Created and Next Action',
+                     breaks = round(seq(0, 1460, by = 90),1)) +
+  scale_y_continuous('Numebr of Top Level Projects', breaks = round(seq(0, 150000, by = 5000),1))
 ```
 
 
@@ -421,55 +443,55 @@ later_project <- all_dates %>%
                     filter(project_created >= '2015-05-01')
 
 
-first_none <- later_project %>% filter(is.na(first_osf_file_created) & is.na(registration_date) & is.na(last_public)) # number of none projects at first level
+first_none <- later_project %>% filter(is.na(first_file) & is.na(first_reg) & is.na(last_public)) # number of none projects at first level
 
-file_first <- later_project %>% filter(!is.na(first_osf_file_created) & ((first_osf_file_created < last_public & first_osf_file_created < registration_date) | (first_osf_file_created < last_public & is.na(registration_date)) | (is.na(last_public) & first_osf_file_created < registration_date) | (is.na(last_public) & is.na(registration_date))))
+file_first <- later_project %>% filter(!is.na(first_file) & ((first_file < last_public & first_file < first_reg) | (first_file < last_public & is.na(first_reg)) | (is.na(last_public) & first_file < first_reg) | (is.na(last_public) & is.na(first_reg))))
 
-public_first <- later_project %>% filter(!is.na(last_public) & ((last_public < first_osf_file_created & last_public < registration_date) | (last_public < first_osf_file_created & is.na(registration_date)) | (is.na(first_osf_file_created) & last_public < registration_date) | (is.na(first_osf_file_created) & is.na(registration_date))))
+public_first <- later_project %>% filter(!is.na(last_public) & ((last_public < first_file & last_public < first_reg) | (last_public < first_file & is.na(first_reg)) | (is.na(first_file) & last_public < first_reg) | (is.na(first_file) & is.na(first_reg))))
   
 registered_first <- later_project %>% 
-                        filter(!is.na(registration_date) & ((registration_date < last_public & registration_date < first_osf_file_created) | 
-                                                              (registration_date < last_public & is.na(first_osf_file_created)) | 
-                                                              (is.na(last_public) & registration_date < first_osf_file_created) | 
-                                                              (is.na(last_public) & is.na(first_osf_file_created))))
+                        filter(!is.na(first_reg) & ((first_reg < last_public & first_reg < first_file) | 
+                                                              (first_reg < last_public & is.na(first_file)) | 
+                                                              (is.na(last_public) & first_reg < first_file) | 
+                                                              (is.na(last_public) & is.na(first_file))))
 
 
 file_then_reg <- file_first %>%
-                    filter(!is.na(registration_date) & ((registration_date < last_public) | is.na(last_public)))
+                    filter(!is.na(first_reg) & ((first_reg < last_public) | is.na(last_public)))
                     
 file_then_public <- file_first %>%
-                      filter(!is.na(last_public) & ((last_public < registration_date) | is.na(registration_date)))
-file_then_none <- file_first %>% filter(is.na(last_public) & is.na(registration_date))
+                      filter(!is.na(last_public) & ((last_public < first_reg) | is.na(first_reg)))
+file_then_none <- file_first %>% filter(is.na(last_public) & is.na(first_reg))
 
 
 public_then_reg <- public_first %>%
-                      filter(!is.na(registration_date) & (registration_date < first_osf_file_created | is.na(first_osf_file_created)))
+                      filter(!is.na(first_reg) & (first_reg < first_file | is.na(first_file)))
 public_then_file <- public_first %>%
-                      filter(!is.na(first_osf_file_created) & (first_osf_file_created < registration_date | is.na(registration_date)))
-public_then_nothing <- public_first %>% filter(is.na(first_osf_file_created) & is.na(registration_date))
+                      filter(!is.na(first_file) & (first_file < first_reg | is.na(first_reg)))
+public_then_nothing <- public_first %>% filter(is.na(first_file) & is.na(first_reg))
 
 reg_then_public <- registered_first %>%
-                      filter(!is.na(last_public) & ((last_public < first_osf_file_created) | is.na(first_osf_file_created)))
+                      filter(!is.na(last_public) & ((last_public < first_file) | is.na(first_file)))
 reg_then_file <- registered_first %>%
-                      filter(!is.na(first_osf_file_created) & ((first_osf_file_created < last_public) | is.na(last_public)))
-reg_then_node <- registered_first %>% filter(is.na(last_public) & is.na(first_osf_file_created))
+                      filter(!is.na(first_file) & ((first_file < last_public) | is.na(last_public)))
+reg_then_node <- registered_first %>% filter(is.na(last_public) & is.na(first_file))
 
 
 file_reg_public <- file_then_reg %>% filter(!is.na(last_public))
 file_reg_none <- file_then_reg %>% filter(is.na(last_public))
 
-file_public_reg <- file_then_public %>% filter(!is.na(registration_date))
-file_public_none <- file_then_public %>% filter(is.na(registration_date))
+file_public_reg <- file_then_public %>% filter(!is.na(first_reg))
+file_public_none <- file_then_public %>% filter(is.na(first_reg))
 
 
-public_reg_file <- public_then_reg %>% filter(!is.na(first_osf_file_created))
-public_reg_none <- public_then_reg %>% filter(is.na(first_osf_file_created))
+public_reg_file <- public_then_reg %>% filter(!is.na(first_file))
+public_reg_none <- public_then_reg %>% filter(is.na(first_file))
 
-public_file_reg <- public_then_file %>% filter(!is.na(registration_date))
-public_file_none <- public_then_file %>% filter(is.na(registration_date))
+public_file_reg <- public_then_file %>% filter(!is.na(first_reg))
+public_file_none <- public_then_file %>% filter(is.na(first_reg))
 
-reg_public_file <- reg_then_public %>% filter(!is.na(first_osf_file_created))
-reg_public_none <- reg_then_public %>% filter(is.na(first_osf_file_created))
+reg_public_file <- reg_then_public %>% filter(!is.na(first_file))
+reg_public_none <- reg_then_public %>% filter(is.na(first_file))
 
 reg_file_public <- reg_then_file %>% filter(!is.na(last_public))
 reg_file_none <- reg_then_file %>% filter(is.na(last_public))

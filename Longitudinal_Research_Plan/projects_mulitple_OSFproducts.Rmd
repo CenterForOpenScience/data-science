@@ -71,6 +71,7 @@ projects_by_product <- node_data %>%
                                       wiki_updates = sum(num_wiki_edits, na.rm = T),
                                       link_created = sum(num_links_added, na.rm = T),
                                       links_removed = sum(num_links_removed, na.rm = T),
+                                      movecopy_actions = sum(num_copy_moves, na.rm = T),
                                       suppnode = max(preprint_suppnode),
                                       first_reg = if(all(is.na(first_reg))) NA else min(first_reg, na.rm = TRUE),
                                       first_file = if(all(is.na(first_file))) NA else min(first_file, na.rm = TRUE),
@@ -103,6 +104,8 @@ all_dates <- projects_by_product %>%
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 
 action_flow <- projects_by_product %>%
+                        filter(movecopy_actions == 0) %>%
+                        filter(is.na(is_fork)) %>%
                         filter(project_created > '2015-05-01') %>%   #file creation dates only accurate after May 1st, 2015
                         mutate(action1 = 'Created Project',
                                action2 = case_when(is.na(first_file) & is.na(first_public) & is.na(first_reg) ~ 'None',
@@ -194,6 +197,8 @@ For this analysis, I removed projects that were OSF4M projects.
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 
 project_timeline <- projects_by_product %>%
+  filter(movecopy_actions == 0) %>%
+  filter(is.na(is_fork)) %>%
   filter(project_created > '2015-05-01') %>%
   filter(osf4m == 0 | (nodes_in_project > 1 & osf4m == 1)) %>%
   mutate(action1 = 'Created Project',

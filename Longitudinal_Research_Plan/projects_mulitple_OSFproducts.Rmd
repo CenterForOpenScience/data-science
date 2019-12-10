@@ -5,14 +5,13 @@ output: html_document
 
 This analysis is collecting initial data on the number of projects that take advantage of two of the major behaviors on the OSF that also represent different different points in the workflow: sharing files and registrations.
 
-Data caveats and explanations:
+General Data caveats and explanations:
 
-* The data used for the analyses below goes through 6/27/19. 
+* The data used for the analyses below goes through 10/04/19. 
 * Only non-spam non-deleted projects/nodes are counted. Supplemental nodes that were created pre-NPD and are empty (no files, no addons, no links, no components, and no wiki_update or registration logs) were removed from the analysis.
-* 'Sharing a file' is measured by looking for non-registered nodes that are public and have an OSFstorage file in them or an add-on folder/repo attached. If any node in a project is public and has a file in it, the top-level project is counted as sharing a file, even if the top-level itself is private. 
 * Only non-withdrawn, non-deleted registrations are counted (excluding old private registrations). Registrations can be under embargo though and still be counted.
-* For a project to be labeled `Sharing a file` and `Registered`, the sharing and registration do not have to include the same nodes, just some node within a project must be sharing a file and either the same or a different node must be registered.
 * Linked nodes are not included in this initial analysis. So, if a project is public has no files in it, but does have a linked node that is public and has a file in it, the project would not be counted as having a public file. 
+
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 #load libraries
@@ -54,6 +53,11 @@ node_data <- read_csv(
 content_logs <- read_csv('/Users/courtneysoderberg/Downloads/content_creation_logs.csv')
 all_logs <- read_csv('/Users/courtneysoderberg/Downloads/logs_per_node.csv')
 ```
+
+## Top-Level Projects Event Flow
+
+####Caveats
+* Forks and any projects that have file copied or file moved actions are removed for this analysis, because the file creation dates (in the case of moves/copies) and the log dates (in the case of forks) aren't accurate
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 projects_by_product <- node_data %>%
@@ -183,14 +187,14 @@ p <- plot_ly(
 ```
 
 
-## Workflow Investigations:
+### Workflow Investigations:
 
-###Can wikis or links explain the strange 'None' behavior?
+#### Can wikis or links explain the strange 'None' behavior?
 
 * Percentage of `Created -> None` projects with wiki updates or linked nodes: `r round(100*sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & is.na(projects_by_product$first_public) & (projects_by_product$wiki_updates > 0 | projects_by_product$link_created > 0))/sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & is.na(projects_by_product$first_public)),2)`
 * Percentage of `Created -> Made Public -> None` projects with wiki updates or linked nodes: `r round(100*sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & !is.na(projects_by_product$first_public) & (projects_by_product$wiki_updates > 0 | projects_by_product$link_created > 0))/sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & !is.na(projects_by_product$first_public)),2)`
 
-###Average Time between Steps
+### Average Time between Steps
 
 For this analysis, I removed projects that were OSF4M projects.
 
@@ -288,6 +292,9 @@ ggplot(project_timeline %>% filter(time_action2 > 1), aes(time_action2)) +
 ## Initial Analyses
 
 The table below shows the number of projects that have each of the actions. These numbers are not mutually exclusive. So, if a project shares a file and has a registration, it will count towards all three totals.
+
+* 'Sharing a file' is measured by looking for non-registered nodes that are public and have an OSFstorage file in them or an add-on folder/repo attached. If any node in a project is public and has a file in it, the top-level project is counted as sharing a file, even if the top-level itself is private. 
+* For a project to be labeled `Sharing a file` and `Registered`, the sharing and registration do not have to include the same nodes, just some node within a project must be sharing a file and either the same or a different node must be registered.
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 atleast_one_pubnode <- nrow(node_data %>% group_by(root_id) %>% summarize(num_public_nodes = sum(is_public == TRUE)) %>% filter(num_public_nodes > 0))

@@ -310,13 +310,21 @@ intersections <- projects_by_product %>%
                       has_file == 1 | shared_file == 1 | registered == 1  ~ 0)) %>%
   select(has_file, registered, is_public, shared_file, no_action) %>%
   rename(`Has a file` = has_file,
-         `>= 1 public component` = is_public,
+         `>= 1 public node` = is_public,
          `Been registered` = registered,
-         `File in a public component` = shared_file,
+         `File in a public node` = shared_file,
          `Empty project` = no_action) %>%
   as.data.frame()
 
-upset(intersections, sets = c('Been registered', 'File in a public component', '>= 1 public component', 'Has a file', 'Empty project'), main.bar.color = "SteelBlue", sets.bar.color = "DarkCyan", sets.x.label = "Top-Level Projects Count", text.scale = c(rep(1.4, 5), 2), keep.order = T)
+upset(intersections, 
+      sets = c('Been registered', 'File in a public node', '>= 1 public node', 'Has a file', 'Empty project'), 
+      main.bar.color = "SteelBlue", 
+      sets.bar.color = "DarkCyan", 
+      sets.x.label = "Top-Level Projects Count", 
+      text.scale = c(rep(1.4, 5), 2), 
+      keep.order = T,
+      set_size.show = T, 
+      set_size.scale_max = 125000)
 ```
 
 

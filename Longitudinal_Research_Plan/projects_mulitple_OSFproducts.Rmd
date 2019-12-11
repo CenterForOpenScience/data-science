@@ -108,7 +108,7 @@ all_dates <- projects_by_product %>%
 #### Caveats
 
 * Forks and any projects that have file copied or file moved actions are removed for this analysis, because the file creation dates (in the case of moves/copies) and the log dates (in the case of forks) aren't accurate
-* A total of `r nrow(projects_by_products %>% filter(movecopy_actions == 0 & is.na(is_fork) & project_created > '2015-05-01') %>% filter(osf4m == 1))` osf4m projects are included in the flow diagram below. The vast majority of these fall into the `Created Project -> Made Public -> Upload File -> None` flow path. 
+* A total of `r nrow(projects_by_product %>% filter(movecopy_actions == 0 & is.na(is_fork) & project_created > '2015-05-01') %>% filter(osf4m == 1))` osf4m projects are included in the flow diagram below. The vast majority of these fall into the `Created Project -> Made Public -> Upload File -> None` flow path. 
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 

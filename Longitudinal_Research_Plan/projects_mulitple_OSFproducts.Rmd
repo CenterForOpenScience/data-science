@@ -328,28 +328,6 @@ upset(intersections,
 ```
 
 
-```{r warning=FALSE, echo=FALSE, message=FALSE}
-atleast_one_pubnode <- nrow(node_data %>% group_by(root_id) %>% summarize(num_public_nodes = sum(is_public == TRUE)) %>% filter(num_public_nodes > 0))
-
-aggregate_data <- projects_by_product %>%
-                    summarize(`Projects with no files or registrations` = sum(has_file == 0 & registered == 0),
-                              `Projects with files` = sum(has_file > 0),
-                              `Projects sharing > 0 files` = sum(shared_file > 0), 
-                              `Projects with > 0 registrations` = sum(registered > 0),
-                              `Projects sharing > 0 files and registered` = sum(shared_file > 0 & registered > 0)) %>%
-                    gather() %>%
-                    mutate(percentage_total_project = round((value/nrow(projects_by_product))*100,2), percentage_public_projects = ifelse(key != 'Projects with > 0 registrations' & key != 'Projects with files' & key != 'Projects with no files or registrations', round((value/atleast_one_pubnode)*100,2), NA))
-                                                                                                                          
-kable(aggregate_data,
-  col.names = c('Project actions', 'Number of top-level projects', 'Percentage of top-level projects', 'Percentage of top-level projects with at least 1 public node')) %>%
-  kable_styling(bootstrap_options = c("striped", "hover"))
-  
-sharing_projects <- projects_by_product %>% filter(shared_file == 1) %>% nrow()
-registered_projects <- projects_by_product %>% filter(registered == 1) %>% nrow()
-sharing_registered <- projects_by_product %>% filter(shared_file ==1 & registered ==1) %>% nrow()
-
-```
-
 The graph shows the number of top-level projects that were created each month that either *only* share files, *only* have a registration, do both of these things, are private and have files but no registration, or do none of these things. So, these numbers are mutually exclusive and will not exactly match the number in the table above, which are not mutually exclusive.
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}

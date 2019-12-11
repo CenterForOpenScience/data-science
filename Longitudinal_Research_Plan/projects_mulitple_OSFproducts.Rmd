@@ -62,12 +62,14 @@ projects_by_product <- node_data %>%
                             filter(type == 'osf.node' & is_deleted == FALSE) %>%
                             group_by(root_id) %>%
                             mutate(registered = case_when(any(registered == TRUE) ~ 1, all(registered == FALSE) ~ 0),
-                                   is_fork = case_when(any(is_fork == TRUE) ~ 1)) %>%
+                                   is_fork = case_when(any(is_fork == TRUE) ~ 1),
+                                   is_public = case_when(any(is_public == TRUE) ~ 1, all(is_public == FALSE) ~ 0)) %>%
                             summarize(nodes_in_project = n(),
                                       has_file = max(has_files), 
                                       is_fork = max(is_fork),
                                       shared_file = max(public_sharing), 
-                                      registered = max(registered), 
+                                      registered = max(registered),
+                                      is_public = max(is_public),
                                       project_created = min(created),
                                       osf4m = max(osf4m),
                                       wiki_updates = sum(num_wiki_edits, na.rm = T),
@@ -296,16 +298,11 @@ ggplot(project_timeline %>% filter(time_action2 > 1), aes(time_action2)) +
 
 ## Initial Analyses
 
-The table below shows the number of projects that have each of the actions. These numbers are not mutually exclusive. So, if a project shares a file and has a registration, it will count towards all three totals.
-
-* 'Sharing a file' is measured by looking for non-registered nodes that are public and have an OSFstorage file in them or an add-on folder/repo attached. If any node in a project is public and has a file in it, the top-level project is counted as sharing a file, even if the top-level itself is private. 
-* For a project to be labeled `Sharing a file` and `Registered`, the sharing and registration do not have to include the same nodes, just some node within a project must be sharing a file and either the same or a different node must be registered.
+The graph below shows the number of non-deleted projects that have each action and the intersections of those actions. There are `r nrow(projects_by_product)` total non-deleted projects. 
 
 ```{r}
 intersections <- projects_by_product %>% 
-  select(root_id, has_file, shared_file, registered, first_public) %>%
-  mutate(is_public = case_when(is.na(first_public) ~ 0,
-                               !is.na(first_public) ~ 1)) %>%
+  select(root_id, has_file, shared_file, registered, is_public) %>%
   mutate(no_action = case_when(has_file == 0 & shared_file == 0 & registered == 0  ~ 1,
                       has_file == 1 | shared_file == 1 | registered == 1  ~ 0)) %>%
   select(has_file, registered, is_public, shared_file, no_action) %>%
@@ -328,7 +325,8 @@ upset(intersections,
 ```
 
 
-The graph shows the number of top-level projects that were created each month that either *only* share files, *only* have a registration, do both of these things, are private and have files but no registration, or do none of these things. So, these numbers are mutually exclusive and will not exactly match the number in the table above, which are not mutually exclusive.
+
+The graph below shows timecourse of when these projects were created. I only retained a subsect of the 12 potential intersections in the graph for clarity. 
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 

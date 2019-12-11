@@ -24,6 +24,7 @@ library(osfr)
 library(here)
 library(ggalluvial)
 library(plotly)
+library(UpSetR)
 
 knitr::opts_chunk$set(fig.width=12, fig.height=8) 
 ```
@@ -299,6 +300,24 @@ The table below shows the number of projects that have each of the actions. Thes
 
 * 'Sharing a file' is measured by looking for non-registered nodes that are public and have an OSFstorage file in them or an add-on folder/repo attached. If any node in a project is public and has a file in it, the top-level project is counted as sharing a file, even if the top-level itself is private. 
 * For a project to be labeled `Sharing a file` and `Registered`, the sharing and registration do not have to include the same nodes, just some node within a project must be sharing a file and either the same or a different node must be registered.
+
+```{r}
+intersections <- projects_by_product %>% 
+  select(root_id, has_file, shared_file, registered, first_public) %>%
+  mutate(is_public = case_when(is.na(first_public) ~ 0,
+                               !is.na(first_public) ~ 1)) %>%
+  mutate(no_action = case_when(has_file == 0 & shared_file == 0 & registered == 0  ~ 1,
+                      has_file == 1 | shared_file == 1 | registered == 1  ~ 0)) %>%
+  select(has_file, registered, is_public, shared_file, no_action) %>%
+  rename(`Has a file` = has_file,
+         `>= 1 public component` = is_public,
+         `Been registered` = registered,
+         `File in a public component` = shared_file,
+         `Empty project` = no_action) %>%
+  as.data.frame()
+
+upset(intersections, sets = c('Been registered', 'File in a public component', '>= 1 public component', 'Has a file', 'Empty project'), main.bar.color = "SteelBlue", sets.bar.color = "DarkCyan", sets.x.label = "Top-Level Projects Count", text.scale = c(rep(1.4, 5), 2), keep.order = T)
+```
 
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}

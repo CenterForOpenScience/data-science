@@ -169,7 +169,10 @@ SELECT osf_abstractnode.id AS node_id,
 	   onedrive_added,
 	   owncloud_added,
 	   s3_added,
-	   CASE WHEN is_public IS TRUE THEN date_made_public ELSE NULL END AS date_made_public,
+	   CASE 
+	   		WHEN is_public IS TRUE AND date_made_public IS NOT NULL THEN date_made_public
+	   		WHEN is_public IS TRUE AND date_made_public IS NULL AND type = 'osf.node' THEN created
+	   		ELSE NULL END AS date_made_public,
 	   num_regs,
 	   first_reg,
 	   last_reg,

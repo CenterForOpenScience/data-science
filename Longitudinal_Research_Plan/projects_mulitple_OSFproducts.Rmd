@@ -1,5 +1,5 @@
 ---
-title: "projects_multiple_OSFproducts"
+title: "Workflows of Projects on the OSF"
 output: html_document
 ---
 
@@ -13,6 +13,8 @@ General Data caveats and explanations:
 * Only non-withdrawn, non-deleted registrations are counted (excluding old private registrations). Registrations can be under embargo though and still be counted.
 * Linked nodes are not included in this initial analysis. So, if a project is public has no files in it, but does have a linked node that is public and has a file in it, the project would not be counted as having a public file. 
 
+\
+\
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 #load libraries
@@ -105,12 +107,66 @@ all_dates <- projects_by_product %>%
                 left_join(content_logs, by = 'root_id')
 ```
 
-## Top-Level Projects Event Flow
+## How many multiple action projects are there?
+
+The graph below shows the number of non-deleted projects that have each action (horizontal bars on the bottom left) and the intersections of those actions (vertical bars). The lines and dots show what intersection of actions each vertical bar is tallying. There are `r nrow(projects_by_product)` total non-deleted projects. 
+
+\
+
+```{r}
+intersections <- projects_by_product %>% 
+  select(root_id, has_file, shared_file, registered, is_public) %>%
+  mutate(no_action = case_when(has_file == 0 & shared_file == 0 & registered == 0  ~ 1,
+                      has_file == 1 | shared_file == 1 | registered == 1  ~ 0)) %>%
+  select(has_file, registered, is_public, shared_file, no_action) %>%
+  rename(`Has a file` = has_file,
+         `>= 1 public node` = is_public,
+         `Been registered` = registered,
+         `File in a public node` = shared_file,
+         `Empty project` = no_action) %>%
+  as.data.frame()
+
+upset(intersections, 
+      sets = c('Been registered', 'File in a public node', '>= 1 public node', 'Has a file', 'Empty project'), 
+      main.bar.color = "SteelBlue", 
+      sets.bar.color = "DarkCyan", 
+      sets.x.label = "Top-Level Projects Count", 
+      text.scale = c(rep(1.4, 5), 2), 
+      keep.order = T,
+      set_size.show = T, 
+      set_size.scale_max = 125000)
+```
+
+\
+
+#### When were these different 'types' of project created?
+
+The graph below shows timecourse of when these projects were created. I only retained a subsect of the 12 potential intersections in the graph for clarity. 
+
+\
+
+```{r warning=FALSE, echo=FALSE, message=FALSE}
+ggplotly(projects_by_product %>%
+  filter(!is.na(products)) %>%
+  ggplot(aes(pc_by_day, color = products)) + 
+  geom_freqpoly(binwidth = 30) +
+  xlab('When projects were created') +
+  ylab('Number of Top Level Projects') +
+  scale_x_date(breaks = date_breaks("3 month"), labels = date_format("%b %y")) +
+  theme(axis.text.x  = element_text(angle=45,hjust = 1,vjust = 1)))
+ 
+```
+
+
+## What's the flow of events within projects?
 
 #### Caveats
 
 * Forks and any projects that have file copied or file moved actions are removed for this analysis, because the file creation dates (in the case of moves/copies) and the log dates (in the case of forks) aren't accurate
 * A total of `r nrow(projects_by_product %>% filter(movecopy_actions == 0 & is.na(is_fork) & project_created > '2015-05-01') %>% filter(osf4m == 1))` osf4m projects are included in the flow diagram below. The vast majority of these fall into the `Created Project -> Made Public -> Upload File -> None` flow path. 
+
+\
+\
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 
@@ -201,9 +257,11 @@ p <- plot_ly(
 * Percentage of `Created -> None` projects with wiki updates or linked nodes: `r round(100*sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & is.na(projects_by_product$first_public) & (projects_by_product$wiki_updates > 0 | projects_by_product$link_created > 0))/sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & is.na(projects_by_product$first_public)),2)`
 * Percentage of `Created -> Made Public -> None` projects with wiki updates or linked nodes: `r round(100*sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & !is.na(projects_by_product$first_public) & (projects_by_product$wiki_updates > 0 | projects_by_product$link_created > 0))/sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & !is.na(projects_by_product$first_public)),2)`
 
-### Average Time between Steps
+### Median Time between Steps
 
 For this analysis, I removed projects that were OSF4M projects, since the actions are done automatically by the system, rather than by explicit user actions.
+
+\
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 
@@ -268,6 +326,45 @@ project_timeline <- projects_by_product %>%
                                 action4 == 'Registered' ~ days_create_reg,
                                 action4 == 'Upload File' ~ days_create_files))
 
+sankey_time_data <- rbind(project_timeline %>% group_by(action1, action2) %>% summarize(median = median(time_action2, na.rm = T)) %>% rename(from = action1, to = action2) %>% mutate(median = as.numeric(median)),
+                      project_timeline %>% group_by(action2, action3) %>% summarize(median = median(time_action3, na.rm = T)) %>% rename(from = action2, to = action3) %>% mutate(median = as.numeric(median)),
+                      project_timeline %>% group_by(action3, action4) %>% summarize(median = median(time_action4, na.rm = T)) %>% rename(from = action3, to = action4) %>% mutate(median = as.numeric(median))) %>%
+              filter(from != 'None') %>%
+              add_column(source, target) %>%
+              mutate(median = case_when(!is.na(median) ~ median,
+                                        is.na(median) ~ 0))
+
+
+tp <- plot_ly(
+  type = 'sankey',
+  orientation = 'h',
+  
+  node = list(
+    label = c("Created Project", "None", "Registered", "Made Public", "Upload File", 'None', "Registered", 'Made Public', "Upload File", "None", "Registered", "Made Public", "Upload File"),
+    color = c("blue", "black", "blue", "blue", "blue", "black", "red", "red", "red", "black", "green", "green", "green"),
+    pad = 15,
+    thickness = 20,
+    line = list(
+      color = 'black',
+      width = .5
+    )
+  ),
+  
+  link = list(
+    source = sankey_time_data$source,
+    target = sankey_time_data$target,
+    value = sankey_time_data$median
+  )
+) %>%
+  layout(
+    title = 'Non-Deleted, Non-registrations Project Event Flow Times (in median days)',
+    font = list(
+      size = 10
+    )
+  )
+ tp
+
+
 time_estimates <- project_timeline %>% 
                         group_by(action1, action2, action3, action4) %>% 
                         summarize(avg_til2 = round(mean(time_action2),2),
@@ -285,6 +382,9 @@ time_estimates <- project_timeline %>%
 
 ```
 
+
+
+
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 ggplot(project_timeline %>% filter(time_action2 > 1), aes(time_action2)) +
   facet_wrap(~action2) +
@@ -296,49 +396,7 @@ ggplot(project_timeline %>% filter(time_action2 > 1), aes(time_action2)) +
 
 
 
-## Initial Analyses
 
-The graph below shows the number of non-deleted projects that have each action and the intersections of those actions. There are `r nrow(projects_by_product)` total non-deleted projects. 
-
-```{r}
-intersections <- projects_by_product %>% 
-  select(root_id, has_file, shared_file, registered, is_public) %>%
-  mutate(no_action = case_when(has_file == 0 & shared_file == 0 & registered == 0  ~ 1,
-                      has_file == 1 | shared_file == 1 | registered == 1  ~ 0)) %>%
-  select(has_file, registered, is_public, shared_file, no_action) %>%
-  rename(`Has a file` = has_file,
-         `>= 1 public node` = is_public,
-         `Been registered` = registered,
-         `File in a public node` = shared_file,
-         `Empty project` = no_action) %>%
-  as.data.frame()
-
-upset(intersections, 
-      sets = c('Been registered', 'File in a public node', '>= 1 public node', 'Has a file', 'Empty project'), 
-      main.bar.color = "SteelBlue", 
-      sets.bar.color = "DarkCyan", 
-      sets.x.label = "Top-Level Projects Count", 
-      text.scale = c(rep(1.4, 5), 2), 
-      keep.order = T,
-      set_size.show = T, 
-      set_size.scale_max = 125000)
-```
-
-
-
-The graph below shows timecourse of when these projects were created. I only retained a subsect of the 12 potential intersections in the graph for clarity. 
-
-```{r warning=FALSE, echo=FALSE, message=FALSE}
-ggplotly(projects_by_product %>%
-  filter(!is.na(products)) %>%
-  ggplot(aes(pc_by_day, color = products)) + 
-  geom_freqpoly(binwidth = 30) +
-  xlab('When projects were created') +
-  ylab('Number of Top Level Projects') +
-  scale_x_date(breaks = date_breaks("3 month"), labels = date_format("%b %y")) +
-  theme(axis.text.x  = element_text(angle=45,hjust = 1,vjust = 1)))
- 
-```
 
 ## Days from Project created to last log event:
 

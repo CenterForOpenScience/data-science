@@ -432,8 +432,15 @@ ggplot(project_timeline %>% filter(time_action3 > 0), aes(time_action3)) +
   ggtitle('Time between 1st action [on x-axis] and 2nd action [on y-axis]')
 ```
 
+\
 
 ## Days from Project created to last log event:
+
+The graphs be show the time, in days, between a projects creation and the last log on the project. 
+
+*Caveats*
+* Forked projects are not included, because they include their origin projects logs so they can have negative times.
+* `Content` logs are any logs that involve the addition, updating, or removal of files, add-ons, wikis, or structural elements, as well as changes to public/private settings. `Metadata` logs are any that make alterations to to things like titles, descriptions, tags, or contributors.
 
 #### Last log:
 
@@ -467,7 +474,6 @@ ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog)
 ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog) & !is.na(products) & (year != '2012' & year != '2013' & year != '2014')),aes(days_create_lastlog, color = products)) + 
   geom_freqpoly(binwidth = 25) +
   facet_grid(year ~ log_type) +
-  ggtitle('Projects with >= 1 day between creation and last log') +
   scale_x_continuous('Days Between Last Log and Date Created',
                      breaks = round(seq(1, 1840, by = 180),1)) +
   scale_y_log10('Number of Top Level Projects')

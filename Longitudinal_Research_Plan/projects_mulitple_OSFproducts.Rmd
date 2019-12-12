@@ -14,7 +14,6 @@ General Data caveats and explanations:
 * Linked nodes are not included in this initial analysis. So, if a project is public has no files in it, but does have a linked node that is public and has a file in it, the project would not be counted as having a public file. 
 
 \
-\
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 #load libraries
@@ -31,7 +30,7 @@ library(UpSetR)
 knitr::opts_chunk$set(fig.width=12, fig.height=8) 
 ```
 
-```{r warning=FALSE, echo=FALSE, message=FALSE}
+```{r warning=FALSE, echo=FALSE, message=FALSE, results = 'hide'}
 #load data, query used to generate node_data: https://github.com/CenterForOpenScience/data-science/blob/master/SQL_queries/cat_nodes_by_product.sql
 osf_retrieve_file('https://osf.io/z2bcq/') %>%
   osf_download(overwrite = T)
@@ -114,7 +113,7 @@ The graph below shows the number of non-deleted projects that have each action (
 
 \
 
-```{r}
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 intersections <- projects_by_product %>% 
   select(root_id, has_file, shared_file, registered, is_public) %>%
   mutate(no_action = case_when(has_file == 0 & shared_file == 0 & registered == 0  ~ 1,
@@ -547,6 +546,6 @@ ggplot(all_dates %>% filter(!is.na(project_to_lastcontentadd)) %>% filter(projec
 
 Potential Next Steps for more complex relationships:
 
-* Are files that are eventually shared being added/modified before or after registrations?
 * How many of the 4817 projects that share files and are registered have contributors in common (i.e. are these projects by a diverse group of people or a smaller set of users who doing this repeatedly across projects)?
+* What disciplines are the different types of projects from? (Can't get this directly until discipline is added to profiles, but migth be able to back-guess for projects with contributors who have uploaded preprints)
 * What are the projects with no files in them doing?

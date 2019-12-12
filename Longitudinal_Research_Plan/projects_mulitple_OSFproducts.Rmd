@@ -396,11 +396,11 @@ action2_stats <- project_timeline %>%
                     summarize(Mean = mean(time_action2), Median = median(time_action2))
 action3_stats <- project_timeline %>% 
                     filter(time_action2 > 0 & action3 > 0) %>%
-                    group_by(action2) %>%
+                    group_by(action2, action3) %>%
                     summarize(Mean = mean(time_action2), Median = median(time_action2))
 
 ggplot(project_timeline %>% filter(time_action2 > 0), aes(time_action2)) +
-  geom_histogram(binwidth = 50) +
+  geom_histogram(binwidth = 25) +
   facet_wrap(~action2) +
   geom_vline(data = action2_stats, aes(xintercept = Mean), color = 'red') + 
   geom_vline(data = action2_stats, aes(xintercept = Median), color = 'blue') + 
@@ -410,10 +410,9 @@ ggplot(project_timeline %>% filter(time_action2 > 0), aes(time_action2)) +
   ggtitle('Time between project creation and first action')
   
 
-
 ggplot(project_timeline %>% filter(time_action3 > 0), aes(time_action3)) +
   facet_grid(action3~action2) +
-  geom_histogram(binwidth = 50) +
+  geom_histogram(binwidth = 25) +
     geom_vline(data = action3_stats, aes(xintercept = Mean), color = 'red') + 
   geom_vline(data = action3_stats, aes(xintercept = Median), color = 'blue') + 
   scale_x_continuous('Days Elapsed',

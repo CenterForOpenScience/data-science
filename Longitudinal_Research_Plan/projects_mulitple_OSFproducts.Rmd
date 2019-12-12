@@ -55,7 +55,7 @@ node_data <- read_csv(
                 ))
 
 ```
-```{r warning=FALSE, echo=FALSE, message=FALSE}
+```{r warning=FALSE, echo=FALSE, message=FALSE, results = 'hide'}
 osf_retrieve_file('https://osf.io/y29as/') %>%
   osf_download(overwrite = T)
 
@@ -150,12 +150,13 @@ upset(intersections,
 ```
 
 \
+\
 
 #### When were these different 'types' of project created?
 
 The graph below shows timecourse of when these projects were created. I only retained a subsect of the 12 potential intersections in the graph for clarity. 
 
-\
+\ 
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 ggplotly(projects_by_product %>%
@@ -177,10 +178,10 @@ The graphs be show the time, in days, between a projects creation and the last l
 * `Metadata` logs are any that make alterations to to things like titles, descriptions, tags, or contributors.
 
 *Caveats*
+
 * Forked projects are not included, because they include their origin projects logs so they can have negative times.
 
-
-#### Last log:
+\
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 
@@ -193,25 +194,35 @@ log_time_stats <- projects_and_logs %>%
 ggplot(projects_and_logs %>% filter(is.na(is_fork)) %>% filter(!is.na(days_create_lastlog)), aes(days_create_lastlog)) +
   geom_freqpoly(binwidth = 25) +
   facet_wrap(~log_type) +
+  ggtitle('Log times across project types') + 
   geom_vline(data = log_time_stats, aes(xintercept = Mean), color = 'red') + 
   geom_vline(data = log_time_stats, aes(xintercept = Median), color = 'blue') + 
   scale_x_continuous('Days Between Last Log and Date Created',
                      breaks = round(seq(1, 1840, by = 180),1)) +
   scale_y_log10('Numebr of Top Level Projects')
+```
 
+\
+
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 ##time in days from project creation to the last log on the project by product type
 ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog) & !is.na(products)),aes(days_create_lastlog, color = products)) + 
   geom_freqpoly(binwidth = 25) +
   facet_wrap(~log_type) +
-  ggtitle('Projects with >= 1 day between creation and last log') +
+  ggtitle('Log times by project types') +
   scale_x_continuous('Days Between Last Log and Date Created',
                      breaks = round(seq(1, 1840, by = 180),1)) +
   scale_y_log10('Numebr of Top Level Projects')
+```
 
+\
+
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 ##time in days from project creation to the last log on the project by product type, faceted by year
 ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog) & !is.na(products) & (year != '2012' & year != '2013' & year != '2014')),aes(days_create_lastlog, color = products)) + 
   geom_freqpoly(binwidth = 25) +
   facet_grid(year ~ log_type) +
+  ggtitle('Log times by project types across year of project creation') +
   scale_x_continuous('Days Between Last Log and Date Created',
                      breaks = round(seq(1, 1840, by = 180),1)) +
   scale_y_log10('Number of Top Level Projects')
@@ -219,6 +230,8 @@ ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog)
 
 
 ## What's the flow of events within projects?
+
+Within a project, for the major events we care about (public sharing, having files, and registering), what is the order of these events? The graph below plots the number of projects that go through each action pathway, reading from left to right.
 
 #### Caveats
 
@@ -445,7 +458,7 @@ time_estimates <- project_timeline %>%
 
 \
 
-To get an idea of the spread in times, the graphs below are histograms of the time between actions.
+To get an idea of the spread in times, the graphs below are histograms of the time between actions. Red lines are means, blue lines are medians.
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 
@@ -467,8 +480,11 @@ ggplot(project_timeline %>% filter(time_action2 > 0), aes(time_action2)) +
                      breaks = round(seq(0, 1460, by = 180),1)) +
   scale_y_log10('Number of Top Level Projects') +
   ggtitle('Time between project creation and first action')
-  
+```  
 
+\
+
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 ggplot(project_timeline %>% filter(time_action3 > 0), aes(time_action3)) +
   facet_grid(action3~action2) +
   geom_histogram(binwidth = 25) +
@@ -480,9 +496,8 @@ ggplot(project_timeline %>% filter(time_action3 > 0), aes(time_action3)) +
   ggtitle('Time between 1st action [on x-axis] and 2nd action [on y-axis]')
 ```
 
-```
 
-Potential Next Steps for more complex relationships:
+## Potential Next Steps for more complex relationships:
 
 * How many of the 4817 projects that share files and are registered have contributors in common (i.e. are these projects by a diverse group of people or a smaller set of users who doing this repeatedly across projects)?
 * What disciplines are the different types of projects from? (Can't get this directly until discipline is added to profiles, but migth be able to back-guess for projects with contributors who have uploaded preprints)

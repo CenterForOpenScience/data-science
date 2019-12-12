@@ -385,15 +385,40 @@ time_estimates <- project_timeline %>%
 
 \
 
-To get an idea of the spread in times, the graphs below are histograms of the time between top level projects and their first action.
+To get an idea of the spread in times, the graphs below are histograms of the time between actions.
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
-ggplot(project_timeline %>% filter(time_action2 > 1), aes(time_action2)) +
-  facet_wrap(~action2) +
+
+action2_stats <- project_timeline %>% 
+                    filter(time_action2 > 0) %>%
+                    group_by(action2) %>%
+                    summarize(Mean = mean(time_action2), Median = median(time_action2))
+action3_stats <- project_timeline %>% 
+                    filter(time_action2 > 0 & action3 > 0) %>%
+                    group_by(action2) %>%
+                    summarize(Mean = mean(time_action2), Median = median(time_action2))
+
+ggplot(project_timeline %>% filter(time_action2 > 0), aes(time_action2)) +
   geom_histogram(binwidth = 50) +
-  scale_x_continuous('Days Between Project Created and Next Action',
+  facet_wrap(~action2) +
+  geom_vline(data = action2_stats, aes(xintercept = Mean), color = 'red') + 
+  geom_vline(data = action2_stats, aes(xintercept = Median), color = 'blue') + 
+  scale_x_continuous('Days Elapsed',
                      breaks = round(seq(0, 1460, by = 180),1)) +
-  scale_y_log10('Number of Top Level Projects')
+  scale_y_log10('Number of Top Level Projects') +
+  ggtitle('Time between project creation and first action')
+  
+
+
+ggplot(project_timeline %>% filter(time_action3 > 0), aes(time_action3)) +
+  facet_grid(action3~action2) +
+  geom_histogram(binwidth = 50) +
+    geom_vline(data = action3_stats, aes(xintercept = Mean), color = 'red') + 
+  geom_vline(data = action3_stats, aes(xintercept = Median), color = 'blue') + 
+  scale_x_continuous('Days Elapsed',
+                     breaks = round(seq(0, 1460, by = 180),1)) +
+  scale_y_log10('Number of Top Level Projects') +
+  ggtitle('Time between 1st action [on x-axis] and 2nd action [on y-axis]')
 ```
 
 

@@ -7,7 +7,7 @@ This analysis is collecting initial data on the number of projects that take adv
 
 General Data caveats and explanations:
 
-* The data used for the analyses below goes through 10/04/19. 
+* The data used for the analyses includes projects created on or before 9/1/19 and logs through 10/04/19. 
 * Only non-spam non-deleted projects/nodes are counted.
 * Supplemental nodes that were created pre-NPD and are empty (no files, no addons, no links, no components, and no wiki_update or registration logs) were removed from the analysis.
 * Only non-withdrawn, non-deleted registrations are counted (excluding old private registrations). Registrations can be under embargo though and still be counted.
@@ -83,6 +83,7 @@ projects_by_product <- node_data %>%
                                       first_file = if(all(is.na(first_file))) NA else min(first_file, na.rm = TRUE),
                                       first_public = if(all(is.na(date_made_public))) NA else min(date_made_public, na.rm = TRUE),
                                       first_reg = as_datetime(first_reg)) %>%
+                            filter(project_created <= '2019-09-01') %>%
                             mutate(products = case_when(has_file > 0 & shared_file == 0 & registered == 0 ~ 'Files_Private',
                                                           shared_file ==1 & registered == 0 ~ 'Files_Public',
                                                           shared_file == 0 & registered ==1 & is_public == 0 ~ 'Reg_Private',
@@ -163,6 +164,7 @@ ggplotly(projects_by_product %>%
 #### Caveats
 
 * Forks and any projects that have file copied or file moved actions are removed for this analysis, because the file creation dates (in the case of moves/copies) and the log dates (in the case of forks) aren't accurate
+* Only projects created *after* 5/1/15 are included in these analyses, b/c the date stamps on files aren't accurate before that
 * A total of `r nrow(projects_by_product %>% filter(movecopy_actions == 0 & is.na(is_fork) & project_created > '2015-05-01') %>% filter(osf4m == 1))` osf4m projects are included in the flow diagram below. The vast majority of these fall into the `Created Project -> Made Public -> Upload File -> None` flow path. 
 
 \
@@ -246,7 +248,6 @@ p <- plot_ly(
     )
   )
  p
-
 ```
 
 
@@ -254,8 +255,8 @@ p <- plot_ly(
 
 #### Can wikis or links explain the strange 'None' behavior?
 
-* Percentage of `Created -> None` projects with wiki updates or linked nodes: `r round(100*sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & is.na(projects_by_product$first_public) & (projects_by_product$wiki_updates > 0 | projects_by_product$link_created > 0))/sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & is.na(projects_by_product$first_public)),2)`
-* Percentage of `Created -> Made Public -> None` projects with wiki updates or linked nodes: `r round(100*sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & !is.na(projects_by_product$first_public) & (projects_by_product$wiki_updates > 0 | projects_by_product$link_created > 0))/sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & !is.na(projects_by_product$first_public)),2)`
+* Percentage of `Created -> None` projects with wiki updates or linked nodes: `r round(100*nrow(projects_by_product %>% filter(movecopy_actions == 0 & is.na(is_fork) & project_created > '2015-05-01' & is.na(first_file) & is.na(first_public) & is.na(first_reg)& (wiki_updates > 0 | link_created > 0)))/nrow(projects_by_product %>% filter(movecopy_actions == 0 & is.na(is_fork) & project_created > '2015-05-01' & is.na(first_file) & is.na(first_public) & is.na(first_reg))),2)`
+* Percentage of `Created -> Made Public -> None` projects with wiki updates or linked nodes: `r round(100*nrow(projects_by_product %>% filter(movecopy_actions == 0 & is.na(is_fork) & project_created > '2015-05-01' & is.na(first_file) & !is.na(first_public) & is.na(first_reg)& (wiki_updates > 0 | link_created > 0)))/nrow(projects_by_product %>% filter(movecopy_actions == 0 & is.na(is_fork) & project_created > '2015-05-01' & is.na(first_file) & !is.na(first_public) & is.na(first_reg))),2)`
 
 
 ### Median Time between Steps

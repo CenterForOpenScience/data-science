@@ -169,6 +169,54 @@ ggplotly(projects_by_product %>%
  
 ```
 
+## How long are different projects 'active' for?:
+
+The graphs be show the time, in days, between a projects creation and the last log on the project. Graphs are facited by the `type` of log:
+
+* `Content` logs are any logs that involve the addition, updating, or removal of files, add-ons, wikis, or structural elements, as well as changes to public/private settings. 
+* `Metadata` logs are any that make alterations to to things like titles, descriptions, tags, or contributors.
+
+*Caveats*
+* Forked projects are not included, because they include their origin projects logs so they can have negative times.
+
+
+#### Last log:
+
+```{r warning=FALSE, echo=FALSE, message=FALSE}
+
+log_time_stats <- projects_and_logs %>% 
+  filter(is.na(is_fork) & !is.na(days_create_lastlog)) %>% 
+  group_by(log_type) %>% 
+  summarize(Mean = mean(days_create_lastlog), Median = median(days_create_lastlog))
+
+##time in days from project creation to the last log on the project
+ggplot(projects_and_logs %>% filter(is.na(is_fork)) %>% filter(!is.na(days_create_lastlog)), aes(days_create_lastlog)) +
+  geom_freqpoly(binwidth = 25) +
+  facet_wrap(~log_type) +
+  geom_vline(data = log_time_stats, aes(xintercept = Mean), color = 'red') + 
+  geom_vline(data = log_time_stats, aes(xintercept = Median), color = 'blue') + 
+  scale_x_continuous('Days Between Last Log and Date Created',
+                     breaks = round(seq(1, 1840, by = 180),1)) +
+  scale_y_log10('Numebr of Top Level Projects')
+
+##time in days from project creation to the last log on the project by product type
+ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog) & !is.na(products)),aes(days_create_lastlog, color = products)) + 
+  geom_freqpoly(binwidth = 25) +
+  facet_wrap(~log_type) +
+  ggtitle('Projects with >= 1 day between creation and last log') +
+  scale_x_continuous('Days Between Last Log and Date Created',
+                     breaks = round(seq(1, 1840, by = 180),1)) +
+  scale_y_log10('Numebr of Top Level Projects')
+
+##time in days from project creation to the last log on the project by product type, faceted by year
+ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog) & !is.na(products) & (year != '2012' & year != '2013' & year != '2014')),aes(days_create_lastlog, color = products)) + 
+  geom_freqpoly(binwidth = 25) +
+  facet_grid(year ~ log_type) +
+  scale_x_continuous('Days Between Last Log and Date Created',
+                     breaks = round(seq(1, 1840, by = 180),1)) +
+  scale_y_log10('Number of Top Level Projects')
+```
+
 
 ## What's the flow of events within projects?
 
@@ -430,53 +478,6 @@ ggplot(project_timeline %>% filter(time_action3 > 0), aes(time_action3)) +
                      breaks = round(seq(0, 1460, by = 180),1)) +
   scale_y_log10('Number of Top Level Projects') +
   ggtitle('Time between 1st action [on x-axis] and 2nd action [on y-axis]')
-```
-
-\
-
-## Days from Project created to last log event:
-
-The graphs be show the time, in days, between a projects creation and the last log on the project. 
-
-*Caveats*
-* Forked projects are not included, because they include their origin projects logs so they can have negative times.
-* `Content` logs are any logs that involve the addition, updating, or removal of files, add-ons, wikis, or structural elements, as well as changes to public/private settings. `Metadata` logs are any that make alterations to to things like titles, descriptions, tags, or contributors.
-
-#### Last log:
-
-```{r warning=FALSE, echo=FALSE, message=FALSE}
-
-log_time_stats <- projects_and_logs %>% 
-  filter(is.na(is_fork) & !is.na(days_create_lastlog)) %>% 
-  group_by(log_type) %>% 
-  summarize(Mean = mean(days_create_lastlog), Median = median(days_create_lastlog))
-
-##time in days from project creation to the last log on the project
-ggplot(projects_and_logs %>% filter(is.na(is_fork)) %>% filter(!is.na(days_create_lastlog)), aes(days_create_lastlog)) +
-  geom_freqpoly(binwidth = 25) +
-  facet_wrap(~log_type) +
-  geom_vline(data = log_time_stats, aes(xintercept = Mean), color = 'red') + 
-  geom_vline(data = log_time_stats, aes(xintercept = Median), color = 'blue') + 
-  scale_x_continuous('Days Between Last Log and Date Created',
-                     breaks = round(seq(1, 1840, by = 180),1)) +
-  scale_y_log10('Numebr of Top Level Projects')
-
-##time in days from project creation to the last log on the project by product type
-ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog) & !is.na(products)),aes(days_create_lastlog, color = products)) + 
-  geom_freqpoly(binwidth = 25) +
-  facet_wrap(~log_type) +
-  ggtitle('Projects with >= 1 day between creation and last log') +
-  scale_x_continuous('Days Between Last Log and Date Created',
-                     breaks = round(seq(1, 1840, by = 180),1)) +
-  scale_y_log10('Numebr of Top Level Projects')
-
-##time in days from project creation to the last log on the project by product type, faceted by year
-ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog) & !is.na(products) & (year != '2012' & year != '2013' & year != '2014')),aes(days_create_lastlog, color = products)) + 
-  geom_freqpoly(binwidth = 25) +
-  facet_grid(year ~ log_type) +
-  scale_x_continuous('Days Between Last Log and Date Created',
-                     breaks = round(seq(1, 1840, by = 180),1)) +
-  scale_y_log10('Number of Top Level Projects')
 ```
 
 ```

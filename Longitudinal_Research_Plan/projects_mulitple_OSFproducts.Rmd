@@ -36,6 +36,7 @@ osf_retrieve_file('https://osf.io/z2bcq/') %>%
   osf_download(overwrite = T)
 
 
+
 node_data <- read_csv(
                 here::here('Longitudinal_Research_Plan','node_categorizations.csv'), 
                 col_types = cols(
@@ -53,8 +54,20 @@ node_data <- read_csv(
                   registered = col_logical()
                 ))
 
-content_logs <- read_csv('/Users/courtneysoderberg/Downloads/content_creation_logs.csv')
-all_logs <- read_csv('/Users/courtneysoderberg/Downloads/logs_per_node.csv')
+```
+```{r}
+osf_retrieve_file('https://osf.io/y29as/') %>%
+  osf_download(overwrite = T)
+
+content_logs <- c("addon_file_copied", "addon_file_moved", "addon_removed", "bitbucket_repo_linked", "bitbucker_node_deauthorized", "box_file_added", "box_file_updated", "box_file_removed", "box_folder_selected", "box_node_deauthorized", "dataverse_dataset_linked", "dataverse_dataset_published", "dataverse_file_added", "dataverse_file_removed", "dataverse_file_updated", "dataverse_node_deauthorized", "dataverse_study_linked", "dataverse_study_released", "dropbox_file_added", "dropbox_file_removed", "dropbox_file_updated", "dropbox_folder_selected", "dropbox_node_deauthorized", "figshare_content_unlinked", "figshare_file_added", "figshare_file_removed", "figshare_folder_selected", "figshare_node_deauthorized", "file_added", "file_removed", "file_updated", "github_file_added", "github_file_removed", "github_file_updated", "github_node_deauthorized", "github_repo_linked", "github_repo_unlinked", "gitlab_node_deauthorized", "gitlab_repo_linked", "googledrive_file_added", "googledrive_file_removed", "googledrive_file_updated", "googledrive_folder_selected", "googledrive_node_deauthorized", "made_public", "made_private", "mendeley_folder_selected", "mendeley_node_deauthorized", "onedrive_folder_selected", "onedrive_node_deauthorized", "osf_storage_file_added", "osf_storage_file_removed", "osf_storage_file_updated", "owncloud_file_added", "owncloud_file_removed", "owncloud_file_updated", "owncloud_folder_created", "owncloud_node_deauthorized", "owncloud_folder_selected", "project_deleted", "project_created", "node_removed", "prereg_registration_initiated", "project_registered", "registration_cancelled", "retraction_initiated", "retraction_approved", "retraction_canceled", "s3_bucket_linked", "s3_bucket_unlinked", "s3_file_added", "s3_file_removed", "s3_file_updated", "s3_node_deauthorized", "wiki_updated", "zotero_folder_selected", "zotero_library_selected", "zotero_node_deauthorized", "addon_added", "node_created", "node_forked", "pointer_created", "pointer_removed")
+
+
+project_logs <- read_csv(here::here('Longitudinal_Research_Plan','project_logs.csv')) %>%
+                    filter(root_id != id | (root_id == id & action != 'project_created')) %>%
+                    mutate(log_type = case_when(grepl(paste(content_logs,collapse="|"),action) ~ 'content', 
+                                                   TRUE ~ 'metadata' )) %>%
+                    group_by(root_id, log_type) %>%
+                    summarize(first_log = min(first_date), last_log = max(last_date))
 ```
 
 
@@ -101,10 +114,8 @@ projects_by_product <- node_data %>%
                                                       mutate(year = year(project_created))
 
 
-
-all_dates <- projects_by_product %>%
-                left_join(all_logs, by = 'root_id') %>%
-                left_join(content_logs, by = 'root_id')
+projects_and_logs <- projects_by_product %>%
+                left_join(project_logs, by = 'root_id')
 ```
 
 ## How many multiple action projects are there?

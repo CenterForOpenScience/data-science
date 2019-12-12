@@ -517,69 +517,6 @@ ggplot(all_dates %>% filter(!is.na(project_to_lastcontentadd)) %>% filter(projec
   scale_y_continuous('Number of Top Level Projects')
 ```
 
-```{r warning=FALSE, echo=FALSE, message=FALSE}
-## the basefilenod table is showing incorrect creation dates for files from before
-
-later_project <- all_dates %>%
-                    filter(project_created >= '2015-05-01')
-
-
-first_none <- later_project %>% filter(is.na(first_file) & is.na(first_reg) & is.na(first_public)) # number of none projects at first level
-
-file_first <- later_project %>% filter(!is.na(first_file) & ((first_file < first_public & first_file < first_reg) | (first_file < first_public & is.na(first_reg)) | (is.na(first_public) & first_file < first_reg) | (is.na(first_public) & is.na(first_reg))))
-
-public_first <- later_project %>% filter(!is.na(first_public) & ((first_public < first_file & first_public < first_reg) | (first_public < first_file & is.na(first_reg)) | (is.na(first_file) & first_public < first_reg) | (is.na(first_file) & is.na(first_reg))))
-  
-registered_first <- later_project %>% 
-                        filter(!is.na(first_reg) & ((first_reg < first_public & first_reg < first_file) | 
-                                                              (first_reg < first_public & is.na(first_file)) | 
-                                                              (is.na(first_public) & first_reg < first_file) | 
-                                                              (is.na(first_public) & is.na(first_file))))
-
-
-file_then_reg <- file_first %>%
-                    filter(!is.na(first_reg) & ((first_reg < first_public) | is.na(first_public)))
-                    
-file_then_public <- file_first %>%
-                      filter(!is.na(first_public) & ((first_public < first_reg) | is.na(first_reg)))
-file_then_none <- file_first %>% filter(is.na(first_public) & is.na(first_reg))
-
-
-public_then_reg <- public_first %>%
-                      filter(!is.na(first_reg) & (first_reg < first_file | is.na(first_file)))
-public_then_file <- public_first %>%
-                      filter(!is.na(first_file) & (first_file < first_reg | is.na(first_reg)))
-public_then_nothing <- public_first %>% filter(is.na(first_file) & is.na(first_reg))
-
-reg_then_public <- registered_first %>%
-                      filter(!is.na(first_public) & ((first_public < first_file) | is.na(first_file)))
-reg_then_file <- registered_first %>%
-                      filter(!is.na(first_file) & ((first_file < first_public) | is.na(first_public)))
-reg_then_node <- registered_first %>% filter(is.na(first_public) & is.na(first_file))
-
-
-file_reg_public <- file_then_reg %>% filter(!is.na(first_public))
-file_reg_none <- file_then_reg %>% filter(is.na(first_public))
-
-file_public_reg <- file_then_public %>% filter(!is.na(first_reg))
-file_public_none <- file_then_public %>% filter(is.na(first_reg))
-
-
-public_reg_file <- public_then_reg %>% filter(!is.na(first_file))
-public_reg_none <- public_then_reg %>% filter(is.na(first_file))
-
-public_file_reg <- public_then_file %>% filter(!is.na(first_reg))
-public_file_none <- public_then_file %>% filter(is.na(first_reg))
-
-reg_public_file <- reg_then_public %>% filter(!is.na(first_file))
-reg_public_none <- reg_then_public %>% filter(is.na(first_file))
-
-reg_file_public <- reg_then_file %>% filter(!is.na(first_public))
-reg_file_none <- reg_then_file %>% filter(is.na(first_public))
-
-```
-
-
 
 ```
 

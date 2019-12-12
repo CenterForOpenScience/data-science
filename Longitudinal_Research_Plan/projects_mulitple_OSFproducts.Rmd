@@ -473,45 +473,6 @@ ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog)
   scale_y_log10('Number of Top Level Projects')
 ```
 
-#### Last content addition log
-
-```{r warning=FALSE, echo=FALSE, message=FALSE}
-##time in days from project creation to the last log on the project
-ggplot(all_dates %>% filter(!is.na(project_to_lastcontentadd)), aes(project_to_lastcontentadd)) +
-  geom_freqpoly(binwidth = 10) +
-  scale_x_continuous('Days Between Last Log and Date Created',
-                     breaks = round(seq(0, 2563, by = 365),1)) +
-  scale_y_continuous('Numebr of Top Level Projects', breaks = round(seq(0, 150000, by = 5000),1))
-
-
-##only projects with a difference more than 1 day
-ggplot(all_dates %>% filter(!is.na(project_to_lastcontentadd)) %>% filter(project_to_lastcontentadd >= 1),aes(project_to_lastcontentadd)) + 
-  geom_freqpoly(binwidth = 10) +
-  ggtitle('Projects with >= 1 day between creation and last content creation log') +
-  scale_x_continuous('Days Between Last Log and Date Created',
-                     breaks = round(seq(1, 2563, by = 365),1)) +
-  scale_y_continuous('Number of Top Level Projects', breaks = round(seq(0, 50000, by = 500),1))
-
-
-##only projects with a difference more than 1 day
-ggplot(all_dates %>% filter(!is.na(project_to_lastcontentadd)) %>% filter(project_to_lastcontentadd >= 1),aes(project_to_lastcontentadd, color = products)) + 
-  geom_freqpoly(binwidth = 10) +
-  ggtitle('Projects with >= 1 day between creation and last content creation log') +
-  scale_x_continuous('Days Between Last Log and Date Created',
-                     breaks = round(seq(1, 2563, by = 365),1)) +
-  scale_y_continuous('Number of Top Level Projects', breaks = round(seq(0, 50000, by = 500),1))
-
-
-##only projects with a difference more than 1 day
-ggplot(all_dates %>% filter(!is.na(project_to_lastcontentadd)) %>% filter(project_to_lastcontentadd >= 1),aes(project_to_lastcontentadd, color = products)) + 
-  geom_density() +
-  ggtitle('Projects with >= 1 day between creation and content creation last log') +
-  scale_x_continuous('Days Between Last Log and Date Created',
-                     breaks = round(seq(1, 2563, by = 365),1)) +
-  scale_y_continuous('Number of Top Level Projects')
-```
-
-
 ```
 
 Potential Next Steps for more complex relationships:

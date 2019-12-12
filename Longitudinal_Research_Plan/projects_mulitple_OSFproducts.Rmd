@@ -257,9 +257,10 @@ p <- plot_ly(
 * Percentage of `Created -> None` projects with wiki updates or linked nodes: `r round(100*sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & is.na(projects_by_product$first_public) & (projects_by_product$wiki_updates > 0 | projects_by_product$link_created > 0))/sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & is.na(projects_by_product$first_public)),2)`
 * Percentage of `Created -> Made Public -> None` projects with wiki updates or linked nodes: `r round(100*sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & !is.na(projects_by_product$first_public) & (projects_by_product$wiki_updates > 0 | projects_by_product$link_created > 0))/sum(is.na(projects_by_product$first_file) & is.na(projects_by_product$first_reg) & !is.na(projects_by_product$first_public)),2)`
 
+
 ### Median Time between Steps
 
-For this analysis, I removed projects that were OSF4M projects, since the actions are done automatically by the system, rather than by explicit user actions.
+The graph below is the same sankey diagram as above, but this time it's plotting median time (in days) rather than counts of projects. For this analysis, I removed projects that were OSF4M projects, since the actions are done automatically by the system, rather than by explicit user actions.
 
 \
 
@@ -382,8 +383,9 @@ time_estimates <- project_timeline %>%
 
 ```
 
+\
 
-
+To get an idea of the spread in times, the graphs below are histograms of the time between top level projects and their first action.
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 ggplot(project_timeline %>% filter(time_action2 > 1), aes(time_action2)) +

@@ -13,23 +13,23 @@ urls <- paste0('https://api.eventdata.crossref.org/v1/events?obj-id.prefix=', do
 # function to call and handle each API return
 cleaning <- function(url){
   output <- GET(url)
-  fromJSON(prettify(output))$message$events %>%
-    select(obj_id, occurred_at, subj_id, id, action, source_id, timestamp, relation_type_id)
+  fromJSON(prettify(output))$message$events 
 }
 
 # apply function to each DOI prefix and save in a df
-plaudits <- map_dfr(urls, ~ cleaning(.))
+plaudits <- map_dfr(urls, ~ cleaning(.)) %>%
+                select(obj_id, occurred_at, subj_id, id, action, source_id, timestamp, relation_type_id)
             
 
 # total plaudits
-nrow(output)
+nrow(plaudits)
 
 # number preprints with plaudits
-nrow(output %>%
+nrow(plaudits %>%
   group_by(obj_id) %>%
   tally())
 
 # number of plauditors
-nrow(output %>%
+nrow(plaudits %>%
   group_by(subj_id) %>%
   tally())

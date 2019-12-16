@@ -38,5 +38,15 @@ node_data <- fromJSON(prettify(nodesummary_output))$result %>%
                 ungroup() %>%
                 
                 #make sure column order correct
-                select(keen.created_at, keen.timestamp, public, registered_projects.total, registered_projects.withdrawn, registered_projects.embargoed_v2)
+                select(keen.created_at, keen.timestamp, projects.public, registered_projects.total, registered_projects.withdrawn, registered_projects.embargoed_v2)
+
+##read in existing data & add newer data 
+read_sheet('https://docs.google.com/spreadsheets/d/1fkKNfZgxVVWt3tXTAxXSK58p5LqalLQRr4tuMLIOJEY/edit?folder=1tcHvdlf86AP9CWiKFUJL4bJRsJg0ybQ7') %>%
+  rbind(node_data) %>%
+  write_csv('test_sheet.csv')
+
+
+
+
+
 

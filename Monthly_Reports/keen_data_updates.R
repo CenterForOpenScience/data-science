@@ -3,6 +3,12 @@ library(tidyverse)
 library(httr)
 library(jsonlite)
 library(googlesheets4)
+library(googledrive)
+
+
+# force authentication with googledrive first
+drive_auth()
+sheets_auth(token = drive_token())
 
 # get keys
 nodesummary_projectid <- Sys.getenv("nodesummary_projectid")
@@ -41,12 +47,12 @@ node_data <- fromJSON(prettify(nodesummary_output))$result %>%
                 select(keen.created_at, keen.timestamp, projects.public, registered_projects.total, registered_projects.withdrawn, registered_projects.embargoed_v2)
 
 ##read in existing data & add newer data 
-read_sheet('https://docs.google.com/spreadsheets/d/1fkKNfZgxVVWt3tXTAxXSK58p5LqalLQRr4tuMLIOJEY/edit?folder=1tcHvdlf86AP9CWiKFUJL4bJRsJg0ybQ7') %>%
+gdrive_file <- 'https://docs.google.com/spreadsheets/d/1fkKNfZgxVVWt3tXTAxXSK58p5LqalLQRr4tuMLIOJEY/edit?folder=1tcHvdlf86AP9CWiKFUJL4bJRsJg0ybQ7'
+
+read_sheet(gdrive_file) %>%
   rbind(node_data) %>%
   write_csv('test_sheet.csv')
 
-
-
-
-
+## update googlesheet with new appended date (switch to more targetted update once googlesheets4 has write capabilities)
+drive_update(file = gdrive_file,media = 'test_sheet.csv')
 

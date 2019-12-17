@@ -17,7 +17,7 @@ keen_read_key <- Sys.getenv("keen_read_key")
 
 # function to create keen calls
 keen_extraction_call <- function(event_collection, timeframe, variable_list){
-  variables <- str_c(variable_list, collapse = '$property_names=')
+  variables <- str_c(variable_list, collapse = '&property_names=')
   
   output <- GET(paste0('https://api.keen.io/3.0/projects/', 
                        keen_projectid, 
@@ -27,7 +27,7 @@ keen_extraction_call <- function(event_collection, timeframe, variable_list){
                        event_collection,
                        '&timeframe=',
                        timeframe,
-                       '&product_name=',
+                       '&property_names=',
                        variables))
   return(output)
 }

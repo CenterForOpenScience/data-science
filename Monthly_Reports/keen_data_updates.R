@@ -35,6 +35,24 @@ keen_extraction_call <- function(event_collection, timeframe, variable_list){
 # store raw API results
 nodesummary_output <- keen_extraction_call('node_summary', 'this_1_week', variable_list = c('keen.created_at', 'keen.timestamp', 'projects.public', 'registered_projects.total', 'registered_projects.withdrawn', 'registered_projects.embargoed_v2'))
 filesummary_output <- keen_extraction_call('node_summary', 'this_1_week', variable_list = c('keen.created_at', 'keen.timestamp', 'osfstorage_files_including_quickfiles.public', 'osfstorage_files_including_quickfiles.total'))
+
+
+clean_api_response <- function(api_output){
+  
+  cleaned_result <- fromJSON(prettify(api_output))$result %>%
+  
+                      #handle nested dataframes in created from json output
+                      map_if(., is.data.frame, list) %>%
+                      as_tibble() %>%
+                      unnest() %>%
+                      
+                      #handle if keen accidently ran more than once in a night
+                      arrange(created_at) %>%
+                      group_by(timestamp) %>%
+                      slice(1L) %>%
+                      ungroup()
+  return(cleaned_result)
+}
   
 # clean API result and get in same order as existing data
 node_data <- fromJSON(prettify(nodesummary_output))$result %>%

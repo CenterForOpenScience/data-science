@@ -27,28 +27,15 @@ keen_extraction_call <- function(event_collection, timeframe, variable_list){
                        event_collection,
                        '&timeframe=',
                        timeframe,
+                       '&product_name=',
                        variables))
   return(output)
 }
 
-
-
-
-# query API for all node_summary variables we store
-nodesummary_output <- GET(paste0('https://api.keen.io/3.0/projects/', 
-                                 keen_projectid, 
-                                 '/queries/extraction?api_key=', 
-                                 keen_read_key, 
-                                 '&event_collection=node_summary&timeframe=previous_1_month&property_names=keen.created_at&property_names=keen.timestamp&property_names=projects.public&property_names=registered_projects.total&property_names=registered_projects.withdrawn&property_names=registered_projects.embargoed_v2'))
-
-# query API for files variables we store
-filesummary_output <- GET(paste0('https://api.keen.io/3.0/projects/', 
-                                 keen_projectid, 
-                                 '/queries/extraction?api_key=', 
-                                 keen_read_key, 
-                                 '&event_collection=file_summary&timeframe=previous_1_week&property_names=keen.created_at&property_names=keen.timestamp&property_names=osfstorage_files_including_quickfiles.public&property_names=osfstorage_files_including_quickfiles.total'))
-
-
+# store raw API results
+nodesummary_output <- keen_extraction_call('node_summary', 'this_1_week', variable_list = c('keen.created_at', 'keen.timestamp', 'projects.public', 'registered_projects.total', 'registered_projects.withdrawn', 'registered_projects.embargoed_v2'))
+filesummary_output <- keen_extraction_call('node_summary', 'this_1_week', variable_list = c('keen.created_at', 'keen.timestamp', 'osfstorage_files_including_quickfiles.public', 'osfstorage_files_including_quickfiles.total'))
+  
 # clean API result and get in same order as existing data
 node_data <- fromJSON(prettify(nodesummary_output))$result %>%
                 

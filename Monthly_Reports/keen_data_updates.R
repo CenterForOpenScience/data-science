@@ -53,15 +53,12 @@ clean_api_response <- function(api_output){
                       ungroup()
   return(cleaned_result)
 }
-  
-# clean API result and get in same order as existing data
-node_data <- fromJSON(prettify(nodesummary_output))$result %>%
-                
-                #handle nested dataframes in created from json output
-                map_if(., is.data.frame, list) %>%
-                as_tibble() %>%
-                unnest() %>%
-  
+
+### clean API results and make sure new df names and order match existing gsheets
+
+# node data
+node_data <- clean_api_response(nodesummary_output) %>%
+
                 #rename to match existing column names              
                 rename(keen.timestamp = timestamp, 
                        keen.created_at = created_at, 
@@ -69,38 +66,21 @@ node_data <- fromJSON(prettify(nodesummary_output))$result %>%
                        registered_projects.withdrawn = withdrawn, 
                        registered_projects.embargoed_v2 = embargoed_v2, 
                        projects.public = public) %>%             
-                arrange(keen.created_at) %>%
   
-                #handle if keen accidently ran more than once in a night
-                group_by(keen.timestamp) %>%
-                slice(1L) %>%
-                ungroup() %>%
-                
                 #make sure column order correct
                 select(keen.created_at, keen.timestamp, projects.public, registered_projects.total, registered_projects.withdrawn, registered_projects.embargoed_v2)
 
-# clean files data
-file_data <- fromJSON(prettify(filesummary_output))$result %>%
-  
-  #handle nested dataframes in created from json output
-  map_if(., is.data.frame, list) %>%
-  as_tibble() %>%
-  unnest() %>%
-  
-  #rename to match existing column names              
-  rename(keen.timestamp = timestamp, 
-         keen.created_at = created_at, 
-         osfstorage_files_including_quickfiles.total = total, 
-         osfstorage_files_including_quickfiles.public = public) %>%             
-  arrange(keen.created_at) %>%
-  
-  #handle if keen accidently ran more than once in a night
-  group_by(keen.timestamp) %>%
-  slice(1L) %>%
-  ungroup() %>%
-  
-  #make sure column order correct
-  select(keen.timestamp, keen.created_at, osfstorage_files_including_quickfiles.public, osfstorage_files_including_quickfiles.total)
+# file_data
+file_data <- clean_api_response(filesummary_output) %>%
+
+                #rename to match existing column names              
+                rename(keen.timestamp = timestamp, 
+                       keen.created_at = created_at, 
+                       osfstorage_files_including_quickfiles.total = total, 
+                       osfstorage_files_including_quickfiles.public = public) %>%             
+               
+                #make sure column order correct
+                select(keen.timestamp, keen.created_at, osfstorage_files_including_quickfiles.public, osfstorage_files_including_quickfiles.total)
 
 ##read in existing data & add newer data 
 nodes_gdrive_file <- 'https://docs.google.com/spreadsheets/d/1ti6iEgjvr-hXyMT5NwCNfAg-PJaczrMUX9sr6Cj6_kM/'

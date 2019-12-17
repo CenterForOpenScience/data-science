@@ -55,10 +55,10 @@ clean_api_response <- function(api_output){
 nodesummary_output <- keen_extraction_call('node_summary', 'this_1_week', variable_list = c('keen.created_at', 'keen.timestamp', 'projects.public', 'registered_projects.total', 'registered_projects.withdrawn', 'registered_projects.embargoed_v2'))
 filesummary_output <- keen_extraction_call('file_summary', 'this_1_week', variable_list = c('keen.created_at', 'keen.timestamp', 'osfstorage_files_including_quickfiles.public', 'osfstorage_files_including_quickfiles.total'))
 usersummary_output <- keen_extraction_call('user_summary', 'this_1_week', variable_list = c('keen.created_at', 'keen.timestamp', 'status.active'))
+download_output <- keen_extraction_call('download_count_summary', 'this_1_week', variable_list = c('keen.created_at', 'keen.timestamp', 'files.total'))
 
 ### clean API results and make sure new df names and order match existing gsheets
 
-# node data
 node_data <- clean_api_response(nodesummary_output) %>%
 
                 #rename to match existing column names              
@@ -72,7 +72,6 @@ node_data <- clean_api_response(nodesummary_output) %>%
                 #make sure column order correct
                 select(keen.created_at, keen.timestamp, projects.public, registered_projects.total, registered_projects.withdrawn, registered_projects.embargoed_v2)
 
-# file_data
 file_data <- clean_api_response(filesummary_output) %>%
 
                 #rename to match existing column names              
@@ -93,7 +92,16 @@ user_data <- clean_api_response(usersummary_output) %>%
                       
                       #make sure column order correct
                       select(keen.created_at, keen.timestamp, status.active)
+
+download_data <- clean_api_response(download_output) %>%
   
+                    #rename to match existing column names              
+                    rename(keen.timestamp = timestamp, 
+                           keen.created_at = created_at, 
+                           files.total = total) %>%
+                    
+                    #make sure column order correct
+                    select(keen.created_at, keen.timestamp, files.total)
 
 
 ##read in existing data & add newer data 

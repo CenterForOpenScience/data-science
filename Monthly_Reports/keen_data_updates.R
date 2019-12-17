@@ -14,6 +14,26 @@ sheets_auth(token = drive_token())
 keen_projectid <- Sys.getenv("production_osfprivate_projectid")
 keen_read_key <- Sys.getenv("keen_read_key")
 
+
+# function to create keen calls
+keen_extraction_call <- function(event_collection, timeframe, variable_list){
+  variables <- str_c(variable_list, collapse = '$property_names=')
+  
+  output <- GET(paste0('https://api.keen.io/3.0/projects/', 
+                       keen_projectid, 
+                       '/queries/extraction?api_key=', 
+                       keen_read_key,
+                       '&event_collection=',
+                       event_collection,
+                       '&timeframe=',
+                       timeframe,
+                       variables))
+  return(output)
+}
+
+
+
+
 # query API for all node_summary variables we store
 nodesummary_output <- GET(paste0('https://api.keen.io/3.0/projects/', 
                                  keen_projectid, 

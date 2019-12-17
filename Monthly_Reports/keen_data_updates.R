@@ -11,12 +11,12 @@ drive_auth()
 sheets_auth(token = drive_token())
 
 # get keys
-nodesummary_projectid <- Sys.getenv("nodesummary_projectid")
+keen_projectid <- Sys.getenv("production_osfprivate_projectid")
 keen_read_key <- Sys.getenv("keen_read_key")
 
 # query API for all node_summary variables we store
 nodesummary_output <- GET(paste0('https://api.keen.io/3.0/projects/', 
-                                 nodesummary_projectid, 
+                                 keen_projectid, 
                                  '/queries/extraction?api_key=', 
                                  keen_read_key, 
                                  '&event_collection=node_summary&timeframe=previous_1_month&property_names=keen.created_at&property_names=keen.timestamp&property_names=projects.public&property_names=registered_projects.total&property_names=registered_projects.withdrawn&property_names=registered_projects.embargoed_v2'))

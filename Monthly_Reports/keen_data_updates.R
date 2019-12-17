@@ -83,13 +83,13 @@ files_grdrive_file <- 'https://docs.google.com/spreadsheets/d/1gOodKyhEhegXd0sTn
 
 read_sheet(nodes_gdrive_file) %>%
   rbind(node_data) %>%
-  write_csv('test_sheet.csv')
+  write_csv('node_data.csv')
 
 read_sheet(files_grdrive_file) %>%
   rbind(file_data) %>%
   write_csv('files_data.csv')
 
 ## update googlesheet with new appended date (switch to more targetted update once googlesheets4 has write capabilities)
-drive_update(file = nodes_gdrive_file, media = 'test_sheet.csv')
-drive_update(file = files_grdrive_file, media = 'files_data.csv')
+drive_update(file = nodes_gdrive_file, media = 'node_data.csv')
+drive_update(file = files_grdrive_file, media = 'files_data.csvs')
 

@@ -56,6 +56,7 @@ nodesummary_output <- keen_extraction_call('node_summary', 'this_1_week', variab
 filesummary_output <- keen_extraction_call('file_summary', 'this_1_week', variable_list = c('keen.created_at', 'keen.timestamp', 'osfstorage_files_including_quickfiles.public', 'osfstorage_files_including_quickfiles.total'))
 usersummary_output <- keen_extraction_call('user_summary', 'this_1_week', variable_list = c('keen.created_at', 'keen.timestamp', 'status.active'))
 download_output <- keen_extraction_call('download_count_summary', 'this_1_week', variable_list = c('keen.created_at', 'keen.timestamp', 'files.total'))
+preprint_output <- keen_extraction_call('preprint_summary', 'this_1_week', variable_list = c('keen.created_at', 'keen.timestamp', 'provider.name', 'provider.total'))
 
 ### clean API results and make sure new df names and order match existing gsheets
 
@@ -95,6 +96,7 @@ user_data <- clean_api_response(usersummary_output) %>%
 
 download_data <- clean_api_response(download_output) %>%
   
+                    
                     #rename to match existing column names              
                     rename(keen.timestamp = timestamp, 
                            keen.created_at = created_at, 
@@ -103,6 +105,28 @@ download_data <- clean_api_response(download_output) %>%
                     #make sure column order correct
                     select(keen.created_at, keen.timestamp, files.total)
 
+# can't use function for preprint data b/c need to handling groupings differently
+preprint_data <- fromJSON(prettify(preprint_output))$result %>%
+
+                    #handle nested dataframes in created from json output
+                    map_if(., is.data.frame, list) %>%
+                    as_tibble() %>%
+                    unnest() %>%
+                    
+                    #handle if keen accidently ran more than once in a night
+                    arrange(created_at) %>%
+                    group_by(timestamp, name) %>%
+                    slice(1L) %>%
+                    ungroup()
+                    
+                    #rename to match existing column names              
+                    rename(keen.timestamp = timestamp, 
+                           keen.created_at = created_at, 
+                           provider.name = name,
+                           provider.total = total) %>%
+                    
+                    #make sure column order correct
+                    select(keen.created_at, keen.timestamp, provider.name, provider.total)
 
 ##read in existing data & add newer data 
 nodes_gdrive_file <- 'https://docs.google.com/spreadsheets/d/1ti6iEgjvr-hXyMT5NwCNfAg-PJaczrMUX9sr6Cj6_kM/'

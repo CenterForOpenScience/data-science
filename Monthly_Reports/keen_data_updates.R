@@ -117,7 +117,7 @@ preprint_data <- fromJSON(prettify(preprint_output))$result %>%
                     arrange(created_at) %>%
                     group_by(timestamp, name) %>%
                     slice(1L) %>%
-                    ungroup()
+                    ungroup() %>%
                     
                     #rename to match existing column names              
                     rename(keen.timestamp = timestamp, 
@@ -129,10 +129,13 @@ preprint_data <- fromJSON(prettify(preprint_output))$result %>%
                     select(keen.created_at, keen.timestamp, provider.name, provider.total)
 
 ##read in existing data & add newer data 
-nodes_gdrive_file <- 'https://docs.google.com/spreadsheets/d/1ti6iEgjvr-hXyMT5NwCNfAg-PJaczrMUX9sr6Cj6_kM/'
-files_grdrive_file <- 'https://docs.google.com/spreadsheets/d/1gOodKyhEhegXd0sTnc0IURq282wMgZgwAgoZS8brVUQ/'
+nodes_gdrive_file <- 'https://docs.google.com/spreadsheets/d/1pa9lnuSaYRRLuc1xn5DSueqw4umW58CWhCOpN76FXoU/'
+files_grdrive_file <- 'https://docs.google.com/spreadsheets/d/1vZfrud7ufbKTaleyVYAYrB0Q6cZc9wO4G7YV-34Megc/'
+user_gdrive_file <- 'https://docs.google.com/spreadsheets/d/1jSweHJw7AHB3Yd03Ybbh76I9fNdIGpMfldqoKTPjElM/'
+download_gdrive_file <- 'https://docs.google.com/spreadsheets/d/1_PTjNXw9Hce0L8eQzxfNUyKlhAY5xnn6Qr-BdXfla-g/'
+preprint_gdrive_file <- 'https://docs.google.com/spreadsheets/d/1xsHtpWNBezo1WO8O5jyXuksrIt2zkTrgb29YRVVnUoY/'
 
-read_sheet(nodes_gdrive_file) %>%
+read_sheet(nodes_gdrive_file, col_types = 'cciiii') %>%
   rbind(node_data) %>%
   write_csv('node_data.csv')
 
@@ -140,7 +143,22 @@ read_sheet(files_grdrive_file) %>%
   rbind(file_data) %>%
   write_csv('files_data.csv')
 
+read_sheet(user_gdrive_file) %>%
+  rbind(user_data) %>%
+  write_csv('user_data.csv')
+
+read_sheet(download_gdrive_file) %>%
+  rbind(download_data) %>%
+  write_csv('download_data.csv')
+
+read_sheet(preprint_gdrive_file) %>%
+  rbind(preprint_data) %>%
+  write_csv('preprint_data.csv')
+
 ## update googlesheet with new appended date (switch to more targetted update once googlesheets4 has write capabilities)
 drive_update(file = nodes_gdrive_file, media = 'node_data.csv')
-drive_update(file = files_grdrive_file, media = 'files_data.csvs')
+drive_update(file = files_grdrive_file, media = 'files_data.csv')
+drive_update(file = user_gdrive_file, media = 'user_data.csv')
+drive_update(file = download_gdrive_file, media = 'download_data.csv')
+drive_update(file = preprint_gdrive_file, media = 'preprint_data.csv')
 

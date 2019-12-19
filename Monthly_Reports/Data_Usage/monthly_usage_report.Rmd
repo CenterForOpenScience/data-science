@@ -17,9 +17,10 @@ library(plotly)
 options(digits=10)
 
 # creating additional variables
-storage_data <- read_csv('/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Data_Usage/osf_storage_metrics.csv', col_types = cols(date = col_datetime(format = "%m/%d/%y"))) %>%
+storage_data <- read_csv('/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Data_Usage/osf_storage_metrics.csv', col_types = cols(date = col_datetime())) %>%
+                    mutate(date = rollback(date, roll_to_first = FALSE)) %>%
                     mutate(month = month(date, label = T),
-                           year = year(date)) %>%
+                    year = year(date)) %>%
                     filter(year == year(as.Date(Sys.time()) - 5)) %>%
                     mutate(total_tib = round(total/(1024^3),2),
                            deleted_tib = round(deleted/(1024^3),2),

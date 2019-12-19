@@ -115,6 +115,7 @@ diff_product_storage$Type <- fct_relevel(diff_product_storage$Type, c('Nodes', '
 # overall storage
 rbind(raw_storage %>% arrange(Type), diff_storage %>% arrange(Type)) %>%
   gt() %>%
+  cols_align(align = c('center')) %>%
   tab_header(
     title = 'Overall Storage'
   ) %>%
@@ -145,6 +146,7 @@ rbind(raw_storage %>% arrange(Type), diff_storage %>% arrange(Type)) %>%
 # monthly storage
 rbind(raw_product_storage %>% arrange(Type), diff_product_storage %>% arrange(Type)) %>%
   gt() %>%
+  cols_align(align = c('center')) %>%
   tab_header(
     title = 'Storage by Product'
   ) %>%

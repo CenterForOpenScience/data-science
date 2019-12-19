@@ -7,7 +7,7 @@ library(googledrive)
 
 
 # force authentication with googledrive first
-drive_auth()
+#drive_auth()
 sheets_auth(token = drive_token())
 
 # get keys
@@ -52,11 +52,11 @@ clean_api_response <- function(api_output){
 
 
 ### Make and store api calls
-nodesummary_output <- keen_extraction_call('node_summary', 'this_1_week', variable_list = c('keen.created_at', 'keen.timestamp', 'projects.public', 'registered_projects.total', 'registered_projects.withdrawn', 'registered_projects.embargoed_v2'))
-filesummary_output <- keen_extraction_call('file_summary', 'this_1_week', variable_list = c('keen.created_at', 'keen.timestamp', 'osfstorage_files_including_quickfiles.public', 'osfstorage_files_including_quickfiles.total'))
-usersummary_output <- keen_extraction_call('user_summary', 'this_1_week', variable_list = c('keen.created_at', 'keen.timestamp', 'status.active'))
-download_output <- keen_extraction_call('download_count_summary', 'this_1_week', variable_list = c('keen.created_at', 'keen.timestamp', 'files.total'))
-preprint_output <- keen_extraction_call('preprint_summary', 'this_1_week', variable_list = c('keen.created_at', 'keen.timestamp', 'provider.name', 'provider.total'))
+nodesummary_output <- keen_extraction_call('node_summary', 'previous_1_months', variable_list = c('keen.created_at', 'keen.timestamp', 'projects.public', 'registered_projects.total', 'registered_projects.withdrawn', 'registered_projects.embargoed_v2'))
+filesummary_output <- keen_extraction_call('file_summary', 'previous_1_month', variable_list = c('keen.created_at', 'keen.timestamp', 'osfstorage_files_including_quickfiles.public', 'osfstorage_files_including_quickfiles.total'))
+usersummary_output <- keen_extraction_call('user_summary', 'previous_1_months', variable_list = c('keen.created_at', 'keen.timestamp', 'status.active'))
+download_output <- keen_extraction_call('download_count_summary', 'previous_1_months', variable_list = c('keen.created_at', 'keen.timestamp', 'files.total'))
+preprint_output <- keen_extraction_call('preprint_summary', 'previous_1_months', variable_list = c('keen.created_at', 'keen.timestamp', 'provider.name', 'provider.total'))
 
 ### clean API results and make sure new df names and order match existing gsheets
 

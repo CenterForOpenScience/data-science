@@ -21,7 +21,6 @@ storage_data <- read_csv('/Users/courtneysoderberg/Documents/data-science/Monthl
                     mutate(date = rollback(date, roll_to_first = FALSE)) %>%
                     mutate(month = month(date, label = T),
                     year = year(date)) %>%
-                    filter(year == year(as.Date(Sys.time()) - 5)) %>%
                     mutate(total_tib = round(total/(1024^3),2),
                            deleted_tib = round(deleted/(1024^3),2),
                            regs_tib = round(registrations/(1024^3),2),
@@ -46,10 +45,11 @@ The data used to generate this report can be found [here](https://osf.io/a7w36/)
 ```{r, warning=FALSE, include=FALSE}
 # creating data formatted for tables
 raw_storage <- storage_data %>%
-  select(month, total_tib, pubnode_tib, privatenode_tib, deleted_tib) %>%
-  gather(total_tib:deleted_tib, key = 'storage_type', value = 'storage', factor_key = T) %>%
-  spread(month, storage) %>%
-  rename(Type = storage_type)
+                      filter(date >= as.Date(Sys.time()) - dyears(1)) %>%
+                      select(month, total_tib, pubnode_tib, privatenode_tib, deleted_tib) %>%
+                      gather(total_tib:deleted_tib, key = 'storage_type', value = 'storage', factor_key = T) %>%
+                      spread(month, storage) %>%
+                      rename(Type = storage_type)
 
 raw_storage$Type <- fct_recode(raw_storage$Type, Total = 'total_tib',
                                     Deleted = 'deleted_tib',
@@ -60,14 +60,15 @@ raw_storage$Type <- fct_relevel(raw_storage$Type, c('Total', 'Deleted', 'Public 
                             
 
 diff_storage <- storage_data %>%
-  select(month, total_tib, pubnode_tib, privatenode_tib, deleted_tib) %>%
-  gather(total_tib:deleted_tib, key = 'storage_type', value = 'storage', factor_key = T) %>%
-  group_by(storage_type) %>%
-  mutate(storage_diff = storage - lag(storage)) %>%
-  ungroup() %>%
-  select(-storage) %>%
-  spread(month, storage_diff) %>%
-  rename(Type = storage_type)
+                      filter(date >= as.Date(Sys.time()) - dyears(1)) %>%
+                      select(month, total_tib, pubnode_tib, privatenode_tib, deleted_tib) %>%
+                      gather(total_tib:deleted_tib, key = 'storage_type', value = 'storage', factor_key = T) %>%
+                      group_by(storage_type) %>%
+                      mutate(storage_diff = storage - lag(storage)) %>%
+                      ungroup() %>%
+                      select(-storage) %>%
+                      spread(month, storage_diff) %>%
+                      rename(Type = storage_type)
 
 
 diff_storage$Type <- fct_recode(diff_storage$Type, Total = 'total_tib',
@@ -78,10 +79,11 @@ diff_storage$Type <- fct_recode(diff_storage$Type, Total = 'total_tib',
 diff_storage$Type <- fct_relevel(diff_storage$Type, c('Total', 'Deleted', 'Public Nodes', 'Private Nodes'))
 
 raw_product_storage <- storage_data %>%
-  select(month, node_tib, preprint_tib, quickfiles_tib, regs_tib) %>%
-  gather(regs_tib:node_tib, key = 'product_type', value = 'storage', factor_key = T) %>%
-  spread(month, storage) %>%
-  rename(Type = product_type)
+                            filter(date >= as.Date(Sys.time()) - dyears(1)) %>%
+                            select(month, node_tib, preprint_tib, quickfiles_tib, regs_tib) %>%
+                            gather(regs_tib:node_tib, key = 'product_type', value = 'storage', factor_key = T) %>%
+                            spread(month, storage) %>%
+                            rename(Type = product_type)
 
 raw_product_storage$Type <- fct_recode(raw_product_storage$Type, Nodes = 'node_tib',
                                     Registrations = 'regs_tib',
@@ -91,14 +93,15 @@ raw_product_storage$Type <- fct_recode(raw_product_storage$Type, Nodes = 'node_t
 raw_product_storage$Type <- fct_relevel(raw_product_storage$Type, c('Nodes', 'Registrations', 'Preprints', 'Quickfiles'))
 
 diff_product_storage <- storage_data %>%
-  select(month, node_tib, preprint_tib, quickfiles_tib, regs_tib) %>%
-  gather(regs_tib:node_tib, key = 'product_type', value = 'storage', factor_key = T) %>%
-  group_by(product_type) %>%
-  mutate(storage_diff = storage - lag(storage)) %>%
-  ungroup() %>%
-  select(-storage) %>%
-  spread(month, storage_diff) %>%
-  rename(Type = product_type)
+                          filter(date >= as.Date(Sys.time()) - dyears(1)) %>%
+                          select(month, node_tib, preprint_tib, quickfiles_tib, regs_tib) %>%
+                          gather(regs_tib:node_tib, key = 'product_type', value = 'storage', factor_key = T) %>%
+                          group_by(product_type) %>%
+                          mutate(storage_diff = storage - lag(storage)) %>%
+                          ungroup() %>%
+                          select(-storage) %>%
+                          spread(month, storage_diff) %>%
+                          rename(Type = product_type)
 
 diff_product_storage$Type <- fct_recode(diff_product_storage$Type, Nodes = 'node_tib',
                                     Registrations = 'regs_tib',

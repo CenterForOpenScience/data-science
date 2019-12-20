@@ -76,7 +76,8 @@ transpose_storage <- transpose_storage %>%
 
 ```{r, warning=FALSE, echo=FALSE}
 # overall storage
-rbind(raw_storage %>% arrange(Type), diff_storage %>% arrange(Type)) %>%
+transpose_storage %>% 
+  filter(Type == 'Total' | Type == 'Public Nodes' | Type == 'Private Nodes' | Type == 'Deleted') %>%
   gt() %>%
   cols_align(align = c('center')) %>%
   tab_header(
@@ -97,7 +98,7 @@ rbind(raw_storage %>% arrange(Type), diff_storage %>% arrange(Type)) %>%
     footnote = 'Includes preprint supp nodes',
     locations = cells_data(
       columns = vars(Type),
-      rows = c(3, 7)
+      rows = c(2, 6)
     )
   )
 
@@ -107,7 +108,8 @@ rbind(raw_storage %>% arrange(Type), diff_storage %>% arrange(Type)) %>%
 
 ```{r, warning=FALSE, echo=FALSE}
 # monthly storage
-rbind(raw_product_storage %>% arrange(Type), diff_product_storage %>% arrange(Type)) %>%
+transpose_storage %>% 
+  filter(Type == 'Nodes' | Type == 'Registrations' | Type == 'Preprints' | Type == 'Quickfiles') %>%
   gt() %>%
   cols_align(align = c('center')) %>%
   tab_header(
@@ -135,7 +137,7 @@ rbind(raw_product_storage %>% arrange(Type), diff_product_storage %>% arrange(Ty
         footnote = 'Excludes preprint supp nodes',
         locations = cells_data(
           columns = vars(Type),
-          rows = c(3, 7)
+          rows = c(2, 6)
         )
       )
 ```

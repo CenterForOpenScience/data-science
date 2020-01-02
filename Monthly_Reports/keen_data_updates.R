@@ -103,7 +103,7 @@ download_data <- clean_api_response(download_output) %>%
                            files.total = total) %>%
                     
                     #make sure column order correct
-                    select(keen.created_at, keen.timestamp, files.total)
+                    select(keen.timestamp, keen.created_at, files.total)
 
 # can't use function for preprint data b/c need to handling groupings differently
 preprint_data <- fromJSON(prettify(preprint_output))$result %>%

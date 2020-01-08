@@ -60,7 +60,7 @@ node_data <- read_csv(
 osf_retrieve_file('https://osf.io/y29as/') %>%
   osf_download(overwrite = T)
 
-content_logs <- c("addon_file_copied", "addon_file_moved", "addon_removed", "bitbucket_repo_linked", "bitbucker_node_deauthorized", "box_file_added", "box_file_updated", "box_file_removed", "box_folder_selected", "box_node_deauthorized", "dataverse_dataset_linked", "dataverse_dataset_published", "dataverse_file_added", "dataverse_file_removed", "dataverse_file_updated", "dataverse_node_deauthorized", "dataverse_study_linked", "dataverse_study_released", "dropbox_file_added", "dropbox_file_removed", "dropbox_file_updated", "dropbox_folder_selected", "dropbox_node_deauthorized", "figshare_content_unlinked", "figshare_file_added", "figshare_file_removed", "figshare_folder_selected", "figshare_node_deauthorized", "file_added", "file_removed", "file_updated", "github_file_added", "github_file_removed", "github_file_updated", "github_node_deauthorized", "github_repo_linked", "github_repo_unlinked", "gitlab_node_deauthorized", "gitlab_repo_linked", "googledrive_file_added", "googledrive_file_removed", "googledrive_file_updated", "googledrive_folder_selected", "googledrive_node_deauthorized", "made_public", "made_private", "mendeley_folder_selected", "mendeley_node_deauthorized", "onedrive_folder_selected", "onedrive_node_deauthorized", "osf_storage_file_added", "osf_storage_file_removed", "osf_storage_file_updated", "owncloud_file_added", "owncloud_file_removed", "owncloud_file_updated", "owncloud_folder_created", "owncloud_node_deauthorized", "owncloud_folder_selected", "project_deleted", "project_created", "node_removed", "prereg_registration_initiated", "project_registered", "registration_cancelled", "retraction_initiated", "retraction_approved", "retraction_canceled", "s3_bucket_linked", "s3_bucket_unlinked", "s3_file_added", "s3_file_removed", "s3_file_updated", "s3_node_deauthorized", "wiki_updated", "zotero_folder_selected", "zotero_library_selected", "zotero_node_deauthorized", "addon_added", "node_created", "node_forked", "pointer_created", "pointer_removed")
+content_logs <- c("addon_file_copied", "addon_file_moved", "addon_removed", "bitbucket_repo_linked", "bitbucker_node_deauthorized", "box_file_added", "box_file_updated", "box_file_removed", "box_folder_selected", "box_node_authorized", "box_node_deauthorized", "created_from", "dataverse_dataset_linked", "dataverse_dataset_published", "dataverse_file_added", "dataverse_file_removed", "dataverse_file_updated", "dataverse_node_authorized", "dataverse_node_deauthorized", "dataverse_study_linked", "dataverse_study_released", "dropbox_file_added", "dropbox_file_removed", "dropbox_file_updated", "dropbox_folder_selected", "dropbox_node_deauthorized", "dropbox_folder_created", "dropbox_node_authorized", "embargo_approved", "embargo_initiated", "embargo_cancelled", "figshare_content_unlinked", "figshare_node_authorized", "figshare_file_added", "figshare_file_removed", "figshare_folder_selected", "figshare_node_deauthorized", "file_added", "file_removed", "file_updated", "github_node_authorized", "github_folder_created", "github_file_added", "github_file_removed", "github_file_updated", "github_node_deauthorized", "github_repo_linked", "github_repo_unlinked", "gitlab_node_deauthorized", "gitlab_repo_linked", "googledrive_file_added", "googledrive_node_authorized", "googledrive_folder_created", "googledrive_file_removed", "googledrive_file_updated", "googledrive_folder_selected", "googledrive_node_deauthorized", "made_public", "made_private", "mendeley_node_authorized", "mendeley_folder_selected", "mendeley_node_deauthorized", "osf_storage_folder_created", "onedrive_folder_selected", "onedrive_node_deauthorized", "osf_storage_file_added", "osf_storage_file_removed", "osf_storage_file_updated", "owncloud_node_authorized" , "owncloud_file_added", "owncloud_file_removed", "owncloud_file_updated", "owncloud_folder_created", "owncloud_node_deauthorized", "owncloud_folder_selected", "project_deleted", "project_created", "node_removed", "preprint_initiated", "prereg_registration_initiated", "project_registered", "registration_initiated", "registration_approved", "registration_cancelled", "retraction_initiated", "retraction_approved", "retraction_canceled", "s3_bucket_linked", "s3_bucket_unlinked", "s3_file_added", "s3_file_removed", "s3_folder_created", "s3_node_authorized", "s3_file_updated", "s3_node_deauthorized", "wiki_deleted", "wiki_updated", "zotero_folder_selected", "zotero_library_selected", "zotero_node_authorized", "zotero_node_deauthorized", "addon_added", "node_created", "node_forked", "pointer_created", "pointer_removed")
 
 
 project_logs_detailed <- read_csv(here::here('Longitudinal_Research_Plan','project_logs.csv')) %>%
@@ -124,7 +124,7 @@ projects_and_logs <- projects_by_product %>%
                 mutate(days_create_lastlog = difftime(last_log, project_created, units = 'days'))
 
 projects_and_logs_detailed <- projects_by_product %>%
-                                select(root_id, project_created, has_file, registered, is_public) %>%
+                                select(root_id, project_created, has_file, registered, is_public, is_fork) %>%
                                 left_join(project_logs_detailed, by = 'root_id') %>%
                                 left_join(projects_and_logs %>% select(root_id, days_create_lastlog, log_type), by = c('root_id', 'log_type'))
 ```
@@ -345,16 +345,37 @@ ggplot(projects_and_logs %>% filter(is.na(is_fork)) %>% filter(!is.na(days_creat
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 # log types by quartile
-non_forks <- projects_and_logs %>% 
+non_forks <- projects_and_logs_detailed %>% 
   filter(is.na(is_fork) & !is.na(days_create_lastlog))
 
-quartiles <- quantile(non_forks$days_create_lastlog)
+quartiles <- non_forks %>% 
+              group_by(log_type) %>% 
+              summarize(q25 = quantile(days_create_lastlog, .25),
+                        q50 = quantile(days_create_lastlog, .50),
+                        q75 = quantile(days_create_lastlog, .75)) 
 
 quartile_data <- non_forks %>%
-  mutate(quartile = case_when(days_create_files < quartiles[2] ~ 'First',
-                              days_create_files >= quartiles[2] & days_create_files < quartiles[3] ~ 'Second',
-                              days_create_files >= quartiles[3] & days_create_files < quartiles[4] ~ 'Third',
-                              days_create_files >= quartiles[4] ~ 'Fourth'))
+  mutate(quartile = case_when((log_type == 'content' & days_create_lastlog < quartiles[1,2]) | 
+                                  (log_type == 'metadata' & days_create_lastlog < quartiles[2,2]) ~ 'First',
+                              (log_type == 'content' & days_create_lastlog >= quartiles[1,2] & days_create_lastlog < quartiles[1,3]) | 
+                                  (log_type == 'metadata' & days_create_lastlog >= quartiles[2,2] & days_create_lastlog < quartiles[2,3]) ~ 'Second',
+                              (log_type == 'content' & days_create_lastlog >= quartiles[1,3] & days_create_lastlog < quartiles[1,4]) |
+                                  (log_type == 'metadata' & days_create_lastlog >= quartiles[2,3] & days_create_lastlog < quartiles[2,4]) ~ 'Third',
+                              (log_type == 'content' & days_create_lastlog >= quartiles[1,4]) | 
+                                  (log_type == 'metadata' & days_create_lastlog >= quartiles[2,4]) ~ 'Fourth'))
+
+quartile_data %>%
+  group_by(log_type, quartile, action) %>%
+  tally() %>%
+  filter(log_type == 'metadata') %>%
+  ungroup() %>%
+  pivot_wider(names_from = quartile, values_from = n) %>%
+  mutate(First = round(100 * First/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'First')),2),
+         Second = round(100 * Second/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Second')),2),
+         Third = round(100 * Third/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Third')),2),
+         Fourth = round(100 * Fourth/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Fourth')),2)) %>%
+  select(-log_type) %>%
+  gt()
 
 ```
 

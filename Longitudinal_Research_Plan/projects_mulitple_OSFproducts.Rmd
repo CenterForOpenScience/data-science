@@ -126,7 +126,7 @@ projects_and_logs <- projects_by_product %>%
 projects_and_logs_detailed <- projects_by_product %>%
                                 select(root_id, project_created, has_file, registered, is_public) %>%
                                 left_join(project_logs_detailed, by = 'root_id') %>%
-                                left_join(projects_and_logs %>% select(root_id, days_create_lastlog), by = 'root_id')
+                                left_join(projects_and_logs %>% select(root_id, days_create_lastlog, log_type), by = c('root_id', 'log_type'))
 ```
 
 ## How many multiple action projects are there?

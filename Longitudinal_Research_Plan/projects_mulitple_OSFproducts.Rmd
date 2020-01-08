@@ -26,6 +26,7 @@ library(here)
 library(ggalluvial)
 library(plotly)
 library(UpSetR)
+library(gt)
 
 knitr::opts_chunk$set(fig.width=12, fig.height=8) 
 ```
@@ -126,11 +127,11 @@ The graph below shows the number of non-deleted projects that have each action (
 \
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
-intersections <- projects_by_product %>% 
-  select(root_id, has_file, shared_file, registered, is_public) %>%
+intersections <- projects_by_product %>%
+  select(project_created, root_id, has_file, shared_file, registered, is_public) %>%
   mutate(no_action = case_when(has_file == 0 & shared_file == 0 & registered == 0  ~ 1,
                       has_file == 1 | shared_file == 1 | registered == 1  ~ 0)) %>%
-  select(has_file, registered, is_public, shared_file, no_action) %>%
+  select(project_created, has_file, registered, is_public, shared_file, no_action) %>%
   rename(`Has a file` = has_file,
          `>= 1 public node` = is_public,
          `Been registered` = registered,
@@ -138,7 +139,7 @@ intersections <- projects_by_product %>%
          `Empty project` = no_action) %>%
   as.data.frame()
 
-upset(intersections, 
+upset(intersections %>% select(-project_created), 
       sets = c('Been registered', 'File in a public node', '>= 1 public node', 'Has a file', 'Empty project'), 
       main.bar.color = "SteelBlue", 
       sets.bar.color = "DarkCyan", 
@@ -151,6 +152,128 @@ upset(intersections,
 
 \
 \
+
+```{r}
+# create tables of percentages for types above by when project created
+percent_24 <- intersections %>%
+  filter(project_created >= '2019-06-04' & project_created < '2019-08-04') %>%
+  select(2:4, 6) %>% 
+  group_by(`Has a file`, `Been registered`, `>= 1 public node`, `Empty project`) %>% 
+  tally() %>%
+  ungroup() %>%
+  mutate(`2-4 Months` = round(100 *n/nrow(intersections_24), 2)) %>%
+  select(`2-4 Months`)
+
+percent_68 <- intersections %>%
+  filter(project_created >= '2019-02-04' & project_created < '2019-04-04') %>%
+  select(2:4, 6) %>% 
+  group_by(`Has a file`, `Been registered`, `>= 1 public node`, `Empty project`) %>% 
+  tally() %>%
+  ungroup() %>%
+  mutate(`6-8 Months` = round(100 *n/nrow(intersections_68), 2)) %>%
+  select(`6-8 Months`)
+
+percent_1012 <- intersections %>%
+  filter(project_created >= '2018-10-04' & project_created < '2018-12-04') %>%
+  select(2:4, 6) %>% 
+  group_by(`Has a file`, `Been registered`, `>= 1 public node`, `Empty project`) %>% 
+  tally() %>%
+  ungroup() %>%
+  mutate(`10-12 Months` = round(100 *n/nrow(intersections_1012), 2)) %>%
+  select(`10-12 Months`)
+
+percent_2224 <- intersections %>% 
+  filter(project_created >= '2017-10-04' & project_created < '2017-12-04') %>%
+  select(2:4, 6) %>% 
+  group_by(`Has a file`, `Been registered`, `>= 1 public node`, `Empty project`) %>% 
+  tally() %>%
+  ungroup() %>%
+  mutate(`22-24 Months` = round(100 *n/nrow(intersections_2224), 2)) %>%
+  select(`22-24 Months`)
+
+project_type <- c("Empty", "Empty & Public", "Registered", "Registered & Public", "File", "File & Public", "File & Registered", "File & Public & Registered")
+
+totals <- c("N", nrow(intersections_24), nrow(intersections_68), nrow(intersections_1012), nrow(intersections_2224))
+
+as_tibble(cbind(project_type, percent_24, percent_68, percent_1012, percent_2224)) %>%
+    mutate(project_type = as.character(project_type)) %>%
+    rbind(totals) %>%
+    mutate(project_type = as.factor(project_type)) %>%
+    mutate(project_type = fct_relevel(project_type, 'Empty', 'File', 'Registered', 'Empty & Public', 'File & Public', 'File & Registered', 'Registered & Public', 'File & Public & Registered', 'N')) %>%
+    arrange(project_type) %>%
+    gt() %>%
+    tab_row_group(
+    group = "Percentages",
+    rows = 1:8
+  ) %>%
+  tab_row_group(
+    group = "Total Projects",
+    rows = 9
+  ) %>%
+  cols_align(align = c('center'), columns = T) %>%
+  tab_header(title = 'Type of Projects Created X Months Ago',
+             subtitle = 'From Oct 4th, 2019')
+```
+
+```{r}
+# median time btw creation and getting to type states above:
+project_timelines <- projects_by_product %>%
+  filter(movecopy_actions == 0) %>%
+  filter(is.na(is_fork)) %>%
+  filter(project_created > '2015-05-01') %>%
+  mutate(no_action = case_when(has_file == 0 & shared_file == 0 & registered == 0  ~ 1,
+                      has_file == 1 | shared_file == 1 | registered == 1  ~ 0)) %>%
+  mutate(time_to_type = case_when(has_file == 0 & registered == 0 & is_public == 0 & no_action == 1 ~ difftime(project_created, project_created, units = 'days'),
+                                  has_file == 1 & registered == 0 & is_public == 0 & no_action == 0 ~ days_create_files,
+                                  has_file == 0 & registered == 1 & is_public == 0 & no_action == 0 ~ days_create_reg,
+                                  has_file == 0 & registered == 0 & is_public == 1 & no_action == 1 ~ days_create_public,
+                                  has_file == 1 & registered == 0 & is_public == 1 & no_action == 0 ~ pmax(days_create_public, days_create_files),
+                                  has_file == 1 & registered == 1 & is_public == 0 & no_action == 0 ~ pmax(days_create_files, days_create_reg),
+                                  has_file == 0 & registered == 1 & is_public == 1 & no_action == 0 ~ pmax(days_create_public, days_create_reg),
+                                  has_file == 1 & registered == 1 & is_public == 1 & no_action == 0 ~ pmax(days_create_public, days_create_reg, days_create_files))) %>%
+  select(project_created, time_to_type, has_file, registered, is_public, no_action)
+
+project_timelines_24 <- project_timelines %>%
+                          filter(project_created >= '2019-06-04' & project_created < '2019-08-04') %>%
+                          group_by(has_file, registered, is_public, no_action) %>%
+                          summarize(`2-4 Months` = median(time_to_type)) %>%
+                          ungroup() %>%                        
+                          select(`2-4 Months`)
+
+project_timelines_68 <- project_timelines %>%
+                          filter(project_created >= '2019-02-04' & project_created < '2019-04-04') %>%
+                          group_by(has_file, registered, is_public, no_action) %>%
+                          summarize(`6-8 Months` = round(median(time_to_type),3)) %>%
+                          ungroup() %>%
+                          select(`6-8 Months`)
+
+project_timelines_1012 <- project_timelines %>%
+                            filter(project_created >= '2018-10-04' & project_created < '2018-12-04') %>%
+                            group_by(has_file, registered, is_public, no_action) %>%
+                            summarize(`10-12 Months` = round(median(time_to_type),3)) %>%
+                            ungroup() %>%                          
+                            select(`10-12 Months`)
+
+project_timelines_2224 <- project_timelines %>%
+                            filter(project_created >= '2017-10-04' & project_created < '2017-12-04') %>%
+                            group_by(has_file, registered, is_public, no_action) %>%
+                            summarize(`22-24 Months` = median(time_to_type)) %>%
+                            ungroup() %>%                          
+                            select(`22-24 Months`)
+
+project_type <- c("Empty", "Empty & Public", "Registered", "Registered & Public", "File", "File & Public", "File & Registered", "File & Public & Registered")
+
+
+as_tibble(cbind(project_type, project_timelines_24, project_timelines_68, project_timelines_1012, project_timelines_2224)) %>%
+    mutate(project_type = fct_relevel(project_type, 'Empty', 'File', 'Registered', 'Empty & Public', 'File & Public', 'File & Registered', 'Registered & Public', 'File & Public & Registered')) %>%
+    arrange(project_type) %>%
+    gt() %>%
+      cols_align(align = c('center'), columns = T) %>%
+      tab_header(title = 'Medium Time to Type of Projects Created X Months Ago',
+                 subtitle = 'From Oct 4th, 2019')
+```
+
+
 
 #### When were these different 'types' of project created?
 
@@ -499,6 +622,6 @@ ggplot(project_timeline %>% filter(time_action3 > 0), aes(time_action3)) +
 
 ## Potential Next Steps for more complex relationships:
 
-* How many of the 4817 projects that share files and are registered have contributors in common (i.e. are these projects by a diverse group of people or a smaller set of users who doing this repeatedly across projects)?
+* How many of the ~6k projects that share files and are registered have contributors in common (i.e. are these projects by a diverse group of people or a smaller set of users who doing this repeatedly across projects)?
 * What disciplines are the different types of projects from? (Can't get this directly until discipline is added to profiles, but migth be able to back-guess for projects with contributors who have uploaded preprints)
 * What are the projects with no files in them doing?

@@ -153,7 +153,7 @@ upset(intersections %>% select(-project_created),
 \
 \
 
-```{r}
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 # create tables of percentages for types above by when project created
 percent_24 <- intersections %>%
   filter(project_created >= '2019-06-04' & project_created < '2019-08-04') %>%
@@ -223,7 +223,7 @@ as_tibble(cbind(project_type, percent_24, percent_68, percent_1012, percent_2224
              subtitle = 'From Oct 4th, 2019')
 ```
 
-```{r}
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 # median time btw creation and getting to type states above:
 project_timelines <- projects_by_product %>%
   filter(movecopy_actions == 0) %>%
@@ -244,7 +244,7 @@ project_timelines <- projects_by_product %>%
 project_timelines_24 <- project_timelines %>%
                           filter(project_created >= '2019-06-04' & project_created < '2019-08-04') %>%
                           group_by(has_file, registered, is_public, no_action) %>%
-                          summarize(`2-4 Months` = median(time_to_type)) %>%
+                          summarize(`2-4 Months` = round(median(time_to_type),3)) %>%
                           ungroup() %>%                        
                           select(`2-4 Months`)
 
@@ -265,7 +265,7 @@ project_timelines_1012 <- project_timelines %>%
 project_timelines_2224 <- project_timelines %>%
                             filter(project_created >= '2017-10-04' & project_created < '2017-12-04') %>%
                             group_by(has_file, registered, is_public, no_action) %>%
-                            summarize(`22-24 Months` = median(time_to_type)) %>%
+                            summarize(`22-24 Months` = round(median(time_to_type),3)) %>%
                             ungroup() %>%                          
                             select(`22-24 Months`)
 

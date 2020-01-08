@@ -161,7 +161,8 @@ percent_24 <- intersections %>%
   group_by(`Has a file`, `Been registered`, `>= 1 public node`, `Empty project`) %>% 
   tally() %>%
   ungroup() %>%
-  mutate(`2-4 Months` = round(100 *n/nrow(intersections_24), 2)) %>%
+  mutate(`2-4 Months` = round(100 *n/nrow(intersections %>%
+  filter(project_created >= '2019-06-04' & project_created < '2019-08-04')), 2)) %>%
   select(`2-4 Months`)
 
 percent_68 <- intersections %>%
@@ -170,7 +171,8 @@ percent_68 <- intersections %>%
   group_by(`Has a file`, `Been registered`, `>= 1 public node`, `Empty project`) %>% 
   tally() %>%
   ungroup() %>%
-  mutate(`6-8 Months` = round(100 *n/nrow(intersections_68), 2)) %>%
+  mutate(`6-8 Months` = round(100 *n/nrow(intersections %>%
+  filter(project_created >= '2019-02-04' & project_created < '2019-04-04')), 2)) %>%
   select(`6-8 Months`)
 
 percent_1012 <- intersections %>%
@@ -179,7 +181,8 @@ percent_1012 <- intersections %>%
   group_by(`Has a file`, `Been registered`, `>= 1 public node`, `Empty project`) %>% 
   tally() %>%
   ungroup() %>%
-  mutate(`10-12 Months` = round(100 *n/nrow(intersections_1012), 2)) %>%
+  mutate(`10-12 Months` = round(100 *n/nrow(intersections %>%
+  filter(project_created >= '2018-10-04' & project_created < '2018-12-04')), 2)) %>%
   select(`10-12 Months`)
 
 percent_2224 <- intersections %>% 
@@ -188,12 +191,17 @@ percent_2224 <- intersections %>%
   group_by(`Has a file`, `Been registered`, `>= 1 public node`, `Empty project`) %>% 
   tally() %>%
   ungroup() %>%
-  mutate(`22-24 Months` = round(100 *n/nrow(intersections_2224), 2)) %>%
+  mutate(`22-24 Months` = round(100 *n/nrow(intersections %>% 
+  filter(project_created >= '2017-10-04' & project_created < '2017-12-04')), 2)) %>%
   select(`22-24 Months`)
 
 project_type <- c("Empty", "Empty & Public", "Registered", "Registered & Public", "File", "File & Public", "File & Registered", "File & Public & Registered")
 
-totals <- c("N", nrow(intersections_24), nrow(intersections_68), nrow(intersections_1012), nrow(intersections_2224))
+totals <- c("N", 
+            nrow(intersections %>% filter(project_created >= '2019-06-04' & project_created < '2019-08-04')), 
+            nrow(intersections %>% filter(project_created >= '2019-02-04' & project_created < '2019-04-04')), 
+            nrow(intersections %>% filter(project_created >= '2018-10-04' & project_created < '2018-12-04')), 
+            nrow(intersections %>% filter(project_created >= '2017-10-04' & project_created < '2017-12-04')))
 
 as_tibble(cbind(project_type, percent_24, percent_68, percent_1012, percent_2224)) %>%
     mutate(project_type = as.character(project_type)) %>%

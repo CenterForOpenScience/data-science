@@ -454,12 +454,15 @@ common_logs %>%
   group_by(products, content_log_cats) %>%
   tally() %>%
   ungroup() %>%
+  filter(!is.na(products)) %>%
   pivot_wider(names_from = products, values_from = n) %>%
+  arrange(content_log_cats) %>%
   mutate(Empty_Private = round(100 * Empty_Private/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Empty_Private') %>% distinct(root_id, .keep_all = T)),2),
          Files_Private = round(100 * Files_Private/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Files_Private') %>% distinct(root_id, .keep_all = T)),2),
          Files_Public  = round(100 * Files_Public /nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Files_Public') %>% distinct(root_id, .keep_all = T)),2),
          Files_Reg_Public = round(100 * Files_Reg_Public/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Files_Reg_Public') %>% distinct(root_id, .keep_all = T)),2),
-         Reg_Private = round(100 * Reg_Private/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Reg_Private') %>% distinct(root_id, .keep_all = T)),2))
+         Reg_Private = round(100 * Reg_Private/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Reg_Private') %>% distinct(root_id, .keep_all = T)),2)) %>%
+  gt()
 ```
 
 

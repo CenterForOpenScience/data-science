@@ -342,6 +342,7 @@ ggplot(projects_and_logs %>% filter(is.na(is_fork)) %>% filter(!is.na(days_creat
   scale_y_log10('Numebr of Top Level Projects')
 ```
 \
+\
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 # log types by quartile
@@ -363,7 +364,7 @@ quartile_data <- non_forks %>%
                                   (log_type == 'metadata' & days_create_lastlog >= quartiles[2,3] & days_create_lastlog < quartiles[2,4]) ~ 'Third',
                               (log_type == 'content' & days_create_lastlog >= quartiles[1,4]) | 
                                   (log_type == 'metadata' & days_create_lastlog >= quartiles[2,4]) ~ 'Fourth'))
-
+# table for metadata logs
 quartile_data %>%
   group_by(log_type, quartile, action) %>%
   tally() %>%
@@ -374,6 +375,21 @@ quartile_data %>%
          Second = round(100 * Second/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Second')),2),
          Third = round(100 * Third/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Third')),2),
          Fourth = round(100 * Fourth/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Fourth')),2)) %>%
+  select(-log_type) %>%
+  arrange(desc(First)) %>%
+  gt()
+
+# table for content logs
+quartile_data %>%
+  group_by(log_type, quartile, action) %>%
+  tally() %>%
+  filter(log_type == 'content') %>%
+  ungroup() %>%
+  pivot_wider(names_from = quartile, values_from = n) %>%
+  mutate(First = round(100 * First/nrow(quartile_data %>% filter(log_type == 'content' & quartile  == 'First')),2),
+         Second = round(100 * Second/nrow(quartile_data %>% filter(log_type == 'content' & quartile  == 'Second')),2),
+         Third = round(100 * Third/nrow(quartile_data %>% filter(log_type == 'content' & quartile  == 'Third')),2),
+         Fourth = round(100 * Fourth/nrow(quartile_data %>% filter(log_type == 'content' & quartile  == 'Fourth')),2)) %>%
   select(-log_type) %>%
   arrange(desc(First)) %>%
   gt()

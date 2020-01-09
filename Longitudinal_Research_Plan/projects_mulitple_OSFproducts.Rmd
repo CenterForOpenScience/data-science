@@ -126,7 +126,7 @@ projects_and_logs <- projects_by_product %>%
                 mutate(days_create_lastlog = difftime(last_log, project_created, units = 'days'))
 
 projects_and_logs_detailed <- projects_by_product %>%
-                                select(root_id, project_created, has_file, registered, is_public, is_fork) %>%
+                                select(root_id, project_created, has_file, registered, is_public, is_fork, products) %>%
                                 left_join(project_logs_detailed, by = 'root_id') %>%
                                 left_join(projects_and_logs %>% select(root_id, days_create_lastlog, log_type), by = c('root_id', 'log_type'))
 ```
@@ -445,6 +445,21 @@ common_content_logs <- quartile_data %>%
   filter(First >= 5 | Second >= 5 | Third >= 5 | Fourth >= 5) %>%
   select(content_log_cats)
 
+
+common_logs <- quartile_data %>% 
+  filter(grepl(paste(common_metadata_logs[[1]],collapse="|"),action) | grepl(paste(common_content_logs[[1]],collapse="|"),content_log_cats))
+
+common_logs %>%
+  filter(log_type == 'content' & quartile == 'First') %>%
+  group_by(products, content_log_cats) %>%
+  tally() %>%
+  ungroup() %>%
+  pivot_wider(names_from = products, values_from = n) %>%
+  mutate(Empty_Private = round(100 * Empty_Private/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Empty_Private') %>% distinct(root_id, .keep_all = T)),2),
+         Files_Private = round(100 * Files_Private/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Files_Private') %>% distinct(root_id, .keep_all = T)),2),
+         Files_Public  = round(100 * Files_Public /nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Files_Public') %>% distinct(root_id, .keep_all = T)),2),
+         Files_Reg_Public = round(100 * Files_Reg_Public/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Files_Reg_Public') %>% distinct(root_id, .keep_all = T)),2),
+         Reg_Private = round(100 * Reg_Private/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Reg_Private') %>% distinct(root_id, .keep_all = T)),2))
 ```
 
 

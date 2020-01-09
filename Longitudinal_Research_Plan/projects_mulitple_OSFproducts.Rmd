@@ -397,6 +397,27 @@ quartile_data %>%
 ```
 
 \
+\
+
+```{r warning=FALSE, echo=FALSE, message=FALSE}
+# get list of common metadata logs
+common_metadata_logs <- quartile_data %>%
+  group_by(log_type, quartile, action) %>%
+  tally() %>%
+  filter(log_type == 'metadata') %>%
+  ungroup() %>%
+  pivot_wider(names_from = quartile, values_from = n) %>%
+  mutate(First = round(100 * First/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'First')),2),
+         Second = round(100 * Second/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Second')),2),
+         Third = round(100 * Third/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Third')),2),
+         Fourth = round(100 * Fourth/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Fourth')),2)) %>%
+  select(-log_type) %>%
+  filter(First >= 3 | Second >= 3 | Third >= 3 | Fourth >= 3) %>%
+  select(action)
+
+
+```
+
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 ##time in days from project creation to the last log on the project by product type

@@ -382,8 +382,16 @@ quartile_data %>%
          Fourth = round(100 * Fourth/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Fourth') %>% distinct(root_id, .keep_all = T)),2)) %>%
   select(-log_type) %>%
   arrange(desc(First)) %>%
-  gt()
+  gt() %>%
+  cols_move_to_end(
+    columns = vars(Fourth)
+  )
+```
 
+\
+\
+
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 # table for content logs
 quartile_data %>%
   group_by(log_type, quartile, content_log_cats) %>%
@@ -397,9 +405,12 @@ quartile_data %>%
          Fourth = round(100 * Fourth/nrow(quartile_data %>% filter(log_type == 'content' & quartile  == 'Fourth') %>% distinct(root_id, .keep_all = T)),2)) %>%
   select(-log_type) %>%
   arrange(desc(First)) %>%
-  gt()
-
+  gt() %>%
+  cols_move_to_end(
+    columns = vars(Fourth)
+  )
 ```
+
 
 \
 \

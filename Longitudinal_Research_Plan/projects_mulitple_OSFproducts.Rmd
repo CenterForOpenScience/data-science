@@ -352,7 +352,10 @@ non_forks <- projects_and_logs_detailed %>%
   filter(is.na(is_fork) & !is.na(days_create_lastlog))
 
 quartiles <- non_forks %>% 
-              group_by(log_type) %>% 
+              group_by(root_id, log_type) %>% 
+              slice(1L) %>%
+              ungroup() %>%
+              group_by(log_type) %>%
               summarize(q25 = quantile(days_create_lastlog, .25),
                         q50 = quantile(days_create_lastlog, .50),
                         q75 = quantile(days_create_lastlog, .75)) 
@@ -373,10 +376,10 @@ quartile_data %>%
   filter(log_type == 'metadata') %>%
   ungroup() %>%
   pivot_wider(names_from = quartile, values_from = n) %>%
-  mutate(First = round(100 * First/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'First')),2),
-         Second = round(100 * Second/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Second')),2),
-         Third = round(100 * Third/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Third')),2),
-         Fourth = round(100 * Fourth/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Fourth')),2)) %>%
+  mutate(First = round(100 * First/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'First') %>% distinct(root_id, .keep_all = T)),2),
+         Second = round(100 * Second/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Second') %>% distinct(root_id, .keep_all = T)),2),
+         Third = round(100 * Third/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Third') %>% distinct(root_id, .keep_all = T)),2),
+         Fourth = round(100 * Fourth/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Fourth') %>% distinct(root_id, .keep_all = T)),2)) %>%
   select(-log_type) %>%
   arrange(desc(First)) %>%
   gt()
@@ -388,10 +391,10 @@ quartile_data %>%
   filter(log_type == 'content') %>%
   ungroup() %>%
   pivot_wider(names_from = quartile, values_from = n) %>%
-  mutate(First = round(100 * First/nrow(quartile_data %>% filter(log_type == 'content' & quartile  == 'First')),2),
-         Second = round(100 * Second/nrow(quartile_data %>% filter(log_type == 'content' & quartile  == 'Second')),2),
-         Third = round(100 * Third/nrow(quartile_data %>% filter(log_type == 'content' & quartile  == 'Third')),2),
-         Fourth = round(100 * Fourth/nrow(quartile_data %>% filter(log_type == 'content' & quartile  == 'Fourth')),2)) %>%
+  mutate(First = round(100 * First/nrow(quartile_data %>% filter(log_type == 'content' & quartile  == 'First') %>% distinct(root_id, .keep_all = T)),2),
+         Second = round(100 * Second/nrow(quartile_data %>% filter(log_type == 'content' & quartile  == 'Second') %>% distinct(root_id, .keep_all = T)),2),
+         Third = round(100 * Third/nrow(quartile_data %>% filter(log_type == 'content' & quartile  == 'Third') %>% distinct(root_id, .keep_all = T)),2),
+         Fourth = round(100 * Fourth/nrow(quartile_data %>% filter(log_type == 'content' & quartile  == 'Fourth') %>% distinct(root_id, .keep_all = T)),2)) %>%
   select(-log_type) %>%
   arrange(desc(First)) %>%
   gt()

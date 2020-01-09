@@ -423,14 +423,27 @@ common_metadata_logs <- quartile_data %>%
   filter(log_type == 'metadata') %>%
   ungroup() %>%
   pivot_wider(names_from = quartile, values_from = n) %>%
-  mutate(First = round(100 * First/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'First')),2),
-         Second = round(100 * Second/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Second')),2),
-         Third = round(100 * Third/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Third')),2),
-         Fourth = round(100 * Fourth/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Fourth')),2)) %>%
+  mutate(First = round(100 * First/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'First') %>% distinct(root_id, .keep_all = T)),2),
+         Second = round(100 * Second/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Second') %>% distinct(root_id, .keep_all = T)),2),
+         Third = round(100 * Third/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Third') %>% distinct(root_id, .keep_all = T)),2),
+         Fourth = round(100 * Fourth/nrow(quartile_data %>% filter(log_type == 'metadata' & quartile  == 'Fourth') %>% distinct(root_id, .keep_all = T)),2)) %>%
   select(-log_type) %>%
-  filter(First >= 3 | Second >= 3 | Third >= 3 | Fourth >= 3) %>%
+  filter(First >= 5 | Second >= 5 | Third >= 5 | Fourth >= 5) %>%
   select(action)
 
+common_content_logs <- quartile_data %>%
+  group_by(log_type, quartile, content_log_cats) %>%
+  tally() %>%
+  filter(log_type == 'content') %>%
+  ungroup() %>%
+  pivot_wider(names_from = quartile, values_from = n) %>%
+  mutate(First = round(100 * First/nrow(quartile_data %>% filter(log_type == 'content' & quartile  == 'First') %>% distinct(root_id, .keep_all = T)),2),
+         Second = round(100 * Second/nrow(quartile_data %>% filter(log_type == 'content' & quartile  == 'Second') %>% distinct(root_id, .keep_all = T)),2),
+         Third = round(100 * Third/nrow(quartile_data %>% filter(log_type == 'content' & quartile  == 'Third') %>% distinct(root_id, .keep_all = T)),2),
+         Fourth = round(100 * Fourth/nrow(quartile_data %>% filter(log_type == 'content' & quartile  == 'Fourth') %>% distinct(root_id, .keep_all = T)),2)) %>%
+  select(-log_type) %>%
+  filter(First >= 5 | Second >= 5 | Third >= 5 | Fourth >= 5) %>%
+  select(content_log_cats)
 
 ```
 

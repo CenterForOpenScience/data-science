@@ -381,8 +381,9 @@ quartile_data <- non_forks %>%
                                   (log_type == 'metadata' & days_create_lastlog >= quartiles[2,3] & days_create_lastlog < quartiles[2,4]) ~ 'Third',
                               (log_type == 'content' & days_create_lastlog >= quartiles[1,4]) | 
                                   (log_type == 'metadata' & days_create_lastlog >= quartiles[2,4]) ~ 'Fourth'))
-
-kable(quartiles) %>%
+quartiles %>%
+  mutate_at(vars(-log_type), ~round(.,2)) %>%
+  kable() %>%
   kable_styling()
 ```
 

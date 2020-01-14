@@ -353,6 +353,11 @@ ggplot(projects_and_logs %>% filter(is.na(is_fork)) %>% filter(!is.na(days_creat
 
 #### What logs happen in projects from each quartile?
 
+
+**Caveats**
+
+* For content logs, I've grouped together some types of add-on logs for simplicity. 
+
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 # log types by quartile
 non_forks <- projects_and_logs_detailed %>% 
@@ -454,7 +459,7 @@ quartile_data %>%
 \
 \
 
-
+#### What does logtime look like by project type?
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 ##time in days from project creation to the last log on the project by product type
 ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog) & !is.na(products)),aes(days_create_lastlog, color = products)) + 
@@ -467,6 +472,7 @@ ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog)
 ```
 
 \
+\
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 ##time in days from project creation to the last log on the project by product type, faceted by year
@@ -478,6 +484,15 @@ ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog)
                      breaks = round(seq(1, 1840, by = 180),1)) +
   scale_y_log10('Number of Top Level Projects')
 ```
+
+\
+\
+#### What does logtime look like by project type and quartile?
+
+**Caveats**
+
+* I've excluded log types that show up less than 5% for all quartiles and all project types.
+
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 # get list of common metadata logs

@@ -234,6 +234,9 @@ as_tibble(cbind(project_type, percent_24, percent_68, percent_1012, percent_2224
              subtitle = 'From Oct 4th, 2019')
 ```
 
+\
+\
+
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 # median time btw creation and getting to type states above:
 project_timelines <- projects_by_product %>%
@@ -292,7 +295,8 @@ as_tibble(cbind(project_type, project_timelines_24, project_timelines_68, projec
                  subtitle = 'From Oct 4th, 2019')
 ```
 
-
+\
+\
 
 #### When were these different 'types' of project created?
 
@@ -346,6 +350,8 @@ ggplot(projects_and_logs %>% filter(is.na(is_fork)) %>% filter(!is.na(days_creat
 \
 \
 
+#### What logs happen in projects from each quartile?
+
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 # log types by quartile
 non_forks <- projects_and_logs_detailed %>% 
@@ -369,6 +375,7 @@ quartile_data <- non_forks %>%
                                   (log_type == 'metadata' & days_create_lastlog >= quartiles[2,3] & days_create_lastlog < quartiles[2,4]) ~ 'Third',
                               (log_type == 'content' & days_create_lastlog >= quartiles[1,4]) | 
                                   (log_type == 'metadata' & days_create_lastlog >= quartiles[2,4]) ~ 'Fourth'))
+
 # table for metadata logs
 quartile_data %>%
   group_by(log_type, quartile, action) %>%
@@ -385,6 +392,18 @@ quartile_data %>%
   gt() %>%
   cols_move_to_end(
     columns = vars(Fourth)
+  ) %>% 
+  cols_align(align = c('center'), columns = T) %>%
+  tab_header(title = 'Percentage of Projects with log types',
+                 subtitle = 'By quartiles from content graph') %>%
+   data_color(
+    columns = vars(First, Second, Third, Fourth),
+    colors = scales::col_numeric(
+      palette = paletteer::paletteer_d(
+        package = "dichromat",
+        palette = "BluetoDarkOrange.18"
+      ),
+      domain = c(0, 100))
   )
 ```
 
@@ -408,6 +427,18 @@ quartile_data %>%
   gt() %>%
   cols_move_to_end(
     columns = vars(Fourth)
+  ) %>%
+    cols_align(align = c('center'), columns = T) %>%
+  tab_header(title = 'Percentage of Projects with log types',
+                 subtitle = 'By quartiles from metadata graph') %>%
+  data_color(
+    columns = vars(First, Second, Third, Fourth),
+    colors = scales::col_numeric(
+      palette = paletteer::paletteer_d(
+        package = "dichromat",
+        palette = "BluetoDarkOrange.18"
+      ),
+      domain = c(0, 100))
   )
 ```
 
@@ -462,6 +493,22 @@ common_logs %>%
          Files_Public  = round(100 * Files_Public /nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Files_Public') %>% distinct(root_id, .keep_all = T)),2),
          Files_Reg_Public = round(100 * Files_Reg_Public/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Files_Reg_Public') %>% distinct(root_id, .keep_all = T)),2),
          Reg_Private = round(100 * Reg_Private/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Reg_Private') %>% distinct(root_id, .keep_all = T)),2)) %>%
+  gt()
+
+
+common_logs %>%
+  filter(log_type == 'content' & quartile == 'Second') %>%
+  group_by(products, content_log_cats) %>%
+  tally() %>%
+  ungroup() %>%
+  filter(!is.na(products)) %>%
+  pivot_wider(names_from = products, values_from = n) %>%
+  arrange(content_log_cats) %>%
+  mutate(Empty_Private = round(100 * Empty_Private/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'Second' & products == 'Empty_Private') %>% distinct(root_id, .keep_all = T)),2),
+         Files_Private = round(100 * Files_Private/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'Second' & products == 'Files_Private') %>% distinct(root_id, .keep_all = T)),2),
+         Files_Public  = round(100 * Files_Public /nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'Second' & products == 'Files_Public') %>% distinct(root_id, .keep_all = T)),2),
+         Files_Reg_Public = round(100 * Files_Reg_Public/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'Second' & products == 'Files_Reg_Public') %>% distinct(root_id, .keep_all = T)),2),
+         Reg_Private = round(100 * Reg_Private/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'Second' & products == 'Reg_Private') %>% distinct(root_id, .keep_all = T)),2)) %>%
   gt()
 ```
 

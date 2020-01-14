@@ -27,6 +27,7 @@ library(ggalluvial)
 library(plotly)
 library(UpSetR)
 library(gt)
+library(kableExtra)
 
 knitr::opts_chunk$set(fig.width=12, fig.height=8) 
 ```
@@ -376,6 +377,13 @@ quartile_data <- non_forks %>%
                               (log_type == 'content' & days_create_lastlog >= quartiles[1,4]) | 
                                   (log_type == 'metadata' & days_create_lastlog >= quartiles[2,4]) ~ 'Fourth'))
 
+kable(quartiles) %>%
+  kable_styling()
+```
+
+
+
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 # table for metadata logs
 quartile_data %>%
   group_by(log_type, quartile, action) %>%

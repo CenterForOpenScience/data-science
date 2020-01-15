@@ -573,7 +573,7 @@ table_input_metadata <- function(product_type) {
   group_by(products, quartile, action) %>%
   tally() %>%
   ungroup() %>%
-  left_join(total_ns_content, by = c('products', 'quartile')) %>%
+  left_join(total_ns_metadata, by = c('products', 'quartile')) %>%
   mutate(percentages = round(100*n.x/n.y, 2)) %>%
   filter(!is.na(products)) %>%
   select(-c(n.x, n.y)) %>%
@@ -622,7 +622,7 @@ rbind(table_input_metadata('Empty_Private'),
       table_input_metadata('Files_Public'),
       table_input_metadata('Reg_Private'),
       table_input_metadata('Files_Reg_Public')) %>%
-replace_na(0) %>%
+mutate_all(~replace(., is.na(.), 0)) %>%
 group_by(products) %>%
   gt() %>%
   cols_move_to_end(

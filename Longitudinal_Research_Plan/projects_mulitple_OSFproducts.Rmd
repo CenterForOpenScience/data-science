@@ -583,7 +583,8 @@ rbind(table_input_content('Empty_Private'),
       table_input_content('Files_Public'),
       table_input_content('Reg_Private'),
       table_input_content('Files_Reg_Public')) %>%
-group_by(products) %>%
+mutate_all(~replace(., is.na(.), 0)) %>%
+  group_by(products) %>%
   gt() %>%
   cols_move_to_end(
    columns = vars(Fourth)
@@ -615,6 +616,7 @@ rbind(table_input_metadata('Empty_Private'),
       table_input_metadata('Files_Public'),
       table_input_metadata('Reg_Private'),
       table_input_metadata('Files_Reg_Public')) %>%
+replace_na(0) %>%
 group_by(products) %>%
   gt() %>%
   cols_move_to_end(

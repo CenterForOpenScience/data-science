@@ -1,6 +1,10 @@
 ---
 title: "Workflows of Projects on the OSF"
-output: html_document
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 2
 ---
 
 This analysis is collecting initial data on the number of projects that take advantage of two of the major behaviors on the OSF that also represent different different points in the workflow: sharing files and registrations.
@@ -132,8 +136,11 @@ projects_and_logs_detailed <- projects_by_product %>%
                                 left_join(projects_and_logs %>% select(root_id, days_create_lastlog, log_type), by = c('root_id', 'log_type'))
 ```
 
-## How many multiple action projects are there?
+# Multi-action projects
 
+\
+
+## How many of each type?
 The graph below shows the number of non-deleted projects that have each action (horizontal bars on the bottom left) and the intersections of those actions (vertical bars). The lines and dots show what intersection of actions each vertical bar is tallying. There are `r nrow(projects_by_product)` total non-deleted projects. 
 
 \
@@ -153,8 +160,6 @@ intersections <- projects_by_product %>%
 
 upset(intersections %>% select(-project_created), 
       sets = c('Been registered', 'File in a public node', '>= 1 public node', 'Has a file', 'Empty project'), 
-      main.bar.color = "SteelBlue", 
-      sets.bar.color = "DarkCyan", 
       sets.x.label = "Top-Level Projects Count", 
       text.scale = c(rep(1.4, 5), 2), 
       keep.order = T,
@@ -163,6 +168,10 @@ upset(intersections %>% select(-project_created),
 ```
 
 \
+\
+
+## Perc of type within timewindows
+
 \
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
@@ -299,7 +308,9 @@ as_tibble(cbind(project_type, project_timelines_24, project_timelines_68, projec
 \
 \
 
-#### When were these different 'types' of project created?
+## When were these different 'types' of project created?
+
+\
 
 The graph below shows timecourse of when these projects were created. I only retained a subsect of the 12 potential intersections in the graph for clarity. 
 
@@ -317,7 +328,9 @@ ggplotly(projects_by_product %>%
  
 ```
 
-## How long are different projects 'active' for?:
+# Log activity:
+
+\
 
 The graphs be show the time, in days, between a projects creation and the last log on the project. Graphs are facited by the `type` of log:
 
@@ -327,6 +340,8 @@ The graphs be show the time, in days, between a projects creation and the last l
 *Caveats*
 
 * Forked projects are not included, because they include their origin projects logs so they can have negative times.
+
+## Time betwen 1st & last log:
 
 \
 
@@ -351,12 +366,14 @@ ggplot(projects_and_logs %>% filter(is.na(is_fork)) %>% filter(!is.na(days_creat
 \
 \
 
-#### What logs happen in projects from each quartile?
+## Logs by quartile
 
+\
 
 **Caveats**
 
-* For content logs, I've grouped together some types of add-on logs for simplicity. 
+* For content logs, I've grouped together some types of add-on logs for simplicity.
+* Quartiles created from graphs above by number of projects
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 # log types by quartile
@@ -460,7 +477,10 @@ quartile_data %>%
 \
 \
 
-#### What does logtime look like by project type?
+## Log time by project type
+
+\
+
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 ##time in days from project creation to the last log on the project by product type
 ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog) & !is.na(products)),aes(days_create_lastlog, color = products)) + 
@@ -488,11 +508,13 @@ ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog)
 
 \
 \
-#### What does logtime look like by project type and quartile?
+## Log type by project type & quartile
+
+\
 
 **Caveats**
 
-* I've excluded log types that show up less than 5% for all quartiles and all project types.
+* I've excluded log types that show up less than 5% for all quartiles and all project types for simplicity
 
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
@@ -583,13 +605,21 @@ table_input_metadata <- function(product_type) {
 ```
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
+
 # table for content logs
-rbind(table_input_content('Empty_Private'),
+bind_rows(table_input_content('Empty_Private'),
       table_input_content('Files_Private'),
       table_input_content('Files_Public'),
       table_input_content('Reg_Private'),
       table_input_content('Files_Reg_Public')) %>%
 mutate_all(~replace(., is.na(.), 0)) %>%
+bind_rows(total_ns_content %>% 
+        pivot_wider(names_from = quartile, values_from = n) %>% 
+        filter(!is.na(products)) %>% 
+        mutate(content_log_cats = 'Total N') %>% 
+        mutate_if(is.integer, as.double) %>%
+        select(products, content_log_cats, First, Fourth, Second, Third)) %>% 
+  select(products, content_log_cats, First, Fourth, Second, Third) %>%  
   group_by(products) %>%
   gt() %>%
   cols_move_to_end(
@@ -623,6 +653,13 @@ rbind(table_input_metadata('Empty_Private'),
       table_input_metadata('Reg_Private'),
       table_input_metadata('Files_Reg_Public')) %>%
 mutate_all(~replace(., is.na(.), 0)) %>%
+bind_rows(total_ns_metadata %>% 
+      pivot_wider(names_from = quartile, values_from = n) %>% 
+      filter(!is.na(products)) %>% 
+      mutate(action = 'Total N') %>% 
+      mutate_if(is.integer, as.double) %>%
+      select(products, action, First, Fourth, Second, Third)) %>% 
+select(products, action, First, Fourth, Second, Third) %>%  
 group_by(products) %>%
   gt() %>%
   cols_move_to_end(
@@ -648,17 +685,23 @@ group_by(products) %>%
 \
 \
 
-## What's the flow of events within projects?
+# Workflow of projects
+
+\
 
 Within a project, for the major events we care about (public sharing, having files, and registering), what is the order of these events? The graph below plots the number of projects that go through each action pathway, reading from left to right.
 
-#### Caveats
+**Caveats**
 
 * Forks and any projects that have file copied or file moved actions are removed for this analysis, because the file creation dates (in the case of moves/copies) and the log dates (in the case of forks) aren't accurate
 * Only projects created *after* 5/1/15 are included in these analyses, b/c the date stamps on files aren't accurate before that
 * A total of `r nrow(projects_by_product %>% filter(movecopy_actions == 0 & is.na(is_fork) & project_created > '2015-05-01') %>% filter(osf4m == 1))` osf4m projects are included in the flow diagram below. The vast majority of these fall into the `Created Project -> Made Public -> Upload File -> None` flow path. 
 
 \
+\
+
+## Order of events in projects
+
 \
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
@@ -741,8 +784,11 @@ p <- plot_ly(
  p
 ```
 
+\
 
 ### Workflow Investigations:
+
+\
 
 #### Can wikis or links explain the strange 'None' behavior?
 
@@ -750,7 +796,9 @@ p <- plot_ly(
 * Percentage of `Created -> Made Public -> None` projects with wiki updates or linked nodes: `r round(100*nrow(projects_by_product %>% filter(movecopy_actions == 0 & is.na(is_fork) & project_created > '2015-05-01' & is.na(first_file) & !is.na(first_public) & is.na(first_reg)& (wiki_updates > 0 | link_created > 0)))/nrow(projects_by_product %>% filter(movecopy_actions == 0 & is.na(is_fork) & project_created > '2015-05-01' & is.na(first_file) & !is.na(first_public) & is.na(first_reg))),2)`
 
 
-### Median Time between Steps
+## Median Time between Steps
+
+\
 
 The graph below is the same sankey diagram as above, but this time it's plotting median time (in days) rather than counts of projects. For this analysis, I removed projects that were OSF4M projects, since the actions are done automatically by the system, rather than by explicit user actions.
 
@@ -916,7 +964,7 @@ ggplot(project_timeline %>% filter(time_action3 > 0), aes(time_action3)) +
 ```
 
 
-## Potential Next Steps for more complex relationships:
+# Potential Next Steps for more complex relationships:
 
 * How many of the ~6k projects that share files and are registered have contributors in common (i.e. are these projects by a diverse group of people or a smaller set of users who doing this repeatedly across projects)?
 * What disciplines are the different types of projects from? (Can't get this directly until discipline is added to profiles, but migth be able to back-guess for projects with contributors who have uploaded preprints)

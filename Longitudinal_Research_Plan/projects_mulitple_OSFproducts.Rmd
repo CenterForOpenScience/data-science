@@ -550,6 +550,9 @@ total_ns_metadata <- common_logs %>%
 table_input_content <- function(product_type) {
   common_logs %>%
   filter(log_type == 'content') %>%
+  group_by(content_log_cats, root_id) %>%
+  slice(1L) %>%
+  ungroup() %>%
   group_by(products, quartile, content_log_cats) %>%
   tally() %>%
   ungroup() %>%
@@ -564,6 +567,9 @@ table_input_content <- function(product_type) {
 table_input_metadata <- function(product_type) {
   common_logs %>%
   filter(log_type == 'metadata') %>%
+  group_by(action, root_id) %>%
+  slice(1L) %>%
+  ungroup() %>%
   group_by(products, quartile, action) %>%
   tally() %>%
   ungroup() %>%

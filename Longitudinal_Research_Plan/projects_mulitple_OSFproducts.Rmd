@@ -576,8 +576,8 @@ table_input_metadata <- function(product_type) {
 }
 ```
 
-```{r}
-
+```{r warning=FALSE, echo=FALSE, message=FALSE}
+# table for content logs
 rbind(table_input_content('Empty_Private'),
       table_input_content('Files_Private'),
       table_input_content('Files_Public'),
@@ -603,10 +603,39 @@ group_by(products) %>%
       ),
       domain = c(0, 100))
   )
-  
-
 ```
 
+\
+\
+
+```{r warning=FALSE, echo=FALSE, message=FALSE}
+# table for metadata logs
+rbind(table_input_metadata('Empty_Private'),
+      table_input_metadata('Files_Private'),
+      table_input_metadata('Files_Public'),
+      table_input_metadata('Reg_Private'),
+      table_input_metadata('Files_Reg_Public')) %>%
+group_by(products) %>%
+  gt() %>%
+  cols_move_to_end(
+   columns = vars(Fourth)
+  ) %>%
+  tab_header(title = 'Percentages by Quartile',
+                 subtitle = 'For metadata logs') %>%
+  cols_align(align = c('center'), columns = T) %>%
+  data_color(
+    columns = vars(First,
+                  Second,
+                  Third,
+                  Fourth),
+    colors = scales::col_numeric(
+      palette = paletteer::paletteer_d(
+        package = "dichromat",
+        palette = "BluetoDarkOrange.18"
+      ),
+      domain = c(0, 100))
+  )
+```
 
 \
 \

@@ -529,37 +529,126 @@ common_content_logs <- quartile_data %>%
 common_logs <- quartile_data %>% 
   filter(grepl(paste(common_metadata_logs[[1]],collapse="|"),action) | grepl(paste(common_content_logs[[1]],collapse="|"),content_log_cats))
 
-common_logs %>%
-  filter(log_type == 'content' & quartile == 'First') %>%
-  group_by(products, content_log_cats) %>%
-  tally() %>%
-  ungroup() %>%
-  filter(!is.na(products)) %>%
-  pivot_wider(names_from = products, values_from = n) %>%
-  arrange(content_log_cats) %>%
-  mutate(Empty_Private = round(100 * Empty_Private/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Empty_Private') %>% distinct(root_id, .keep_all = T)),2),
-         Files_Private = round(100 * Files_Private/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Files_Private') %>% distinct(root_id, .keep_all = T)),2),
-         Files_Public  = round(100 * Files_Public /nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Files_Public') %>% distinct(root_id, .keep_all = T)),2),
-         Files_Reg_Public = round(100 * Files_Reg_Public/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Files_Reg_Public') %>% distinct(root_id, .keep_all = T)),2),
-         Reg_Private = round(100 * Reg_Private/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'First' & products == 'Reg_Private') %>% distinct(root_id, .keep_all = T)),2)) %>%
-  gt()
+# find projects by product by quartile in content logs
+total_ns_content <- common_logs %>% 
+                filter(log_type == 'content') %>% 
+                distinct(root_id, .keep_all = T) %>% 
+                group_by(products, quartile) %>% 
+                tally()
 
+# find projects by product by quartile in content logs
+total_ns_metadata <- common_logs %>% 
+                filter(log_type == 'metadata') %>% 
+                distinct(root_id, .keep_all = T) %>% 
+                group_by(products, quartile) %>% 
+                tally()
 
 common_logs %>%
-  filter(log_type == 'content' & quartile == 'Second') %>%
-  group_by(products, content_log_cats) %>%
+  filter(log_type == 'content' & products == 'Empty_Private') %>%
+  group_by(content_log_cats, root_id) %>%
+  slice(1L) %>%
+  ungroup() %>%
+  group_by(content_log_cats, quartile) %>%
   tally() %>%
   ungroup() %>%
-  filter(!is.na(products)) %>%
-  pivot_wider(names_from = products, values_from = n) %>%
+  left_join(total_ns_content %>% filter(products == 'Empty_Private'), by = 'quartile') %>%
+  mutate(percentages = round(100*n.x/n.y, 2)) %>%
+  select(content_log_cats, quartile, percentages) %>%
+  pivot_wider(names_from = quartile, values_from = percentages) %>%
+  mutate_all(~replace(., is.na(.), 0)) %>%
   arrange(content_log_cats) %>%
-  mutate(Empty_Private = round(100 * Empty_Private/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'Second' & products == 'Empty_Private') %>% distinct(root_id, .keep_all = T)),2),
-         Files_Private = round(100 * Files_Private/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'Second' & products == 'Files_Private') %>% distinct(root_id, .keep_all = T)),2),
-         Files_Public  = round(100 * Files_Public /nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'Second' & products == 'Files_Public') %>% distinct(root_id, .keep_all = T)),2),
-         Files_Reg_Public = round(100 * Files_Reg_Public/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'Second' & products == 'Files_Reg_Public') %>% distinct(root_id, .keep_all = T)),2),
-         Reg_Private = round(100 * Reg_Private/nrow(quartile_data %>% filter(log_type == 'content' & quartile == 'Second' & products == 'Reg_Private') %>% distinct(root_id, .keep_all = T)),2)) %>%
-  gt()
+  gt() %>%
+  cols_move_to_end(
+   columns = vars(Fourth)
+  ) %>%
+  tab_header(title = 'Empty Private Projects %s by Quartile',
+                 subtitle = 'For content logs') %>%
+  cols_align(align = c('center'), columns = T) %>%
+  data_color(
+    columns = vars(First,
+                  Second,
+                  Third,
+                  Fourth),
+    colors = scales::col_numeric(
+      palette = paletteer::paletteer_d(
+        package = "dichromat",
+        palette = "BluetoDarkOrange.18"
+      ),
+      domain = c(0, 100))
+  )
+
+common_logs %>%
+  filter(log_type == 'content' & products == 'Files_Private') %>%
+  group_by(content_log_cats, root_id) %>%
+  slice(1L) %>%
+  ungroup() %>%
+  group_by(content_log_cats, quartile) %>%
+  tally() %>%
+  ungroup() %>%
+  left_join(total_ns_content %>% filter(products == 'Files_Private'), by = 'quartile') %>%
+  mutate(percentages = round(100*n.x/n.y, 2)) %>%
+  select(content_log_cats, quartile, percentages) %>%
+  pivot_wider(names_from = quartile, values_from = percentages) %>%
+  mutate_all(~replace(., is.na(.), 0)) %>%
+  arrange(content_log_cats) %>%
+  gt() %>%
+  cols_move_to_end(
+   columns = vars(Fourth)
+  ) %>%
+  tab_header(title = 'Files Private Projects %s by Quartile',
+                 subtitle = 'For content logs') %>%
+  cols_align(align = c('center'), columns = T) %>%
+  data_color(
+    columns = vars(First,
+                  Second,
+                  Third,
+                  Fourth),
+    colors = scales::col_numeric(
+      palette = paletteer::paletteer_d(
+        package = "dichromat",
+        palette = "BluetoDarkOrange.18"
+      ),
+      domain = c(0, 100))
+  )
+
 ```
+
+```{r}
+
+
+table_input_content <- function(product_type) {
+  common_logs %>%
+  filter(log_type == 'content') %>%
+  group_by(products, quartile, content_log_cats) %>%
+  tally() %>%
+  ungroup() %>%
+  left_join(total_ns_content, by = c('products', 'quartile')) %>%
+  mutate(percentages = round(100*n.x/n.y, 2)) %>%
+  filter(!is.na(products)) %>%
+  select(-c(n.x, n.y)) %>%
+  filter(products == (!! product_type)) %>%
+  pivot_wider(names_from = c(quartile), values_from = percentages)
+}
+
+table_input_metadata <- function(product_type) {
+  common_logs %>%
+  filter(log_type == 'metadata') %>%
+  group_by(products, quartile, action) %>%
+  tally() %>%
+  ungroup() %>%
+  left_join(total_ns_content, by = c('products', 'quartile')) %>%
+  mutate(percentages = round(100*n.x/n.y, 2)) %>%
+  filter(!is.na(products)) %>%
+  select(-c(n.x, n.y)) %>%
+  filter(products == (!! product_type)) %>%
+  pivot_wider(names_from = c(quartile), values_from = percentages)
+}
+```
+
+
+\
+\
+
 ## What's the flow of events within projects?
 
 Within a project, for the major events we care about (public sharing, having files, and registering), what is the order of these events? The graph below plots the number of projects that go through each action pathway, reading from left to right.

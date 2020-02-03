@@ -151,7 +151,7 @@ read_sheet(download_gdrive_file) %>%
   rbind(download_data) %>%
   write_csv('download_data.csv')
 
-read_sheet(preprint_gdrive_file) %>%
+read_sheet(preprint_gdrive_file, col_types = 'ccci') %>%
   rbind(preprint_data) %>%
   write_csv('preprint_data.csv')
 

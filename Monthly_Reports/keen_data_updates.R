@@ -147,7 +147,7 @@ read_sheet(user_gdrive_file, col_types = 'cci') %>%
   rbind(user_data) %>%
   write_csv('user_data.csv')
 
-read_sheet(download_gdrive_file) %>%
+read_sheet(download_gdrive_file, col_types = 'cci') %>%
   rbind(download_data) %>%
   write_csv('download_data.csv')
 

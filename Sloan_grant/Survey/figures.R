@@ -6,13 +6,12 @@ library(here)
 library(skimr)
 library(gt)
 library(wesanderson)
-library(corrplot)
 
 ## reading in data
 osf_retrieve_file("https://osf.io/86upq/") %>% 
   osf_download(overwrite = T)
 
-survey_data <- read_csv(here::here('cleaned_data.csv'), col_types = cols(.default = col_number(),
+all_data <- read_csv(here::here('/Documents/data-science/Sloan_grant/Survey/cleaned_data.csv'), col_types = cols(.default = col_number(),
                                                                          StartDate = col_datetime(format = '%m/%d/%y %H:%M'),
                                                                          EndDate = col_datetime(format = '%m/%d/%y %H:%M'),
                                                                          ResponseId = col_character(),
@@ -37,6 +36,14 @@ survey_data <- read_csv(here::here('cleaned_data.csv'), col_types = cols(.defaul
                   mutate(acad_career_stage = fct_relevel(acad_career_stage, 'Full Prof', 'Assoc Prof', 'Assist Prof', 'Post doc', 'Grad Student'),
                          preprints_used = fct_relevel(preprints_used, 'No', 'Yes, once', 'Yes, a few times', 'Yes, many times', 'Not sure'),
                          preprints_submitted = fct_relevel(preprints_submitted, 'No', 'Yes, once', 'Yes, a few times', 'Yes, many times', 'Not sure'))
+
+
+
+all_data <- all_data %>%
+  mutate(missing_qs = rowSums(is.na(all_data)))
+
+survey_data <- all_data %>%
+  filter(missing_qs < 54)
 
 ## Overall icons importance
 preprint_cred <- survey_data %>%
@@ -263,15 +270,15 @@ survey_data %>%
     mutate(perc = round(100*n/sum(n),2)) %>%
     filter(!is.na(preprints_used), discipline_collapsed != 'Other', discipline_collapsed != '(Missing)', preprints_used != 'Not sure') %>%
     ggplot(aes(fill = preprints_used, x = discipline_collapsed, y = perc)) +
-    geom_col(position = 'dodge') +
-    geom_text(aes(label = perc), size = 4, position = position_dodge(width = 1), hjust= -.2) +
+    geom_col(stat = 'identity') +
+    geom_text(aes(x = discipline_collapsed ,label = perc), size = 4, position=position_stack(vjust=0.5)) +
     coord_flip() +
     guides(fill = guide_legend(reverse = TRUE)) +
-    scale_fill_manual(values = wes_palette("IsleofDogs2")) +
-    theme(legend.text=element_text(size=12), legend.title = element_blank(),
-          axis.text = element_text(size = 12), axis.title.y = element_blank(),
-          axis.title.x = element_text(size = 12))  +
-    scale_y_continuous(limits = c(0, 65), breaks = c(0, 10, 20, 30, 40, 50, 60)) +
+    scale_fill_brewer(direction = -1, palette = "BrBG") +
+    theme(legend.text=element_text(size=16), legend.title = element_blank(),
+          axis.text = element_text(size = 16), axis.title.y = element_blank(),
+          axis.title.x = element_text(size = 16))  +
+    scale_y_continuous(limits = c(0, 100), breaks = c(0, 20, 40, 60, 80, 100)) +
     labs(y = 'Percentage of Respondents')
     
     
@@ -283,15 +290,15 @@ survey_data %>%
   mutate(perc = round(100*n/sum(n),2)) %>%
   filter(!is.na(preprints_submitted), discipline_collapsed != 'Other', discipline_collapsed != '(Missing)', preprints_submitted != 'Not sure') %>%
   ggplot(aes(fill = preprints_submitted, x = discipline_collapsed, y = perc)) +
-  geom_col(position = 'dodge') +
-  geom_text(aes(label = perc), size = 4, position = position_dodge(width = 1), hjust= -.2) +
+  geom_col(stat = 'identity') +
+  geom_text(aes(x = discipline_collapsed ,label = perc), size = 4, position=position_stack(vjust=0.5)) +
   coord_flip() +
   guides(fill = guide_legend(reverse = TRUE)) +
-  scale_fill_manual(values = wes_palette("IsleofDogs2")) +
-  theme(legend.text=element_text(size=12), legend.title = element_blank(),
-        axis.text = element_text(size = 12), axis.title.y = element_blank(),
-        axis.title.x = element_text(size = 12))  +
-  scale_y_continuous(limits = c(0, 65), breaks = c(0, 10, 20, 30, 40, 50, 60)) +
+  scale_fill_brewer(direction = -1, palette = "BrBG") +
+  theme(legend.text=element_text(size=16), legend.title = element_blank(),
+        axis.text = element_text(size = 16), axis.title.y = element_blank(),
+        axis.title.x = element_text(size = 16))  +
+  scale_y_continuous(limits = c(0, 100), breaks = c(0, 20, 40, 60, 80, 100)) +
   labs(y = 'Percentage of Respondents')
 
 
@@ -320,9 +327,9 @@ survey_data %>%
   coord_flip() +
   guides(fill = guide_legend(reverse = TRUE)) +
   scale_fill_manual(values = wes_palette("IsleofDogs2")) +
-  theme(legend.text=element_text(size=12), legend.title = element_blank(),
-        axis.text = element_text(size = 12), axis.title.y = element_blank(),
-        axis.title.x = element_text(size = 12))  +
+  theme(legend.text=element_text(size=16), legend.title = element_blank(),
+        axis.text = element_text(size = 16), axis.title.y = element_blank(),
+        axis.title.x = element_text(size = 16))  +
   scale_y_continuous(limits = c(0, 65), breaks = c(0, 10, 20, 30, 40, 50, 60)) +
   labs(y = 'Percentage of Respondents')
 
@@ -338,9 +345,9 @@ survey_data %>%
   coord_flip() +
   guides(fill = guide_legend(reverse = TRUE)) +
   scale_fill_manual(values = wes_palette("IsleofDogs2")) +
-  theme(legend.text=element_text(size=12), legend.title = element_blank(),
-        axis.text = element_text(size = 12), axis.title.y = element_blank(),
-        axis.title.x = element_text(size = 12))  +
+  theme(legend.text=element_text(size=16), legend.title = element_blank(),
+        axis.text = element_text(size = 16), axis.title.y = element_blank(),
+        axis.title.x = element_text(size = 16))  +
   scale_y_continuous(limits = c(0, 65), breaks = c(0, 10, 20, 30, 40, 50, 60)) +
   labs(y = 'Percentage of Respondents')
 

@@ -322,7 +322,7 @@ survey_data %>%
   scale_fill_brewer(direction = -1, palette = "BrBG") +
   theme(legend.text=element_text(size=16), legend.title = element_blank(),
         axis.text = element_text(size = 16), axis.title = element_text(size = 16))  +
-  labs(y = 'Percentage of Respondents', x = 'Discipline')
+  labs(y = 'Percentage of Respondents', x = 'Career Stage')
 
 
 survey_data %>%
@@ -337,7 +337,7 @@ survey_data %>%
   scale_fill_brewer(direction = -1, palette = "BrBG") +
   theme(legend.text=element_text(size=16), legend.title = element_blank(),
         axis.text = element_text(size = 16), axis.title = element_text(size = 16))  +
-  labs(y = 'Percentage of Respondents', x = 'Discipline')
+  labs(y = 'Percentage of Respondents', x = 'Career Stage')
 
 
 # favor-use by career stage

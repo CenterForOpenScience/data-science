@@ -276,7 +276,6 @@ survey_data %>%
     ggplot(aes(fill = preprints_used, x = discipline_collapsed, y = perc)) +
     geom_col(stat = 'identity', position = 'fill') +
     geom_text(aes(x = discipline_collapsed ,label = perc), size = 6, position=position_fill(vjust=0.5)) +
-    guides(fill = guide_legend(reverse = TRUE)) +
     scale_fill_brewer(direction = -1, palette = "BrBG") +
     labs(y = 'Percentage of Respondents', x = 'Discipline') +
     theme(legend.text=element_text(size=16), legend.title = element_blank(),
@@ -291,7 +290,6 @@ survey_data %>%
   ggplot(aes(fill = preprints_submitted, x = discipline_collapsed, y = perc)) +
   geom_col(stat = 'identity', position = 'fill') +
   geom_text(aes(x = discipline_collapsed ,label = perc), size = 6, position=position_fill(vjust=0.5)) +
-  guides(fill = guide_legend(reverse = TRUE)) +
   scale_fill_brewer(direction = -1, palette = "BrBG") +
   labs(y = 'Percentage of Respondents', x = 'Discipline') +
   theme(legend.text=element_text(size=16), legend.title = element_blank(),
@@ -320,7 +318,6 @@ survey_data %>%
   filter(!is.na(preprints_used), acad_career_stage != '(Missing)', preprints_used != 'Not sure') %>%
   ggplot(aes(fill = preprints_used, x = reorder(acad_career_stage, desc(acad_career_stage)), y = perc)) +
   geom_col(stat = 'identity', position = 'fill') +
-  guides(fill = guide_legend(reverse = TRUE)) +
   geom_text(aes(x = acad_career_stage ,label = perc), size = 6, position=position_fill(vjust=0.5)) +
   scale_fill_brewer(direction = -1, palette = "BrBG") +
   theme(legend.text=element_text(size=16), legend.title = element_blank(),
@@ -336,7 +333,6 @@ survey_data %>%
   filter(!is.na(preprints_submitted), acad_career_stage != '(Missing)', preprints_submitted != 'Not sure') %>%
   ggplot(aes(fill = preprints_submitted, x = reorder(acad_career_stage, desc(acad_career_stage)), y = perc)) +
   geom_col(stat = 'identity', position = 'fill') +
-  guides(fill = guide_legend(reverse = TRUE)) +
   geom_text(aes(x = acad_career_stage ,label = perc), size = 6, position=position_fill(vjust=0.5)) +
   scale_fill_brewer(direction = -1, palette = "BrBG") +
   theme(legend.text=element_text(size=16), legend.title = element_blank(),

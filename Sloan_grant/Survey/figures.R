@@ -318,16 +318,14 @@ survey_data %>%
   tally() %>%
   mutate(perc = round(100*n/sum(n),2)) %>%
   filter(!is.na(preprints_used), acad_career_stage != '(Missing)', preprints_used != 'Not sure') %>%
-  ggplot(aes(fill = preprints_used, x = acad_career_stage, y = perc)) +
-  geom_col(position = 'dodge') +
-  coord_flip() +
+  ggplot(aes(fill = preprints_used, x = reorder(acad_career_stage, desc(acad_career_stage)), y = perc)) +
+  geom_col(stat = 'identity', position = 'fill') +
   guides(fill = guide_legend(reverse = TRUE)) +
-  scale_fill_manual(values = wes_palette("IsleofDogs2")) +
+  geom_text(aes(x = acad_career_stage ,label = perc), size = 6, position=position_fill(vjust=0.5)) +
+  scale_fill_brewer(direction = -1, palette = "BrBG") +
   theme(legend.text=element_text(size=16), legend.title = element_blank(),
-        axis.text = element_text(size = 16), axis.title.y = element_blank(),
-        axis.title.x = element_text(size = 16))  +
-  scale_y_continuous(limits = c(0, 65), breaks = c(0, 10, 20, 30, 40, 50, 60)) +
-  labs(y = 'Percentage of Respondents')
+        axis.text = element_text(size = 16), axis.title = element_text(size = 16))  +
+  labs(y = 'Percentage of Respondents', x = 'Discipline')
 
 
 survey_data %>%
@@ -336,16 +334,14 @@ survey_data %>%
   tally() %>%
   mutate(perc = round(100*n/sum(n),2)) %>%
   filter(!is.na(preprints_submitted), acad_career_stage != '(Missing)', preprints_submitted != 'Not sure') %>%
-  ggplot(aes(fill = preprints_submitted, x = acad_career_stage, y = perc)) +
-  geom_col(position = 'dodge') +
-  coord_flip() +
+  ggplot(aes(fill = preprints_submitted, x = reorder(acad_career_stage, desc(acad_career_stage)), y = perc)) +
+  geom_col(stat = 'identity', position = 'fill') +
   guides(fill = guide_legend(reverse = TRUE)) +
-  scale_fill_manual(values = wes_palette("IsleofDogs2")) +
+  geom_text(aes(x = acad_career_stage ,label = perc), size = 6, position=position_fill(vjust=0.5)) +
+  scale_fill_brewer(direction = -1, palette = "BrBG") +
   theme(legend.text=element_text(size=16), legend.title = element_blank(),
-        axis.text = element_text(size = 16), axis.title.y = element_blank(),
-        axis.title.x = element_text(size = 16))  +
-  scale_y_continuous(limits = c(0, 65), breaks = c(0, 10, 20, 30, 40, 50, 60)) +
-  labs(y = 'Percentage of Respondents')
+        axis.text = element_text(size = 16), axis.title = element_text(size = 16))  +
+  labs(y = 'Percentage of Respondents', x = 'Discipline')
 
 
 # favor-use by career stage

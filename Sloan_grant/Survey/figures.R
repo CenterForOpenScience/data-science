@@ -270,8 +270,8 @@ survey_data %>%
     mutate(perc = round(100*n/sum(n),2)) %>%
     filter(!is.na(preprints_used), discipline_collapsed != 'Other', discipline_collapsed != '(Missing)', preprints_used != 'Not sure') %>%
     ggplot(aes(fill = preprints_used, x = discipline_collapsed, y = perc)) +
-    geom_col(stat = 'identity') +
-    geom_text(aes(x = discipline_collapsed ,label = perc), size = 4, position=position_stack(vjust=0.5)) +
+    geom_col(stat = 'identity', position = 'fill') +
+    geom_text(aes(x = discipline_collapsed ,label = perc), size = 4, position=position_fill(vjust=0.5)) +
     coord_flip() +
     guides(fill = guide_legend(reverse = TRUE)) +
     scale_fill_brewer(direction = -1, palette = "BrBG") +
@@ -290,8 +290,8 @@ survey_data %>%
   mutate(perc = round(100*n/sum(n),2)) %>%
   filter(!is.na(preprints_submitted), discipline_collapsed != 'Other', discipline_collapsed != '(Missing)', preprints_submitted != 'Not sure') %>%
   ggplot(aes(fill = preprints_submitted, x = discipline_collapsed, y = perc)) +
-  geom_col(stat = 'identity') +
-  geom_text(aes(x = discipline_collapsed ,label = perc), size = 4, position=position_stack(vjust=0.5)) +
+  geom_col(stat = 'identity', position = 'fill') +
+  geom_text(aes(x = discipline_collapsed ,label = perc), size = 4, position=position_fill(vjust=0.5)) +
   coord_flip() +
   guides(fill = guide_legend(reverse = TRUE)) +
   scale_fill_brewer(direction = -1, palette = "BrBG") +

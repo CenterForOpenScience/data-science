@@ -268,28 +268,30 @@ levels(survey_data$discipline_collapsed) <- gsub(" ", "\n", levels(survey_data$d
 
 # use/submissions of preprints by discipline
 survey_data %>%
+    filter(!is.na(preprints_used), discipline_collapsed != 'Other', discipline_collapsed != '(Missing)', preprints_used != 'Not sure') %>%  
     mutate(preprints_used = fct_rev(preprints_used)) %>%
     group_by(discipline_collapsed, preprints_used) %>%
     tally() %>%
-    mutate(perc = round(100*n/sum(n),2)) %>%
-    filter(!is.na(preprints_used), discipline_collapsed != 'Other', discipline_collapsed != '(Missing)', preprints_used != 'Not sure') %>%
+    mutate(perc = round(100*n/sum(n),2),
+           percentage = paste0(perc, '%')) %>%
     ggplot(aes(fill = preprints_used, x = discipline_collapsed, y = perc)) +
     geom_col(stat = 'identity', position = 'fill') +
-    geom_text(aes(x = discipline_collapsed ,label = perc), size = 6, position=position_fill(vjust=0.5)) +
+    geom_text(aes(x = discipline_collapsed ,label = percentage), size = 6, position=position_fill(vjust=0.5)) +
     scale_fill_brewer(direction = -1, palette = "BrBG") +
     labs(y = 'Percentage of Respondents', x = 'Discipline') +
     theme(legend.text=element_text(size=16), legend.title = element_blank(),
           axis.text = element_text(size = 16), axis.title = element_text(size = 16))
     
 survey_data %>%
+  filter(!is.na(preprints_submitted), discipline_collapsed != 'Other', discipline_collapsed != '(Missing)', preprints_submitted != 'Not sure') %>%
   mutate(preprints_submitted = fct_rev(preprints_submitted)) %>%
   group_by(discipline_collapsed, preprints_submitted) %>%
   tally() %>%
-  mutate(perc = round(100*n/sum(n),2)) %>%
-  filter(!is.na(preprints_submitted), discipline_collapsed != 'Other', discipline_collapsed != '(Missing)', preprints_submitted != 'Not sure') %>%
+  mutate(perc = round(100*n/sum(n),2),
+         percentage = paste0(perc, '%')) %>%
   ggplot(aes(fill = preprints_submitted, x = discipline_collapsed, y = perc)) +
   geom_col(stat = 'identity', position = 'fill') +
-  geom_text(aes(x = discipline_collapsed ,label = perc), size = 6, position=position_fill(vjust=0.5)) +
+  geom_text(aes(x = discipline_collapsed ,label = percentage), size = 6, position=position_fill(vjust=0.5)) +
   scale_fill_brewer(direction = -1, palette = "BrBG") +
   labs(y = 'Percentage of Respondents', x = 'Discipline') +
   theme(legend.text=element_text(size=16), legend.title = element_blank(),
@@ -311,14 +313,15 @@ plot(likert(as.data.frame(discipline_favor)), text.size = 4) +
 
 # use/submissions of preprints by academic career stage
 survey_data %>%
+  filter(!is.na(preprints_used), acad_career_stage != '(Missing)', preprints_used != 'Not sure') %>%
   mutate(preprints_used = fct_rev(preprints_used)) %>%
   group_by(acad_career_stage, preprints_used) %>%
   tally() %>%
-  mutate(perc = round(100*n/sum(n),2)) %>%
-  filter(!is.na(preprints_used), acad_career_stage != '(Missing)', preprints_used != 'Not sure') %>%
+  mutate(perc = round(100*n/sum(n),2),
+         percentage = paste0(perc, '%')) %>%
   ggplot(aes(fill = preprints_used, x = reorder(acad_career_stage, desc(acad_career_stage)), y = perc)) +
   geom_col(stat = 'identity', position = 'fill') +
-  geom_text(aes(x = acad_career_stage ,label = perc), size = 6, position=position_fill(vjust=0.5)) +
+  geom_text(aes(x = acad_career_stage ,label = percentage), size = 6, position=position_fill(vjust=0.5)) +
   scale_fill_brewer(direction = -1, palette = "BrBG") +
   theme(legend.text=element_text(size=16), legend.title = element_blank(),
         axis.text = element_text(size = 16), axis.title = element_text(size = 16))  +
@@ -326,14 +329,15 @@ survey_data %>%
 
 
 survey_data %>%
+  filter(!is.na(preprints_submitted), acad_career_stage != '(Missing)', preprints_submitted != 'Not sure') %>%
   mutate(preprints_submitted = fct_rev(preprints_submitted)) %>%
   group_by(acad_career_stage, preprints_submitted) %>%
   tally() %>%
-  mutate(perc = round(100*n/sum(n),2)) %>%
-  filter(!is.na(preprints_submitted), acad_career_stage != '(Missing)', preprints_submitted != 'Not sure') %>%
+  mutate(perc = round(100*n/sum(n),2),
+         percentage = paste0(perc, '%')) %>%
   ggplot(aes(fill = preprints_submitted, x = reorder(acad_career_stage, desc(acad_career_stage)), y = perc)) +
   geom_col(stat = 'identity', position = 'fill') +
-  geom_text(aes(x = acad_career_stage ,label = perc), size = 6, position=position_fill(vjust=0.5)) +
+  geom_text(aes(x = acad_career_stage ,label = percentage), size = 6, position=position_fill(vjust=0.5)) +
   scale_fill_brewer(direction = -1, palette = "BrBG") +
   theme(legend.text=element_text(size=16), legend.title = element_blank(),
         axis.text = element_text(size = 16), axis.title = element_text(size = 16))  +

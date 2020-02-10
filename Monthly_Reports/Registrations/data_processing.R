@@ -46,8 +46,9 @@ last_month_data <- read_csv(file_name) %>%
                                                    TRUE ~ name)) %>%
                       group_by(year, month, form_type) %>%
                       summarize(reg_events = sum(reg_events), retract_events = sum(retract_events), net_events = sum(net_events)) %>%
-                      mutate(date = date(paste0(year, '-', month, '-01')))
+                      mutate(date = date(paste0(year, '-', month, '-01'))) %>%
+                      rename(name = form_type)
 
-monthly_data <- rbind(monthly_data, last_month_data)
+monthly_data <- bind_rows(monthly_data, last_month_data)
 write_csv(monthly_data, here::here('Monthly_Reports/Registrations/', 'form_type_monthly.csv'))
 

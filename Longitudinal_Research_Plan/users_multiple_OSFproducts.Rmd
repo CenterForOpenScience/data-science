@@ -30,7 +30,7 @@ library(ggalluvial)
 
 knitr::opts_chunk$set(fig.width=12, fig.height=8) 
 
-user_data <- read_csv('/Users/courtneysoderberg/Downloads/User_activity.csv', col_types = cols(merged_by_id = col_character()))
+user_data <- read_csv('/Users/courtneysoderberg/Downloads/user_activity2.csv', col_types = cols(merged_by_id = col_character()))
 ```
 
 ```{r echo = FALSE, warning=FALSE}
@@ -170,12 +170,10 @@ mutate(created_prc = round(100*created/nrow(user_categorization %>% filter(is_ac
  on_prc = round(100*on/nrow(user_categorization %>% filter(is_active == TRUE)),2),
  user_prc = round(100*user/nrow(user_categorization %>% filter(is_active == TRUE)),2)) %>%
 gt() %>%
-tab_header(
-title = 'Users by Product Type'
-) %>%
-cols_merge(col_1 = vars(created), col_2 = vars(created_prc), pattern = '{1} ({2}%)') %>%
-cols_merge(col_1 = vars(on), col_2 = vars(on_prc), pattern = '{1} ({2}%)') %>%
-cols_merge(col_1 = vars(user), col_2 = vars(user_prc), pattern = '{1} ({2}%)') %>%
+tab_header(title = 'Users by Product Type') %>%
+cols_merge(columns = vars(created, created_prc), pattern = "{1} ({2}%)") %>%
+cols_merge(columns = vars(on, on_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(columns =  vars(user, user_prc), pattern = '{1} ({2}%)') %>%
 cols_label(product = 'Product Type',
      created = 'Creator',
      on = 'Contributor',
@@ -201,7 +199,7 @@ tab_row_group(
   rows = 3:8
 ) %>%
 tab_row_group(
-  group = 'Multiple Product Usage',
+  group = 'Exclusive Multiple Product Usage',
   rows = 9:12)
                         
 ```
@@ -235,7 +233,7 @@ The graphs below shows when the different types of users were confirmed. For the
 
 ## To what extent do users who engage in certain actions tend to do other actions?
 
-The tables show conditional probabilities for different product types. For each table, the conditional probability is calculated as: given that the osf user has been identified as a creator/user of the product for that row, what is the probability that they were also a creator/user/contributor for each product column. To put it another way, what is the probability that the user has been involved with both products?
+The tables show conditional probabilities for different product types. For each table, the conditional probability is calculated as: given that the osf user has been identified as a creator/user of the product for that row, what is the probability that they were also a creator/user/contributor for each product column.
 
 \
 \
@@ -538,10 +536,10 @@ gt() %>%
 tab_header(
 title = 'Users by Product Type'
 ) %>%
-cols_merge(col_1 = vars(meetings), col_2 = vars(meetings_prc), pattern = '{1} ({2}%)') %>%
-cols_merge(col_1 = vars(OSF), col_2 = vars(osf_prc), pattern = '{1} ({2}%)') %>%
-cols_merge(col_1 = vars(registries), col_2 = vars(registries_prc), pattern = '{1} ({2}%)') %>%
-cols_merge(col_1 = vars(preprints), col_2 = vars(preprints_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(columns = vars(meetings, meetings_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(columns = vars(OSF, osf_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(columns = vars(registries, registries_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(columns = vars(preprints, preprints_prc), pattern = '{1} ({2}%)') %>%
 cols_label(product = 'Product Type',
      meetings = 'osf4m',
      OSF = 'OSF',
@@ -568,7 +566,7 @@ tab_row_group(
   rows = 3:8
 ) %>%
 tab_row_group(
-  group = 'Multiple Product Usage',
+  group = 'Exclusive Multiple Product Usage',
   rows = 9:12)
 
 ```
@@ -576,7 +574,15 @@ tab_row_group(
 
 ## What products do 'depth users' create?
 
-We don't have a good definitive definition of 'depth user', but for this analysis, a depth user is defined as anyone who is the creator of at least 10 top-level items (which could be OSF project or registrations. For this analysis, osf4m projects and preprint supplemental nodes created during the preprint workflow were *not* counted to define depth users). The table below shows creation rates by product type, with depth users showing high levels of engagement with all product types.
+We don't have a good definitive definition of 'depth user', but for this analysis, a depth user is defined as anyone who is the creator of at least 10 top-level items (which could be OSF project or registrations. For this analysis, osf4m projects and preprint supplemental nodes created during the preprint workflow were *not* counted to define depth users). 
+
+By this definition, of all the active users are the site there are:
+
+```{r echo = FALSE, warning=FALSE}
+user_categorization %>% distinct(id, .keep_all = TRUE) %>% filter(is_active == TRUE) %>% group_by(depth_user) %>% tally()
+```
+
+The table below shows creation rates by product type, with depth users showing high levels of engagement with all product types.
 
 ```{r echo = FALSE, warning= FALSE}
 user_categorization %>%
@@ -619,8 +625,8 @@ gt() %>%
 tab_header(
 title = 'Usage - Product Type by Depth Usage'
 ) %>%
-cols_merge(col_1 = vars(depth), col_2 = vars(depth_prc), pattern = '{1} ({2}%)') %>%
-cols_merge(col_1 = vars(nondepth), col_2 = vars(nondepth_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(columns =vars(depth, depth_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(columns = vars(nondepth, nondepth_prc), pattern = '{1} ({2}%)') %>%
 cols_label(product = 'Product Type',
      depth = 'Depth Users',
      nondepth = 'Non-depth Users') %>%
@@ -645,9 +651,23 @@ tab_row_group(
   rows = 3:8
 ) %>%
 tab_row_group(
-  group = 'Multiple Product Usage',
+  group = 'Exclusive Multiple Product Usage',
   rows = 9:12)
 ```
+
+Are depth users created during specific times? Similar to 'all three products' users, depth users tend to have been created a couple of years ago, so it takes a while to work up to 'depth usage' based on the current definition. 
+
+```{r echo=FALSE, warning=FALSE}
+ graph <- ggplot(user_categorization %>% distinct(id, .keep_all = TRUE) %>%  filter(is_active == 'TRUE' & depth_user == 'depth'), aes(by_day_confirmed)) + 
+  geom_freqpoly(binwidth = 30) +
+  xlab('When user was confirmed') +
+  ylab('Number of users') +
+  labs(title = 'When were depth users confirmed?') +
+  scale_x_date(breaks = date_breaks("3 month"), labels = date_format("%b %y"))
+ 
+ graph + theme(axis.text.x  = element_text(angle=45,hjust = 1,vjust = 1))
+```
+
 
 ## What are the 'none' users doing?
 
@@ -691,3 +711,5 @@ Other possibilities for what they might be doing include only creating/contritbu
 ## Potential Next Steps for more complex relationships:
 
 * Are their discipline differences? (infered from OSF4M and preprint services until we have better disciplinary information)
+* Eventually we'll beging to get user_tags on invited users, so we'll be able to include them in the user origin descriptives. 
+* Once file timelines are fixed, sharing behavior can be added to the action flow diagrams.

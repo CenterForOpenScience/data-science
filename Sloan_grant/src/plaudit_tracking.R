@@ -1,4 +1,7 @@
 library(httr)
+library(jsonlite)
+library(dplyr)
+library(purrr)
 
 # set up doi providers and prefixes
 doi_prefixes <- c('10.31219', '10.31235', '10.31234', '10.31222', '10.31220', '10.31228', '10.31224', '10.31231', '10.31229', 

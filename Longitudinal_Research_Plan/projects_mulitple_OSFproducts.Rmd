@@ -32,6 +32,7 @@ library(plotly)
 library(UpSetR)
 library(gt)
 library(kableExtra)
+library(plotly)
 
 knitr::opts_chunk$set(fig.width=12, fig.height=8) 
 ```
@@ -426,7 +427,7 @@ quartile_data %>%
   ) %>% 
   cols_align(align = c('center'), columns = T) %>%
   tab_header(title = 'Percentage of Projects with log types',
-                 subtitle = 'By quartiles from content graph') %>%
+                 subtitle = 'By quartiles from metadata graph') %>%
    data_color(
     columns = vars(First, Second, Third, Fourth),
     colors = scales::col_numeric(
@@ -461,7 +462,7 @@ quartile_data %>%
   ) %>%
     cols_align(align = c('center'), columns = T) %>%
   tab_header(title = 'Percentage of Projects with log types',
-                 subtitle = 'By quartiles from metadata graph') %>%
+                 subtitle = 'By quartiles from content graph') %>%
   data_color(
     columns = vars(First, Second, Third, Fourth),
     colors = scales::col_numeric(
@@ -497,17 +498,20 @@ ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog)
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 ##time in days from project creation to the last log on the project by product type, faceted by year
-ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog) & !is.na(products) & (year != '2012' & year != '2013' & year != '2014')),aes(days_create_lastlog, color = products)) + 
+log_graph <- ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog) & !is.na(products)),aes(days_create_lastlog, color = as.factor(year))) + 
   geom_freqpoly(binwidth = 25) +
-  facet_grid(year ~ log_type) +
+  facet_grid(products ~ log_type) +
   ggtitle('Log times by project types across year of project creation') +
   scale_x_continuous('Days Between Last Log and Date Created',
                      breaks = round(seq(1, 1840, by = 180),1)) +
   scale_y_log10('Number of Top Level Projects')
+
+ggplotly(log_graph)
 ```
 
 \
 \
+
 ## Log type by project type & quartile
 
 \

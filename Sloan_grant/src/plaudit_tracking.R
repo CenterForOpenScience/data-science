@@ -2,6 +2,8 @@ library(httr)
 library(jsonlite)
 library(dplyr)
 library(purrr)
+library(ggplot2)
+library(lubridate)
 
 # set up doi providers and prefixes
 doi_prefixes <- c('10.31219', '10.31235', '10.31234', '10.31222', '10.31220', '10.31228', '10.31224', '10.31231', '10.31229', 
@@ -27,12 +29,34 @@ plaudits <- map_dfr(urls, ~ cleaning(.)) %>%
 # total plaudits
 nrow(plaudits)
 
-# number preprints with plaudits
-nrow(plaudits %>%
-  group_by(obj_id) %>%
-  tally())
+### plaudits per preprint descriptives
+plaudits_per_pp <- plaudits %>%
+                      group_by(obj_id) %>%
+                      tally()
+# number pps with plaudits
+nrow(plaudits_per_pp)
 
-# number of plauditors
-nrow(plaudits %>%
-  group_by(subj_id) %>%
-  tally())
+# basic distribution
+ggplot(plaudits_per_pp, aes(n)) +
+  geom_histogram(binwidth = 1)
+
+### plaudits per user descriptives
+plaudits_per_user <- plaudits %>%
+                        group_by(subj_id) %>%
+                        tally()
+
+# number users with plaudits
+nrow(plaudits_per_user)
+
+# basic distribution
+ggplot(plaudits_per_user , aes(n)) +
+  geom_histogram(binwidth = 1)
+
+
+### plaudits by month
+plaudits %>% 
+  mutate(timestamp = ymd_hms(timestamp)) %>%
+  mutate(month = month(timestamp)) %>%
+  group_by(month) %>%
+  tally() %>%
+  arrange(n)

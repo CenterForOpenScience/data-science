@@ -571,6 +571,95 @@ tab_row_group(
 
 ```
 
+\
+\
+
+```{r warning=FALSE, echo=FALSE, message=FALSE}
+user_categorization %>%
+  filter(is_active == TRUE & is_invited == FALSE) %>%
+  filter(user_origin == 'preprints' & preprint_user == 1 & user_tag != 'preprints_metrics') %>%
+  group_by(user_tag) %>%
+  summarize(n = n(),
+            none = sum(preprint_user == 0 & osf4m_user == 0 & osf_node_user == 0 & registrations_user == 0 & suppnode_user == 0),
+            privatestorage_only = sum(preprint_user == 0 & osf4m_user == 0 & private_storage_user ==1 & public_sharing_user == 0 & registrations_user == 0 & suppnode_user == 0),
+            osf4m = sum(osf4m_user == 1),
+            preprint= sum(preprint_user == 1),
+            suppnode = sum(suppnode_user == 1),
+            nodes = sum(osf_node_user),
+            publicstorage = sum(public_sharing_user == 1),
+            registrations = sum(registrations_user == 1),
+            regpublicstorage = sum(registrations_user == 1 & public_sharing_user == 1),
+            regpreprint = sum(registrations_user == 1 & preprint_user == 1),
+            publicstoragepreprint = sum(public_sharing_user == 1 & preprint_user == 1),
+            allthree = sum(public_sharing_user == 1 & preprint_user == 1 & registrations_contributor == 1)
+            ) %>%
+filter(n >= 75) %>%  ## only keep pp-services that have generated at least 30 users for readability
+melt(variable.name = 'product') %>% 
+dcast(product ~ user_tag) %>%
+mutate(product = case_when(
+                      product == 'n' ~ 'Total',                   
+                      product == 'nodes' ~ 'OSF Node',
+                     product == 'none' ~ 'No nodes or preprints',
+                     product == 'osf4m' ~ 'osf4m',
+                     product == 'preprint' ~ 'Preprints',
+                     product == 'privatestorage_only' ~ 'Only private storage',
+                     product == 'publicstorage' ~ 'Public OSF node storage',
+                     product == 'suppnode' ~ 'Supplemental preprint node',
+                     product == 'registrations' ~ 'Registrations',
+                     product == 'regpreprint' ~ 'Registrations & Preprints',
+                     product == 'regpublicstorage' ~ 'Public Sharing & Registrations',
+                     product ==  'publicstoragepreprint' ~ 'Public Sharing & Preprints',
+                     product == 'allthree' ~ 'All three products')) %>%
+mutate(product = as_factor(product)) %>%
+mutate(product = fct_relevel(product, "No nodes or preprints", "Only private storage", "osf4m", "OSF Node", "Public OSF node storage", "Registrations", "Preprints", "Supplemental preprint node", "Public Sharing & Registrations", "Public Sharing & Preprints", "Registrations & Preprints", "All three products", "Total")) %>%
+arrange(product) %>%
+mutate_if(~is.numeric(.), list(`prc` = ~round(100*./.[13],2))) %>%
+filter(product != 'Total') %>%
+gt() %>%
+tab_header(
+title = 'Users by Product Type'
+) %>%
+cols_merge(columns = vars(eartharxiv_preprints, eartharxiv_preprints_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(columns = vars(engrxiv_preprints, engrxiv_preprints_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(columns = vars(inarxiv_preprints, inarxiv_preprints_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(columns = vars(psyarxiv_preprints, psyarxiv_preprints_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(columns = vars(socarxiv_preprints, socarxiv_preprints_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(columns = vars(osf_preprints, osf_preprints_prc), pattern = '{1} ({2}%)') %>%
+cols_merge(columns = vars(thesiscommons_preprints, thesiscommons_preprints_prc), pattern = '{1} ({2}%)') %>%
+cols_label(product = 'Product Type',
+     eartharxiv_preprints = 'Eartharxiv',
+     engrxiv_preprints = 'Engrxiv',
+     inarxiv_preprints = 'Inarxiv',
+     psyarxiv_preprints = 'Psyarxiv',
+     socarxiv_preprints = 'Socarxiv',
+     osf_preprints = 'OSFPps',
+     thesiscommons_preprints = 'ThesisComs',) %>%
+tab_footnote(
+footnote = 'Only includes nodes that are not osf4m or supplemental nodes created during the preprint process',
+locations = cells_data(
+  columns = vars(product),
+  rows = c(3,5)
+)) %>%
+  tab_footnote(
+footnote = 'Only includes supplemental nodes created during the preprint process',
+locations = cells_data(
+  columns = vars(product),
+  rows = 8
+)) %>%
+tab_row_group(
+  group = 'Exclusive Product Usage',
+  rows = 1:2
+) %>%
+tab_row_group(
+  group = 'Individual Product Usage',
+  rows = 3:8
+) %>%
+tab_row_group(
+  group = 'Exclusive Multiple Product Usage',
+  rows = 9:12)
+```
+
+
 
 ## What products do 'depth users' create?
 

@@ -613,7 +613,7 @@ mutate(product = case_when(
 mutate(product = as_factor(product)) %>%
 mutate(product = fct_relevel(product, "No nodes or preprints", "Only private storage", "osf4m", "OSF Node", "Public OSF node storage", "Registrations", "Preprints", "Supplemental preprint node", "Public Sharing & Registrations", "Public Sharing & Preprints", "Registrations & Preprints", "All three products", "Total")) %>%
 arrange(product) %>%
-mutate_if(~is.numeric(.), list(`prc` = ~round(100*./.[13],2))) %>%
+mutate_if(~is.numeric(.), list(`prc` = ~round(100*./.[13],1))) %>%
 filter(product != 'Total') %>%
 gt() %>%
 tab_header(

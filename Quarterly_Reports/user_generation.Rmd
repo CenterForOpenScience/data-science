@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "User Generation By Product"
 output: 
   flexdashboard::flex_dashboard:
     orientation: column
@@ -33,15 +33,10 @@ Column {data-width=200}
 Column {data-width=500}
 -----------------------------------------------------------------------
 
-### Last Quarter's User Increases {data-height=500}
-
-\
-\
+### Last Quarter's New Users {data-height=500}
 
 Some description of the table below. 
 
-\
-\
 
 ```{r}
 user_generation_data %>%
@@ -49,15 +44,16 @@ user_generation_data %>%
   slice(1L) %>%
   ungroup() %>%
   select(-date) %>%
-  pivot_wider(names_from = product, values_from = new_n) %>%
+  pivot_wider(names_from = user_type, values_from = new_n) %>%
   gt() %>%
   cols_label(
-    user_type = 'Type of User',
-    osf = 'OSF',
-    osf4m = 'OSFMeetings',
-    preprints = 'Preprints',
-    registries = 'Registries'
-  )
+    product = 'Product',
+    new_active = 'Newly Registered',
+    nonreg_added = 'Newly Invited',
+    nonreg_claimed = 'Newly Claimed'
+  ) %>%
+  cols_align(align = 'center') %>%
+  cols_width(everything() ~ px(105))
   
   
 ```

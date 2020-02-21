@@ -35,7 +35,13 @@ Column {data-width=500}
 
 ### Last Quarter's User Increases {data-height=500}
 
+\
+\
+
 Some description of the table below. 
+
+\
+\
 
 ```{r}
 user_generation_data %>%
@@ -95,6 +101,7 @@ user_generation_data %>%
   hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
   hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
   hc_yAxis(title = list(text = "Newly Registered Users")) %>%
+  hc_colors(cols) %>%
   hc_exporting(
     enabled = TRUE, filename="newuser_generation", 
               formAttributes=list(target="_blank"),
@@ -115,6 +122,7 @@ user_generation_data %>%
   hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
   hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
   hc_yAxis(title = list(text = "Newly Registered Users")) %>%
+  hc_colors(cols) %>%
   hc_exporting(
     enabled = TRUE, filename="newuser_generation", 
               formAttributes=list(target="_blank"),

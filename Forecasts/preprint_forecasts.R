@@ -153,3 +153,137 @@ rounded_forecast5 %>%
 ## how many preprints have gotten DOIs this year
 preprint_data %>% filter(ds < '2019-08-16' & ds > '2018-12-31') %>% summarize(n_preprints = sum(y))
 
+
+
+
+#### redoing forecasts ignoring InaRxiv
+library(googlesheets4)
+library(lubridate)
+
+all_preprint_data <- read_sheet('https://docs.google.com/spreadsheets/d/14K6dlo0G5-PA0W14d2DDg4ZHK8cG40JQ8XybQ9yWQYY/edit?usp=drive_web&ouid=113807395134844022691') %>%
+                          select(-keen.created_at) %>%
+                          mutate(provider.total = unlist(provider.total),
+                                 keen.timestamp = ymd_hms(keen.timestamp))
+
+
+preprint_data <- all_preprint_data %>%
+                      mutate(ds = date(keen.timestamp),
+                             y = as.numeric(provider.total),
+                             no_inarxiv = case_when(provider.name == 'INA-Rxiv' ~ 0,
+                                                    TRUE ~ y),
+                             partial_inarxiv = case_when(provider.name == 'INA-Rxiv' ~ round(y * .75),
+                                                         TRUE ~ y))
+
+daily_data <- preprint_data %>%
+                group_by(ds) %>%
+                summarize(daily_total = sum(y, na.rm = T),
+                          daily_total_noina = sum(no_inarxiv, na.rm = T),
+                          daily_total_partialina = sum(partial_inarxiv, na.rm = T)) %>%
+                mutate(dt_increase = daily_total - lag(daily_total),
+                       dt_noina_increase = daily_total_noina - lag(daily_total_noina),
+                       dt_partialina_increase = daily_total_partialina - lag(daily_total_partialina)) %>%
+                filter(dt_increase > -100) %>% #remove spam corrections/keen errors
+                filter(dt_increase < 1000) # remove one extreme outlier day
+                      
+# setting up individual dataframes
+dt_increase_data <- as.data.frame(daily_data %>% 
+                                    select(ds, dt_increase) %>% 
+                                    rename(y = dt_increase))
+
+dt_noina_increase_data <- as.data.frame(daily_data %>% 
+                                    select(ds, dt_noina_increase) %>% 
+                                    rename(y = dt_noina_increase))
+
+dt_partialina_increase_data <- as.data.frame(daily_data %>% 
+                                    select(ds, dt_partialina_increase) %>% 
+                                    rename(y = dt_partialina_increase))
+
+# models with all data
+all_data_model <- prophet(dt_increase_data, seasonality.mode = 'multiplicative')
+all_data_future <- make_future_dataframe(all_data_model, periods = 1095)
+all_data_forecast <- predict(all_data_model, all_data_future )
+
+plot(all_data_model, all_data_forecast)
+prophet_plot_components(all_data_model, all_data_forecast)
+
+df_cv <-  cross_validation(all_data_model, units = 'days', horizon = 180)
+df_p <- performance_metrics(df_cv)
+plot_cross_validation_metric(df_cv, metric = 'mape')
+
+# models assuming no InaRxiv
+noina_data_model <- prophet(dt_noina_increase_data, seasonality.mode = 'multiplicative')
+noina_data_future <- make_future_dataframe(noina_data_model, periods = 1095)
+noina_data_forecast <- predict(noina_data_model, noina_data_future)
+
+plot(noina_data_model, noina_data_forecast)
+prophet_plot_components(noina_data_model, noina_data_forecast)
+
+df_cv <-  cross_validation(noina_data_model, units = 'days', horizon = 180)
+df_p <- performance_metrics(df_cv)
+plot_cross_validation_metric(df_cv, metric = 'mape')
+
+
+# models assuming partial InaRxiv
+partialina_data_model <- prophet(dt_partialina_increase_data, seasonality.mode = 'multiplicative')
+partialina_data_future <- make_future_dataframe(partialina_data_model, periods = 1095)
+partialina_data_forecast <- predict(partialina_data_model, partialina_data_future)
+
+plot(partialina_data_model, partialina_data_forecast)
+prophet_plot_components(partialina_data_model, partialina_data_forecast)
+
+df_cv <-  cross_validation(partialina_data_model, units = 'days', horizon = 180)
+df_p <- performance_metrics(df_cv)
+plot_cross_validation_metric(df_cv, metric = 'mape')
+
+
+
+#total forecasts
+rounded_forecast_total <- all_data_forecast %>%
+  select(ds, yhat, yhat_lower, yhat_upper) %>%
+  mutate(yhat_round = round(yhat),
+         lower_round = round(yhat_lower),
+         upper_round = round(yhat_upper),
+         date = as_date(ds),
+         lower_round = case_when(lower_round < 0 ~ 0,
+                                 lower_round >= 0 ~ lower_round)) %>%
+  filter(date >= '2018-08-16')
+
+rounded_forecast_total %>%
+  filter(date > '2019-12-31' & date < '2022-01-01') %>%
+  mutate(year = year(ds)) %>%
+  group_by(year) %>%
+  summarize(lower_80 = sum(lower_round), upper_80 = sum(upper_round), middle = sum(yhat_round))
+
+#no-inarxiv forecasts
+rounded_forecast_noina <- noina_data_forecast %>%
+  select(ds, yhat, yhat_lower, yhat_upper) %>%
+  mutate(yhat_round = round(yhat),
+         lower_round = round(yhat_lower),
+         upper_round = round(yhat_upper),
+         date = as_date(ds),
+         lower_round = case_when(lower_round < 0 ~ 0,
+                                 lower_round >= 0 ~ lower_round)) %>%
+  filter(date >= '2018-08-16')
+
+rounded_forecast_noina %>%
+  filter(date > '2019-12-31' & date < '2022-01-01') %>%
+  mutate(year = year(ds)) %>%
+  group_by(year) %>%
+  summarize(lower_80 = sum(lower_round), upper_80 = sum(upper_round), middle = sum(yhat_round))
+
+#partial-inarxiv forecasts
+rounded_forecast_partialina <- partialina_data_forecast %>%
+  select(ds, yhat, yhat_lower, yhat_upper) %>%
+  mutate(yhat_round = round(yhat),
+         lower_round = round(yhat_lower),
+         upper_round = round(yhat_upper),
+         date = as_date(ds),
+         lower_round = case_when(lower_round < 0 ~ 0,
+                                 lower_round >= 0 ~ lower_round)) %>%
+  filter(date >= '2018-08-16')
+
+rounded_forecast_partialina %>%
+  filter(date > '2019-12-31' & date < '2022-01-01') %>%
+  mutate(year = year(ds)) %>%
+  group_by(year) %>%
+  summarize(lower_80 = sum(lower_round), upper_80 = sum(upper_round), middle = sum(yhat_round))

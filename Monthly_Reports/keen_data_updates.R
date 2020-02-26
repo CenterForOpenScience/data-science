@@ -3,17 +3,10 @@ library(tidyverse)
 library(httr)
 library(jsonlite)
 library(googlesheets4)
-library(googledrive)
-
-
-# force authentication with googledrive first
-#drive_auth()
-sheets_auth(token = drive_token())
 
 # get keys
 keen_projectid <- Sys.getenv("production_osfprivate_projectid")
 keen_read_key <- Sys.getenv("keen_read_key")
-
 
 # function to create keen calls
 keen_extraction_call <- function(event_collection, timeframe, variable_list){
@@ -128,37 +121,17 @@ preprint_data <- fromJSON(prettify(preprint_output))$result %>%
                     #make sure column order correct
                     select(keen.created_at, keen.timestamp, provider.name, provider.total)
 
-##read in existing data & add newer data 
+##existing sheet IDs
 nodes_gdrive_file <- 'https://docs.google.com/spreadsheets/d/1ti6iEgjvr-hXyMT5NwCNfAg-PJaczrMUX9sr6Cj6_kM/'
 files_grdrive_file <- 'https://docs.google.com/spreadsheets/d/1gOodKyhEhegXd0sTnc0IURq282wMgZgwAgoZS8brVUQ/'
 user_gdrive_file <- 'https://docs.google.com/spreadsheets/d/1qEhmANiAIcdavuugUNPKqVjijxvlihA99vIU9KuBhww/'
 download_gdrive_file <- 'https://docs.google.com/spreadsheets/d/1vs-yRamfmBo_dYs0LsTJ4JZoefPwArQvgA4N4YuTZ8w/'
 preprint_gdrive_file <- 'https://docs.google.com/spreadsheets/d/14K6dlo0G5-PA0W14d2DDg4ZHK8cG40JQ8XybQ9yWQYY/'
 
-read_sheet(nodes_gdrive_file, col_types = 'cciiii') %>%
-  rbind(node_data) %>%
-  write_csv('node_data.csv')
-
-read_sheet(files_grdrive_file) %>%
-  rbind(file_data) %>%
-  write_csv('files_data.csv')
-
-read_sheet(user_gdrive_file, col_types = 'cci') %>%
-  rbind(user_data) %>%
-  write_csv('user_data.csv')
-
-read_sheet(download_gdrive_file, col_types = 'cci') %>%
-  rbind(download_data) %>%
-  write_csv('download_data.csv')
-
-read_sheet(preprint_gdrive_file, col_types = 'ccci') %>%
-  rbind(preprint_data) %>%
-  write_csv('preprint_data.csv')
-
-## update googlesheet with new appended date (switch to more targetted update once googlesheets4 has write capabilities)
-drive_update(file = nodes_gdrive_file, media = 'node_data.csv')
-drive_update(file = files_grdrive_file, media = 'files_data.csv')
-drive_update(file = user_gdrive_file, media = 'user_data.csv')
-drive_update(file = download_gdrive_file, media = 'download_data.csv')
-drive_update(file = preprint_gdrive_file, media = 'preprint_data.csv')
+## append new data to googlesheet
+sheets_append(node_data, ss = nodes_gdrive_file, media = 'node_data.csv')
+sheets_append(file_data, ss = files_grdrive_file, media = 'files_data.csv')
+sheets_append(user_data, ss = user_gdrive_file, media = 'user_data.csv')
+sheets_append(download_data, ss = download_gdrive_file, media = 'download_data.csv')
+sheets_append(preprint_data, ss = preprint_gdrive_file, media = 'preprint_data.csv')
 

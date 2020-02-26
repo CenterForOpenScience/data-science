@@ -129,9 +129,9 @@ download_gdrive_file <- 'https://docs.google.com/spreadsheets/d/1vs-yRamfmBo_dYs
 preprint_gdrive_file <- 'https://docs.google.com/spreadsheets/d/14K6dlo0G5-PA0W14d2DDg4ZHK8cG40JQ8XybQ9yWQYY/'
 
 ## append new data to googlesheet
-sheets_append(node_data, ss = nodes_gdrive_file, media = 'node_data.csv')
-sheets_append(file_data, ss = files_grdrive_file, media = 'files_data.csv')
-sheets_append(user_data, ss = user_gdrive_file, media = 'user_data.csv')
-sheets_append(download_data, ss = download_gdrive_file, media = 'download_data.csv')
-sheets_append(preprint_data, ss = preprint_gdrive_file, media = 'preprint_data.csv')
+sheets_append(node_data, ss = nodes_gdrive_file)
+sheets_append(file_data, ss = files_grdrive_file)
+sheets_append(user_data, ss = user_gdrive_file)
+sheets_append(download_data, ss = download_gdrive_file)
+sheets_append(preprint_data, ss = preprint_gdrive_file)
 

@@ -249,7 +249,7 @@ rounded_forecast_total <- all_data_forecast %>%
   filter(date >= '2018-08-16')
 
 rounded_forecast_total %>%
-  filter(date > '2019-12-31' & date < '2022-01-01') %>%
+  filter(date > '2019-12-31' & date < '2023-01-01') %>%
   mutate(year = year(ds)) %>%
   group_by(year) %>%
   summarize(lower_80 = sum(lower_round), upper_80 = sum(upper_round), middle = sum(yhat_round))
@@ -266,7 +266,7 @@ rounded_forecast_noina <- noina_data_forecast %>%
   filter(date >= '2018-08-16')
 
 rounded_forecast_noina %>%
-  filter(date > '2019-12-31' & date < '2022-01-01') %>%
+  filter(date > '2019-12-31' & date < '2023-01-01') %>%
   mutate(year = year(ds)) %>%
   group_by(year) %>%
   summarize(lower_80 = sum(lower_round), upper_80 = sum(upper_round), middle = sum(yhat_round))
@@ -283,7 +283,7 @@ rounded_forecast_partialina <- partialina_data_forecast %>%
   filter(date >= '2018-08-16')
 
 rounded_forecast_partialina %>%
-  filter(date > '2019-12-31' & date < '2022-01-01') %>%
+  filter(date > '2019-12-31' & date < '2023-01-01') %>%
   mutate(year = year(ds)) %>%
   group_by(year) %>%
   summarize(lower_80 = sum(lower_round), upper_80 = sum(upper_round), middle = sum(yhat_round))

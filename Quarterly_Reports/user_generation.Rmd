@@ -250,27 +250,6 @@ user_generation_data %>%
 Column {data-width = 500}
 -----------------------------------------------------------------------
 
-### Cumulative unregistered accounts claimed {data-height=500}
-
-```{r}
-user_generation_data %>%
-  filter(user_type == 'nonreg_claimed') %>%
-  hchart(., type = 'line',
-         hcaes(x = date,
-               y = new_n,
-               group = product)) %>%
-  hc_tooltip(table = TRUE, sort = TRUE) %>%
-  hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
-  hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
-  hc_yAxis(title = list(text = "Number of Users")) %>%
-  hc_colors(cols) %>%
-  hc_exporting(
-    enabled = TRUE, filename="newuser_generation", 
-              formAttributes=list(target="_blank"),
-               buttons=list(contextButton=list(
-               text="Export", theme=list(fill="transparent"))))
-```
-
 
 ### Cumulative direct user sign-ups {data-height=500}
 
@@ -292,3 +271,25 @@ user_generation_data %>%
                buttons=list(contextButton=list(
                text="Export", theme=list(fill="transparent"))))
 ```
+
+### Cumulative unregistered accounts claimed {data-height=500}
+
+```{r}
+user_generation_data %>%
+  filter(user_type == 'nonreg_claimed') %>%
+  hchart(., type = 'line',
+         hcaes(x = date,
+               y = new_n,
+               group = product)) %>%
+  hc_tooltip(table = TRUE, sort = TRUE) %>%
+  hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
+  hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
+  hc_yAxis(title = list(text = "Number of Users")) %>%
+  hc_colors(cols) %>%
+  hc_exporting(
+    enabled = TRUE, filename="newuser_generation", 
+              formAttributes=list(target="_blank"),
+               buttons=list(contextButton=list(
+               text="Export", theme=list(fill="transparent"))))
+```
+

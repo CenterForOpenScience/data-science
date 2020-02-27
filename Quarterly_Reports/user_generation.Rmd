@@ -50,16 +50,23 @@ Column {data-width=500}
 
 ### Last Quarter's New Users {data-height=500}
 
-Some description of the table below. 
-
-
 ```{r}
-user_generation_data %>%
-  group_by(product, user_type) %>%
-  slice(1L) %>%
-  ungroup() %>%
-  select(-date) %>%
-  pivot_wider(names_from = user_type, values_from = new_n) %>%
+quarterly_numbers <- user_generation_data %>%
+                        group_by(product, user_type) %>%
+                        slice(1L) %>%
+                        ungroup() %>%
+                        select(-date, -sso_users) %>%
+                        pivot_wider(names_from = user_type, values_from = new_n)
+
+sso_percentages <- user_generation_data %>%
+                        group_by(product, user_type) %>%
+                        slice(1L) %>%
+                        ungroup() %>%
+                        mutate(user_type_ssoprc = paste0(round(100 *sso_users/new_n,2), '%')) %>%
+                        select(-date, -new_n, -sso_users) %>%
+                        pivot_wider(names_from = user_type, values_from = user_type_ssoprc)
+
+rbind(quarterly_numbers, sso_percentages) %>%
   gt() %>%
   cols_label(
     product = 'Product',
@@ -68,9 +75,17 @@ user_generation_data %>%
     nonreg_claimed = 'Newly Claimed'
   ) %>%
   cols_align(align = 'center') %>%
-  cols_width(everything() ~ px(105))
+  cols_width(everything() ~ px(105)) %>%
+  tab_row_group(
+    group = "SSO Perc",
+    rows = 5:8
+  ) %>%
+    tab_row_group(
+    group = "Raw Counts",
+    rows = 1:4
+  )
   
-  
+
 ```
 
 ### New unregistered contributor invitations {data-height=500}

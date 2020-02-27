@@ -13,11 +13,16 @@ library(gt)
 library(here)
 library(highcharter)
 library(dichromat)
+library(DT)
 
-user_generation_data <- read_csv(here::here('Quarterly_Reports/data_for_mockup.csv'))
+user_generation_data <- read_csv(here::here('data_for_mockup.csv'))
 
 cols <- c('#34495D', '#3277A2', '#14A4EB', '#A8C8DD')
 ```
+
+
+Monthly Increases
+===================================== 
 
 Column {data-width=200}
 -----------------------------------------------------------------------
@@ -137,7 +142,107 @@ user_generation_data %>%
 ```
 
 
+Cumulative Totals
+===================================== 
+
+Column {data-width=200}
+-----------------------------------------------------------------------
+
+### Users Definitions
+
+* ***New sign-ups***: Counts users who clicked the 'sign-up' button on specific pages
+
+* ***New invites***: Counts the number of unregistered contributors who were added to a new product.
+
+* ***New claims***: Counts unregistered contributors who claimed their account & which product they claimed it from.
+
+### Product Definitions
+
+* ***Registries***: Includes OSFRegistries and Pre-reg and ERP campaign pages
+
+* ***Preprints***: Includes OSFPreprints and all branded preprint pages.
+
+* ***OSF4M***: Anyone who created an account by emailing in an osf4m talk/poster.
+
+* ***OSF***: Everyone else [OSF pages, collections, instituional pages, & SSO]
+
+Column {data-width = 500}
+-----------------------------------------------------------------------
+
+### Underlying Data {data-height=500}
+
+```{r}
+user_generation_data %>%
+  datatable(extensions = 'Buttons',  
+            options = list(dom = 'Bfrtip', buttons = list( list(extend = 'collection', buttons = list(list(extend='csv',filename='reg_form_counts.csv'),
+                                                                 list(extend='excel', filename = 'reg_form_counts.xlsx') ),text="Download"))))
+```
 
 
+### Cumulative unregistered contributor invitations {data-height=500}
+
+```{r}
+user_generation_data %>%
+  filter(user_type == 'nonreg_added') %>%
+  hchart(., type = 'line',
+         hcaes(x = date,
+               y = new_n,
+               group = product)) %>%
+  hc_tooltip(table = TRUE, sort = TRUE) %>%
+  hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
+  hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
+  hc_yAxis(title = list(text = "Number of Users")) %>%
+  hc_colors(cols) %>%
+  hc_exporting(
+    enabled = TRUE, filename="newuser_generation", 
+              formAttributes=list(target="_blank"),
+               buttons=list(contextButton=list(
+               text="Export", theme=list(fill="transparent"))))
+```
 
 
+Column {data-width=200}
+-----------------------------------------------------------------------
+
+### Cumulative unregistered accounts claimed {data-height=500}
+
+```{r}
+user_generation_data %>%
+  filter(user_type == 'nonreg_claimed') %>%
+  hchart(., type = 'line',
+         hcaes(x = date,
+               y = new_n,
+               group = product)) %>%
+  hc_tooltip(table = TRUE, sort = TRUE) %>%
+  hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
+  hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
+  hc_yAxis(title = list(text = "Number of Users")) %>%
+  hc_colors(cols) %>%
+  hc_exporting(
+    enabled = TRUE, filename="newuser_generation", 
+              formAttributes=list(target="_blank"),
+               buttons=list(contextButton=list(
+               text="Export", theme=list(fill="transparent"))))
+```
+
+
+### Cumulative direct user sign-ups {data-height=500}
+
+```{r}
+user_generation_data %>%
+  filter(user_type == 'new_active') %>%
+  hchart(., type = 'line',
+         hcaes(x = date,
+               y = new_n,
+               group = product)) %>%
+  hc_tooltip(table = TRUE, sort = TRUE) %>%
+  hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
+  hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
+  hc_yAxis(title = list(text = "Number of Users")) %>%
+  hc_colors(cols) %>%
+  hc_exporting(
+    enabled = TRUE, filename="newuser_generation", 
+              formAttributes=list(target="_blank"),
+               buttons=list(contextButton=list(
+               text="Export", theme=list(fill="transparent"))))
+```

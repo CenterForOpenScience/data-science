@@ -24,6 +24,9 @@ WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id, username, is_registered
  						WHERE is_invited IS TRUE
  						GROUP BY name)
 
-;
+SELECT new_signups, new_sources, new_claims, sso_newsignups, sso_newclaims, new_invites.name
+	FROM new_invites
+	LEFT JOIN new_signups
+	ON new_invites.name = new_signups.name;
 	
 

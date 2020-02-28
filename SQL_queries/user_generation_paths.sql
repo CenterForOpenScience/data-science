@@ -16,7 +16,13 @@ WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id, username, is_registered
 	 						COUNT(CASE WHEN institution_id IS NOT NULL THEN 1 END) AS sso_newsignups, name
 						FROM user_tag_info
 						WHERE is_registered IS TRUE AND is_invited IS FALSE
-						GROUP BY name)
+						GROUP BY name),
+	 new_invites AS (SELECT COUNT(user_id) AS new_sources,
+	 						COUNT(CASE WHEN date_confirmed IS NOT NULL THEN 1 END) AS new_claims,
+	 						COUNT(CASE WHEN date_confirmed IS NOT NULL AND institution_id IS NOT NULL THEN 1 END) AS sso_newclaims, name
+ 						FROM user_tag_info
+ 						WHERE is_invited IS TRUE
+ 						GROUP BY name)
 
 ;
 	

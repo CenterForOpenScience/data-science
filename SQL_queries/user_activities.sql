@@ -25,7 +25,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 											FROM addons_bitbucket_nodesettings
 											LEFT JOIN osf_nodelog
 											ON addons_bitbucket_nodesettings.owner_id = osf_nodelog.node_id
-											WHERE deleted IS FALSE AND 
+											WHERE is_deleted IS FALSE AND 
 												  repo IS NOT NULL AND
 												  action = 'bitbucket_repo_linked'
 											GROUP BY node_id) bitbucket
@@ -34,7 +34,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 											FROM addons_box_nodesettings
 											LEFT JOIN osf_nodelog
 											ON addons_box_nodesettings.owner_id = osf_nodelog.node_id
-											WHERE deleted IS FALSE AND 
+											WHERE is_deleted IS FALSE AND 
 												  folder_name IS NOT NULL AND
 												  action = 'box_folder_selected'
 											GROUP BY node_id) box
@@ -43,7 +43,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 											FROM addons_dataverse_nodesettings
 											LEFT JOIN osf_nodelog
 											ON addons_dataverse_nodesettings.owner_id = osf_nodelog.node_id
-											WHERE deleted IS FALSE AND 
+											WHERE is_deleted IS FALSE AND 
 												  dataset IS NOT NULL AND
 												  action = 'dataverse_dataset_linked'
 											GROUP BY node_id) dataverse
@@ -52,7 +52,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 											FROM addons_dropbox_nodesettings
 											LEFT JOIN osf_nodelog
 											ON addons_dropbox_nodesettings.owner_id = osf_nodelog.node_id
-											WHERE deleted IS FALSE AND 
+											WHERE is_deleted IS FALSE AND 
 												  folder IS NOT NULL AND
 												  action = 'dropbox_folder_selected'
 											GROUP BY node_id) dropbox
@@ -61,7 +61,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 											FROM addons_figshare_nodesettings
 											LEFT JOIN osf_nodelog
 											ON addons_figshare_nodesettings.owner_id = osf_nodelog.node_id
-											WHERE deleted IS FALSE AND 
+											WHERE is_deleted IS FALSE AND 
 												  folder_name IS NOT NULL AND
 												  action = 'figshare_folder_selected'
 											GROUP BY node_id) figshare
@@ -70,7 +70,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 											FROM addons_github_nodesettings
 											LEFT JOIN osf_nodelog
 											ON addons_github_nodesettings.owner_id = osf_nodelog.node_id
-											WHERE deleted IS FALSE AND 
+											WHERE is_deleted IS FALSE AND 
 												  repo IS NOT NULL AND 
 												  action = 'github_repo_linked'
 											GROUP BY node_id) github
@@ -79,7 +79,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 											FROM addons_gitlab_nodesettings
 											LEFT JOIN osf_nodelog
 											ON addons_gitlab_nodesettings.owner_id = osf_nodelog.node_id
-											WHERE deleted IS FALSE AND 
+											WHERE is_deleted IS FALSE AND 
 											      repo IS NOT NULL AND
 											      action = 'gitlab_repo_linked'
 											GROUP BY node_id) gitlab
@@ -88,7 +88,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 											FROM addons_googledrive_nodesettings
 											LEFT JOIN osf_nodelog
 											ON addons_googledrive_nodesettings.owner_id = osf_nodelog.node_id
-											WHERE deleted IS FALSE AND 
+											WHERE is_deleted IS FALSE AND 
 												  folder_path IS NOT NULL AND
 												  action = 'googledrive_folder_selected'
 											GROUP BY node_id) googledrive
@@ -97,7 +97,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 											FROM addons_onedrive_nodesettings
 											LEFT JOIN osf_nodelog
 											ON addons_onedrive_nodesettings.owner_id = osf_nodelog.node_id
-											WHERE deleted IS FALSE AND 
+											WHERE is_deleted IS FALSE AND 
 												  folder_path IS NOT NULL AND
 												  action = 'onedrive_folder_selected'
 											GROUP BY node_id) onedrive
@@ -106,7 +106,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 											FROM addons_owncloud_nodesettings
 											LEFT JOIN osf_nodelog
 											ON addons_owncloud_nodesettings.owner_id = osf_nodelog.node_id
-											WHERE deleted IS FALSE AND 
+											WHERE is_deleted IS FALSE AND 
 												  folder_id IS NOT NULL AND
 												  action = 'owncloud_folder_selected'
 											GROUP BY node_id) owncloud
@@ -115,7 +115,7 @@ WITH existing_files AS (SELECT COUNT(*) AS num_files, target_object_id, MIN(crea
 											FROM addons_s3_nodesettings
 											LEFT JOIN osf_nodelog
 											ON addons_s3_nodesettings.owner_id = osf_nodelog.node_id
-											WHERE deleted IS FALSE AND 
+											WHERE is_deleted IS FALSE AND 
 												  folder_name IS NOT NULL AND
 												  action = 's3_bucket_linked'
 											GROUP BY node_id) s3

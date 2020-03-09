@@ -537,6 +537,23 @@ log_graph <- ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_cr
   scale_y_log10('Number of Top Level Projects')
 
 ggplotly(log_graph)
+
+
+
+ggplotly(projects_and_logs %>%
+  filter(is.na(is_fork) & !is.na(days_create_lastlog) & !is.na(products)) %>%
+  select(year, log_type, days_create_lastlog, products) %>%
+  mutate(days_create_lastlog = round(log2(ceiling(as.numeric(days_create_lastlog))))) %>%
+  group_by(year, log_type, products, days_create_lastlog) %>%
+  summarize(percent = n()) %>%
+  group_by(year, log_type, days_create_lastlog) %>%
+  mutate(percent = percent/sum(percent)*100) %>%
+  filter(days_create_lastlog >= -22, year >= 2014) %>%
+  ggplot(aes(x = days_create_lastlog, y = percent, color = products)) +
+  geom_line() +
+  geom_point() +
+  facet_grid(year ~ log_type) +
+  labs(y = 'Percentage of projects by product', x = 'Rounded Log2 Days Between Last Log and Date Created'))
 ```
 
 \

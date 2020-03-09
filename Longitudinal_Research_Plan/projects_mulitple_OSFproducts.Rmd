@@ -509,18 +509,17 @@ ggplot(projects_and_logs %>% filter(is.na(is_fork) & !is.na(days_create_lastlog)
 
 projects_and_logs %>%
   filter(is.na(is_fork) & !is.na(days_create_lastlog) & !is.na(products)) %>%
-  select(days_create_lastlog, products) %>%
-  mutate(days_create_lastlog = round(log2(as.numeric(days_create_lastlog)))) %>%
-  group_by(products, days_create_lastlog) %>%
+  select(log_type, days_create_lastlog, products) %>%
+  mutate(days_create_lastlog = round(log2(ceiling(as.numeric(days_create_lastlog))))) %>%
+  group_by(log_type, products, days_create_lastlog) %>%
   summarize(percent = n()) %>%
-  group_by(days_create_lastlog) %>%
+  group_by(log_type, days_create_lastlog) %>%
   mutate(percent = percent/sum(percent)*100) %>%
   filter(days_create_lastlog >= -22) %>%
   ggplot(aes(x = days_create_lastlog, y = percent, color = products)) +
   geom_line() +
-  scale_x_continuous('Log2 Days Between Last Log and Date Created',
-                      breaks = seq(-22, 12, by = 2)) +
-  labs(y = 'Percentage of projects by product')
+  facet_wrap(~log_type) +
+  labs(y = 'Percentage of projects by product', x = 'Rounded Log2 Days Between Last Log and Date Created')
 
 ```
 

@@ -19,9 +19,7 @@ WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id, username, is_registered
 						WHERE is_registered IS TRUE AND is_invited IS FALSE AND 
 								date_confirmed >= date_trunc('month', current_date - interval '3' month)
 						GROUP BY name, date_trunc('month', date_confirmed)),
-	 new_invites AS (SELECT COUNT(user_id) AS new_sources,
-	 						COUNT(CASE WHEN date_confirmed IS NOT NULL THEN 1 END) AS new_claims,
-	 						COUNT(CASE WHEN date_confirmed IS NOT NULL AND institution_id IS NOT NULL THEN 1 END) AS sso_newclaims, name
+	 new_invites AS (SELECT COUNT(user_id) AS new_sources, name
  						FROM user_tag_info
  						WHERE is_invited IS TRUE
  						GROUP BY name),

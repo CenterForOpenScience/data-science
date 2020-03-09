@@ -13,10 +13,12 @@ WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id, username, is_registered
 						WHERE osf_tag.system IS TRUE AND 
 							(osf_tag.name NOT LIKE '%spam' AND osf_tag.name != 'high_upload_limit' AND osf_tag.name != 'ham_confirmed' AND osf_tag.name NOT LIKE '%metrics' AND osf_tag.name != 'prereg_admin')),
 	 new_signups AS (SELECT COUNT(user_id) AS new_signups, 
-	 						COUNT(CASE WHEN institution_id IS NOT NULL THEN 1 END) AS sso_newsignups, name
+	 						COUNT(CASE WHEN institution_id IS NOT NULL THEN 1 END) AS sso_newsignups, 
+	 						date_trunc('month', date_confirmed) as month, name
 						FROM user_tag_info
-						WHERE is_registered IS TRUE AND is_invited IS FALSE
-						GROUP BY name),
+						WHERE is_registered IS TRUE AND is_invited IS FALSE AND 
+								date_confirmed >= date_trunc('month', current_date - interval '3' month)
+						GROUP BY name, date_trunc('month', date_confirmed)),
 	 new_invites AS (SELECT COUNT(user_id) AS new_sources,
 	 						COUNT(CASE WHEN date_confirmed IS NOT NULL THEN 1 END) AS new_claims,
 	 						COUNT(CASE WHEN date_confirmed IS NOT NULL AND institution_id IS NOT NULL THEN 1 END) AS sso_newclaims, name

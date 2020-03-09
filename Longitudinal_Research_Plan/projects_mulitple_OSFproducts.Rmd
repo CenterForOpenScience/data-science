@@ -327,6 +327,20 @@ ggplotly(projects_by_product %>%
   scale_x_date(breaks = date_breaks("3 month"), labels = date_format("%b %y")) +
   theme(axis.text.x  = element_text(angle=45,hjust = 1,vjust = 1)))
  
+
+ggplotly(projects_by_product %>%
+  filter(!is.na(products)) %>%
+  mutate(month_date = floor_date(pc_by_day, 'month')) %>%
+  group_by(products, month_date) %>%
+  summarize(percent = n()) %>%
+  group_by(month_date) %>%
+  mutate(percent = percent/sum(percent)*100) %>%
+  ggplot(aes(x = month_date, y = percent, color = products)) +
+  geom_line() +
+  scale_x_date(breaks = date_breaks("3 month"), labels = date_format("%b %y")) +
+  theme(axis.text.x  = element_text(angle=45,hjust = 1,vjust = 1)))
+
+
 ```
 
 # Log activity:

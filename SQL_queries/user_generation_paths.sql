@@ -24,7 +24,14 @@ WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id, username, is_registered
 	 						COUNT(CASE WHEN date_confirmed IS NOT NULL AND institution_id IS NOT NULL THEN 1 END) AS sso_newclaims, name
  						FROM user_tag_info
  						WHERE is_invited IS TRUE
- 						GROUP BY name)
+ 						GROUP BY name),
+  	 new_claims AS (SELECT COUNT(user_id_ AS new_claims,
+	 					   COUNT(institution_id IS NOT NULL THEN 1 END) AS sso_newclaims, 
+	 					   date_trunc('month', date_confirmed) as month, name
+	 				FROM user_tag_info
+	 				WHERE is_invited IS TRUE AND date_confirmed IS NOT NULL AND
+	 						date_confirmed >= date_trunc('month', current_date - interval '3' month)
+	 				GROUP BY name, date_trunc('month', date_confirmed))
 
 SELECT new_signups, new_sources, new_claims, sso_newsignups, sso_newclaims, new_invites.name
 	FROM new_invites

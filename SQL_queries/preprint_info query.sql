@@ -156,3 +156,18 @@ SELECT distinct on (users_instit_pps.name) users_instit_pps.name, num_users, num
 					FROM users_instit_pps 
 					GROUP BY name) AS n_preprints
 	ON users_instit_pps.name = n_preprints.name;
+
+
+/* return email addresses of users who uploaded still public (non-withdrawn, non-deleted) preprints on Marxiv */
+
+SELECT DISTINCT(username)
+	FROM osf_preprint
+	LEFT JOIN osf_osfuser
+	ON osf_preprint.creator_id = osf_osfuser.id
+	WHERE provider_id = 27 AND 
+			is_published IS TRUE AND 
+			(machine_state = 'accepted' OR machine_state = 'pendind') AND 
+			ever_public IS TRUE AND 
+			is_public IS TRUE AND 
+			osf_preprint.deleted IS NULL AND 
+			date_withdrawn IS NULL

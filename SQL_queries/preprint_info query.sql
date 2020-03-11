@@ -171,3 +171,23 @@ SELECT DISTINCT(username)
 			is_public IS TRUE AND 
 			osf_preprint.deleted IS NULL AND 
 			date_withdrawn IS NULL
+
+
+/* query for email addresses of all creators/contributors of pps submitted to psyarxiv (only is_active users) */
+WITH preprint_contributor AS (SELECT DISTINCT(username) AS contributor_names
+							FROM osf_preprint
+							LEFT JOIN osf_preprintcontributor
+							ON osf_preprint.id = osf_preprintcontributor.preprint_id
+							LEFT JOIN osf_osfuser
+							ON osf_preprintcontributor.user_id = osf_osfuser.id
+							WHERE provider_id = 5 AND is_active IS TRUE),
+	 preprint_creators AS (SELECT DISTINCT(username) AS creator_names
+							FROM osf_preprint
+							LEFT JOIN osf_osfuser
+							ON osf_preprint.creator_id = osf_osfuser.id
+							WHERE provider_id = 5 AND is_active IS TRUE)
+
+SELECT CASE WHEN contributor_names IS NULL THEN creator_names ELSE contributor_names END AS names
+	FROM preprint_creators
+	FULL OUTER JOIN preprint_contributor
+	ON preprint_creators.creator_names = preprint_contributor.contributor_names;

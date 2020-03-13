@@ -83,7 +83,7 @@ query = {
                     "composite": {
                         "size" : 20,
                         "sources" : [
-                            {"date":{"date_histogram":{"field":"timestamp","interval":"second","format": "yyyy-MM-dd HH:MM"}}},
+                            {"date":{"date_histogram":{"field":"timestamp","interval":"second","format": "yyyy-MM-dd HH:mm"}}},
                             {"user_id":{"terms":{"field":"user_id"}}},
                             {"preprint_id":{"terms":{"field":"preprint_id"}}}
                         ]
@@ -222,7 +222,7 @@ query = {
                         "date_histogram" :{
                           "field":"timestamp",
                           "interval":"day",
-                          "format": "yyyy-MM-dd HH:MM"
+                          "format": "yyyy-MM-dd HH:mm"
                         }
                       }
                     }
@@ -273,7 +273,7 @@ query = {
                         "date_histogram" :{
                           "field":"timestamp",
                           "interval":"day",
-                          "format": "yyyy-MM-dd HH:MM"
+                          "format": "yyyy-MM-dd HH:mm"
                         },
                         "aggs":{
                           "preprints" : {
@@ -302,6 +302,72 @@ payload = {
 
 res = requests.post(post_url, headers=headers, json=payload)
 downloads_byuser_byday_bypreprint = res.json()['aggregations']['preprints_from_2019']['users']['buckets']
+```
+
+```{python}
+# downloads by user by second for a given time window & preprint
+
+query = {
+    "query": {
+         "term" : { "preprint_id" : "c8ufs" }
+    },
+     "aggs" : {
+        "preprints_from_2019": {
+            "filter": {
+                "range" : {
+                    "timestamp" : {
+                        "gte" : "2018-01-01",
+                        "lt" : "2020-03-13"
+                    }
+                }
+            },
+            "aggs": {
+                "users" : {
+                    "terms" : {
+                        "field" : "user_id",
+                        "size" : 250
+                    },
+                    "aggs": {
+                      "downloads_per_day" : {
+                        "date_histogram" :{
+                          "field":"timestamp",
+                          "interval":"second",
+                          "format": "yyyy-MM-dd HH:mm:ss"
+                        }
+                      }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+payload = {
+    'data': {
+        'type': 'preprint_metrics',
+        'attributes': {
+            'query': query
+        }
+    }
+}
+
+res = requests.post(post_url, headers=headers, json=payload)
+downloads_byuser_byday_forapreprint = res.json()['aggregations']['preprints_from_2019']['users']['buckets']
+```
+
+```{r}
+# turning output of downloads_byuser_byday_forapreprint into a usable dataframe
+
+downloads_byuser_byday_forapreprint_df <- bind_rows(py$downloads_byuser_byday_forapreprint) %>% unnest(downloads_per_day)
+
+downloads_byuser_byday_bypreprint_df %>%
+  mutate(date = map_chr(downloads_per_day, 'key_as_string'),
+         downloads = map_dbl(downloads_per_day, 'doc_count')) %>%
+  rename(user_id = key,
+        tot_pp_downloads = doc_count) %>%
+  select(-downloads_per_day)
+  
 ```
 
 

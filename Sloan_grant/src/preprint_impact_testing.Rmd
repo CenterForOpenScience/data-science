@@ -246,4 +246,62 @@ res = requests.post(post_url, headers=headers, json=payload)
 downloads_byuser_byday = res.json()['aggregations']['preprints_from_2019']['users']['buckets']
 ```
 
+```{python 3level agg}
+# downloads for preprints on OSF in a specifc timeframe by user by day by preprint
+query = {
+    "query": {
+         "term" : { "provider_id" : "osf" }
+    },
+     "aggs" : {
+        "preprints_from_2019": {
+            "filter": {
+                "range" : {
+                    "timestamp" : {
+                        "gte" : "2018-01-01",
+                        "lt" : "2019-12-31"
+                    }
+                }
+            },
+            "aggs": {
+                "users" : {
+                    "terms" : {
+                        "field" : "user_id",
+                        "size" : 250
+                    },
+                    "aggs": {
+                      "downloads_per_day" : {
+                        "date_histogram" :{
+                          "field":"timestamp",
+                          "interval":"day",
+                          "format": "yyyy-MM-dd HH:MM"
+                        },
+                        "aggs":{
+                          "preprints" : {
+                            "terms" :{
+                              "field" : "preprint_id"
+                            }
+                          }
+                        }
+                      }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+payload = {
+    'data': {
+        'type': 'preprint_metrics',
+        'attributes': {
+            'query': query
+        }
+    }
+}
+
+res = requests.post(post_url, headers=headers, json=payload)
+downloads_byuser_byday_bypreprint = res.json()['aggregations']['preprints_from_2019']['users']['buckets']
+```
+
 

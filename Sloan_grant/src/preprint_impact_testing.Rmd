@@ -154,6 +154,57 @@ login_users = res.json()['aggregations']['preprints_from_2019']['users']['bucket
 ```
 
 ```{python}
+# downloads by service by month in 2019
+query = {
+     "aggs" : {
+        "preprints_from_2019": {
+            "filter": {
+                "range" : {
+                    "timestamp" : {
+                        "gte" : "2019-01-01",
+                        "lt" : "2020-03-13"
+                    }
+                }
+            },
+            "aggs": {
+                "service" : {
+                    "terms" : { 
+                      "field" : "provider_id",
+                      "size" : 20
+                      },
+                      "aggs": {
+                        "downloads_per_month" : {
+                          "date_histogram" :{
+                            "field":"timestamp",
+                            "interval":"month",
+                            "format": "yyyy-MM-dd HH:mm"
+                          }
+                        }
+                      }
+                }
+            }
+        }
+    }
+}
+
+
+payload = {
+    'data': {
+        'type': 'preprint_metrics',
+        'attributes': {
+            'query': query
+        }
+    }
+}
+
+res = requests.post(post_url, headers=headers, json=payload)
+services_by_month = res.json()['aggregations']['preprints_from_2019']['service']['buckets']
+```
+
+
+
+
+```{python}
 # downloads for preprints on osfpreprints
 query = {
     "query": {
@@ -416,9 +467,6 @@ downloads_byuser_byday_bypreprint_df %>%
   rename(user_id = key,
         tot_pp_downloads = doc_count) %>%
   select(-downloads_per_day)
-
-
-
 ```
 
 

@@ -354,6 +354,55 @@ payload = {
 
 res = requests.post(post_url, headers=headers, json=payload)
 downloads_byuser_byday_forapreprint = res.json()['aggregations']['preprints_from_2019']['users']['buckets']
+
+## same query, just using sloan_id rather than user_id
+query = {
+    "query": {
+         "term" : { "preprint_id" : "c8ufs" }
+    },
+     "aggs" : {
+        "preprints_from_2019": {
+            "filter": {
+                "range" : {
+                    "timestamp" : {
+                        "gte" : "2018-01-01",
+                        "lt" : "2020-03-13"
+                    }
+                }
+            },
+            "aggs": {
+                "users" : {
+                    "terms" : {
+                        "field" : "sloan_id",
+                        "size" : 250
+                    },
+                    "aggs": {
+                      "downloads_per_day" : {
+                        "date_histogram" :{
+                          "field":"timestamp",
+                          "interval":"second",
+                          "format": "yyyy-MM-dd HH:mm:ss"
+                        }
+                      }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+payload = {
+    'data': {
+        'type': 'preprint_metrics',
+        'attributes': {
+            'query': query
+        }
+    }
+}
+
+res = requests.post(post_url, headers=headers, json=payload)
+downloads_bysloanid_byday_forapreprint = res.json()['aggregations']['preprints_from_2019']['users']['buckets']
 ```
 
 ```{r}
@@ -367,7 +416,9 @@ downloads_byuser_byday_bypreprint_df %>%
   rename(user_id = key,
         tot_pp_downloads = doc_count) %>%
   select(-downloads_per_day)
-  
+
+
+
 ```
 
 

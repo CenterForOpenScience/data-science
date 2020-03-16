@@ -154,6 +154,121 @@ login_users = res.json()['aggregations']['preprints_from_2019']['users']['bucket
 ```
 
 ```{python}
+## downloads by user_id in March
+
+query = {
+     "aggs" : {
+        "preprints_from_2020": {
+            "filter": {
+                "range" : {
+                    "timestamp" : {
+                        "gte" : "2020-02-01",
+                        "lt" : "2020-03-16"
+                    }
+                }
+            },
+            "aggs": {
+                "users" : {
+                    "terms" : {
+                        "field" : "user_id",
+                        "size" : 250
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+payload = {
+    'data': {
+        'type': 'preprint_metrics',
+        'attributes': {
+            'query': query
+        }
+    }
+}
+
+res = requests.post(post_url, headers=headers, json=payload)
+downloads_byuser = res.json()['aggregations']['preprints_from_2020']['users']['buckets']
+
+##downloads by sloan_id for March
+query = {
+     "aggs" : {
+        "preprints_from_2020": {
+            "filter": {
+                "range" : {
+                    "timestamp" : {
+                        "gte" : "2020-02-01",
+                        "lt" : "2020-03-16"
+                    }
+                }
+            },
+            "aggs": {
+                "sloan_ids" : {
+                    "terms" : {
+                        "field" : "sloan_id",
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+payload = {
+    'data': {
+        'type': 'preprint_metrics',
+        'attributes': {
+            'query': query
+        }
+    }
+}
+
+res = requests.post(post_url, headers=headers, json=payload)
+downloads_bysloanid = res.json()['aggregations']['preprints_from_2020']['sloan_ids']['buckets']
+
+
+##downloads by sloan_coi for March
+query = {
+     "aggs" : {
+        "preprints_from_2020": {
+            "filter": {
+                "range" : {
+                    "timestamp" : {
+                        "gte" : "2020-02-01",
+                        "lt" : "2020-03-16"
+                    }
+                }
+            },
+            "aggs": {
+                "sloan_cois" : {
+                    "terms" : {
+                        "field" : "sloan_coi",
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+payload = {
+    'data': {
+        'type': 'preprint_metrics',
+        'attributes': {
+            'query': query
+        }
+    }
+}
+
+res = requests.post(post_url, headers=headers, json=payload)
+downloads_bysloancoi = res.json()['aggregations']['preprints_from_2020']['sloan_cois']['buckets']
+```
+
+
+
+```{python}
 # downloads by service by month in 2019
 query = {
      "aggs" : {
@@ -406,7 +521,7 @@ payload = {
 res = requests.post(post_url, headers=headers, json=payload)
 downloads_byuser_byday_forapreprint = res.json()['aggregations']['preprints_from_2019']['users']['buckets']
 
-## same query, just using sloan_id rather than user_id
+## same query, just using sloan_id rather than sloan_id
 query = {
     "query": {
          "term" : { "preprint_id" : "c8ufs" }

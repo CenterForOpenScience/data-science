@@ -31,6 +31,11 @@ library(ggalluvial)
 knitr::opts_chunk$set(fig.width=12, fig.height=8) 
 
 user_data <- read_csv('/Users/courtneysoderberg/Documents/data-science/Longitudinal_Research_Plan/user_categorization.csv', col_types = cols(merged_by_id = col_character()))
+
+user_preprint_data <- read_csv('/Users/courtneysoderberg/Documents/data-science/Longitudinal_Research_Plan/user_preprint_usage.csv')
+
+#turn into long form
+user_preprint_data <- rbind(user_preprint_data %>% select(-c(preprints_contributed, contributor_provider)) %>% rename(preprints = preprints_created, provider = creator_provider) %>% mutate(type = 'created'), user_preprint_data %>% select(-c(preprints_created, creator_provider)) %>% rename(preprints = preprints_contributed, provider = contributor_provider) %>% mutate(type = 'contributor')) %>% distinct() %>% filter(!is.na(provider))
 ```
 
 ```{r echo = FALSE, warning=FALSE}
@@ -203,6 +208,42 @@ tab_row_group(
   rows = 9:12)
                         
 ```
+
+```{r}
+
+##create table of all 3 product users by which preprint service they use
+
+#get provider userage by id
+provider_users <- user_preprint_data %>%
+                    group_by(id, provider) %>%
+                    tally() %>%
+                    select(-n)
+
+#get usage for only all 3 product users
+user_categorization %>%
+  distinct(id, .keep_all = TRUE) %>%
+  filter(is_active == TRUE) %>%
+  filter(public_sharing_contributor == 1 & preprint_contributor == 1 & registrations_contributor == 1) %>%
+  select(id, public_sharing_creator, public_sharing_contributor, public_sharing_user, preprint_creator, preprint_contributor, preprint_user, registrations_creator, registrations_contributor, registrations_user) %>%
+  left_join(provider_users, by = 'id') %>%
+  group_by(provider) %>%
+  tally() %>%
+  mutate(total_n = nrow(user_categorization %>%
+  distinct(id, .keep_all = TRUE) %>%
+  filter(is_active == TRUE) %>%
+  filter(public_sharing_contributor == 1 & preprint_contributor == 1 & registrations_contributor == 1) %>%
+  select(id, public_sharing_creator, public_sharing_contributor, public_sharing_user, preprint_creator, preprint_contributor, preprint_user, registrations_creator, registrations_contributor, registrations_user))) %>%
+  mutate(percent = round(100*n/total_n,2)) %>%
+  select(-total_n) %>%
+  arrange(desc(percent)) %>%
+  rename(Provider = provider, 
+         Users = n,
+         Percentage = percent) %>%
+  gt() %>%
+  tab_header(title = 'Preprint providers used by users of 3 OSF products')
+```
+
+
 
 #### When did different types of users confirm their accounts?
 

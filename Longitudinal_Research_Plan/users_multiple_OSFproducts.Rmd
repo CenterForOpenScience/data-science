@@ -785,6 +785,87 @@ tab_row_group(
   rows = 9:12)
 ```
 
+Total depth users who have created a preprint: `r nrow(user_categorization %>% distinct(id, .keep_all = TRUE) %>% filter(is_active == TRUE,preprint_creator == 1,depth_user == 'depth'))`
+
+
+```{r}
+# are depth users from particular fields, using preprint provider as proxy for discipline
+user_categorization %>%
+  distinct(id, .keep_all = TRUE) %>%
+  filter(is_active == TRUE,
+         preprint_creator == 1,
+         depth_user == 'depth') %>%
+  select(id, contains('creator')) %>%
+  left_join(user_preprint_data %>% filter(type == 'created'), by = 'id') %>%
+  group_by(provider) %>%
+  summarize(osf4m = sum(osf4m_creator == 1),
+            preprint= sum(preprint_creator == 1),
+            suppnode = sum(suppnode_creator == 1),
+            nodes = sum(osf_node_creator),
+            publicstorage = sum(public_sharing_creator == 1),
+            registrations = sum(registrations_creator == 1),
+            regpublicstorage = sum(registrations_creator == 1 & public_sharing_creator == 1),
+            regpreprint = sum(registrations_creator == 1 & preprint_creator == 1),
+            publicstoragepreprint = sum(public_sharing_creator == 1 & preprint_creator == 1),
+            allthree = sum(public_sharing_creator == 1 & preprint_creator == 1 & registrations_creator == 1)
+            ) %>%
+  filter(preprint >= 25) %>%
+  melt(id.vars = 'provider', variable.name = 'product') %>% 
+  dcast(product ~ provider) %>%
+  mutate(ina_perc = round(100 * inarxiv/(.[2, 'inarxiv']),2),
+         osf_perc = round(100 * osf/(.[2, 'osf']),2),
+         psy_perc = round(100 * psyarxiv/(.[2, 'psyarxiv']),2),
+         soc_perc = round(100 * socarxiv/(.[2, 'socarxiv']),2),
+         thesis_perc = round(100 * thesiscommons/(.[2, 'thesiscommons']),2)) %>%
+  mutate(product = case_when(product == 'nodes' ~ 'OSF Node',
+                     product == 'osf4m' ~ 'osf4m',
+                     product == 'preprint' ~ 'Preprints',
+                     product == 'publicstorage' ~ 'Public OSF node storage',
+                     product == 'suppnode' ~ 'Supplemental preprint node',
+                     product == 'registrations' ~ 'Registrations',
+                     product == 'regpreprint' ~ 'Registrations & Preprints',
+                     product == 'regpublicstorage' ~ 'Public Sharing & Registrations',
+                     product ==  'publicstoragepreprint' ~ 'Public Sharing & Preprints',
+                     product == 'allthree' ~ 'All three products')) %>%
+    mutate(product = as_factor(product)) %>%
+    mutate(product = fct_relevel(product, "osf4m", "OSF Node", "Public OSF node storage", "Registrations", "Preprints", "Supplemental preprint node", "Public Sharing & Registrations", "Public Sharing & Preprints", "Registrations & Preprints", "All three products")) %>%
+    arrange(product) %>%
+gt() %>%
+tab_header(
+title = 'Creation - Product Type by Preprint Provider'
+) %>%
+cols_merge(columns =vars(inarxiv, ina_perc), pattern = '{1} ({2}%)') %>%
+cols_merge(columns = vars(osf, osf_perc), pattern = '{1} ({2}%)') %>%
+cols_merge(columns = vars(psyarxiv, psy_perc), pattern = '{1} ({2}%)') %>%
+cols_merge(columns = vars(socarxiv, soc_perc), pattern = '{1} ({2}%)') %>%
+cols_merge(columns = vars(thesiscommons, thesis_perc), pattern = '{1} ({2}%)') %>%
+cols_label(product = 'Product Type',
+     inarxiv = 'INA-Rxiv',
+     osf = 'OSFPps',
+     psyarxiv = 'PsyArXiv',
+     socarxiv = 'SocArXiv',
+     thesiscommons = 'Thesis Commons') %>%
+tab_footnote(
+footnote = 'Only includes nodes that are not osf4m or supplemental nodes created during the preprint process',
+locations = cells_data(
+  columns = vars(product),
+  rows = c(2,3)
+)) %>%
+  tab_footnote(
+footnote = 'Only includes supplemental nodes created during the preprint process',
+locations = cells_data(
+  columns = vars(product),
+  rows = 6
+)) %>%
+tab_row_group(
+  group = 'Individual Product Usage',
+  rows = 1:6
+) %>%
+tab_row_group(
+  group = 'Exclusive Multiple Product Usage',
+  rows = 7:10)
+```
+
 Are depth users created during specific times? Similar to 'all three products' users, depth users tend to have been created a couple of years ago, so it takes a while to work up to 'depth usage' based on the current definition. 
 
 ```{r echo=FALSE, warning=FALSE}
@@ -797,6 +878,8 @@ Are depth users created during specific times? Similar to 'all three products' u
  
  graph + theme(axis.text.x  = element_text(angle=45,hjust = 1,vjust = 1))
 ```
+
+
 
 
 ## What are the 'none' users doing?

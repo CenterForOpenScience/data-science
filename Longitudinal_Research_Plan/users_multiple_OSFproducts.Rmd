@@ -9,7 +9,7 @@ Nodes sharing files is a proxy measure for sharing of data, code, or materials/m
 
 Data caveats and explanations:
 
- * The data used for the analyses below goes through 6/27/19
+ * The data used for the analyses below goes through 12/30/19
  * Empty supplemental nodes that resulted from NPD have been removed from the data
  * The analysis only include **Non-Deleted/Withdrawn** nodes and registrations and published preprints
  * Supplemental preprint node that were created as part of the preprint workflow and osf4m projects are not included as OSF nodes or public storage for this analysis
@@ -30,7 +30,7 @@ library(ggalluvial)
 
 knitr::opts_chunk$set(fig.width=12, fig.height=8) 
 
-user_data <- read_csv('/Users/courtneysoderberg/Downloads/user_activity2.csv', col_types = cols(merged_by_id = col_character()))
+user_data <- read_csv('/Users/courtneysoderberg/Documents/data-science/Longitudinal_Research_Plan/user_categorization.csv', col_types = cols(merged_by_id = col_character()))
 ```
 
 ```{r echo = FALSE, warning=FALSE}

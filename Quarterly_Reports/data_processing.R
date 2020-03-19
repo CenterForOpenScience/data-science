@@ -56,4 +56,6 @@ full_hist_cat_date <- full_join(date, products, by = 'placeholder') %>%
                                  cum_sso_newsignups = cumsum(sso_newsignups),
                                  cum_sso_newclaims = cumsum(sso_newclaims))
 
+# write out full_hist_cat_date for use in dashboard
+write_csv(full_hist_cat_date, 'full_hist_cat_date.csv')
 

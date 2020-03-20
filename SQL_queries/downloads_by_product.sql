@@ -1,9 +1,10 @@
 /* downloads by product type backfill query*/
 
-SELECT *
+SELECT osf_pagecounter.id, date, osf_pagecounter.modified, file_id, resource_id, version, 
+		target_content_type_id, target_object_id
 	FROM osf_pagecounter
 	LEFT JOIN osf_basefilenode
-	osf_pagecounter.file_id = osf_basefilenode.id
+	ON osf_pagecounter.file_id = osf_basefilenode.id
 	WHERE action = 'download'
 
 

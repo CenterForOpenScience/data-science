@@ -13,7 +13,18 @@ WITH daily_format AS (SELECT *, json_object_keys(date::json) AS download_date, j
  	monthly_pp_downloads AS (SELECT COUNT(total) AS downloads, date_trunc('month', download_date) AS trunc_date
 							FROM daily_downloads
 							WHERE target_content_type_id = 47
-							GROUP BY date_trunc('month', download_date))
+							GROUP BY date_trunc('month', download_date)),
+ 	monthly_file_downloads AS (SELECT daily_downloads.id, target_object_id, osf_abstractnode.id, download_date, total, type, spam_status, name
+								 FROM daily_downloads
+								 LEFT JOIN osf_abstractnode
+								 ON daily_downloads.target_object_id = osf_abstractnode.id
+								 LEFT JOIN (SELECT *
+								 				FROM osf_abstractnode_tags
+								 				LEFT JOIN osf_tag
+								 				ON osf_abstractnode_tags.tag_id = osf_tag.id
+								 				WHERE name = 'osf4m') AS project_tags
+								 ON osf_abstractnode.id = project_tags.abstractnode_id
+								 WHERE target_content_type_id = 30)
 
 
 /* downloads by product type per quater */

@@ -2,16 +2,15 @@
 
 WITH daily_format AS (SELECT *, json_object_keys(date::json) AS download_date, json_each_text(date::json) AS daily_downloads
 						FROM osf_pagecounter
-						WHERE action = "download"
+						WHERE action = 'download'
 						LIMIT 100)
 
-SELECT osf_pagecounter.id, date, osf_pagecounter.modified, file_id, resource_id, version, 
+SELECT daily_format.id, file_id, resource_id, download_date, 
+		(SELECT regexp_matches(daily_downloads::text, '\{""total"": ([0-9]*)'))[1] AS total,
 		target_content_type_id, target_object_id
-	FROM osf_pagecounter
+	FROM daily_format
 	LEFT JOIN osf_basefilenode
-	ON osf_pagecounter.file_id = osf_basefilenode.id
-	WHERE action = 'download'
-	LIMIT 100
+	ON daily_format.file_id = osf_basefilenode.id
 
 
 /* downloads by product type per quater */

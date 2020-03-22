@@ -28,11 +28,7 @@ WITH
 							FROM daily_format
 							LEFT JOIN osf_basefilenode
 							ON daily_format.file_id = osf_basefilenode.id),
- 	monthly_pp_downloads AS (SELECT COUNT(total) AS downloads, date_trunc('month', download_date) AS trunc_date
-							FROM daily_downloads
-							WHERE target_content_type_id = 47
-							GROUP BY date_trunc('month', download_date)),
- 	monthly_file_downloads AS (SELECT daily_downloads.id, target_object_id, osf_abstractnode.id, download_date, total, type, spam_status, name,
+ 	file_categorization AS (SELECT daily_downloads.id, target_object_id, osf_abstractnode.id, download_date, total, type, spam_status, name,
  									CASE WHEN institution_id IS NOT NULL THEN 1 ELSE 0 END as inst_affil,
  									CASE WHEN sr_child.suppnode_id IS NOT NULL OR sr_parent.suppnode_id IS NOT NULL THEN 1 ELSE 0 END as supp_node
 								 FROM daily_downloads
@@ -55,9 +51,11 @@ WITH
 								 ON osf_abstractnode.id = sr_child.child_id
 								 LEFT JOIN (SELECT DISTINCT ON (parent_id) parent_id, suppnode_id, child_id
 				 								FROM suppnode_relations) AS sr_parent
-								 ON osf_abstractnode.id = sr_parent.parent_id
+								 ON osf_abstractnode.id = sr_parent.parent_id)
 
-								 WHERE target_content_type_id = 30)
+/* calculate monthly downloads for all product types*/
+SELECT *
+	FROM file_categorization
 
 
 /* downloads by product type per quater */

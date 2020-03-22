@@ -5,7 +5,7 @@ WITH daily_format AS (SELECT *, json_object_keys(date::json) AS download_date, j
 						WHERE action = 'download'
 						LIMIT 100)
 
-SELECT daily_format.id, file_id, resource_id, download_date, 
+SELECT daily_format.id, file_id, resource_id,TO_DATE(download_date, 'YYYY/MM/DD') AS download_date, 
 		(SELECT regexp_matches(daily_downloads::text, '\{""total"": ([0-9]*)'))[1] AS total,
 		target_content_type_id, target_object_id
 	FROM daily_format

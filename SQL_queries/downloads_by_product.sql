@@ -1,6 +1,23 @@
 /* downloads by product type backfill query*/
 
-WITH daily_format AS (SELECT *, json_object_keys(date::json) AS download_date, json_each_text(date::json) AS daily_downloads
+WITH 
+
+	/* get all nested components under connected suppnode to also classify them as suppnodes */
+	RECURSIVE children_nodes AS (SELECT osf_noderelation.id, osf_noderelation._id, is_node_link, child_id, parent_id, parent_id AS suppnode_id
+										FROM osf_preprint
+										LEFT JOIN osf_noderelation
+										ON osf_preprint.node_id = osf_noderelation.parent_id
+										WHERE is_node_link IS FALSE
+									UNION
+										SELECT cl.id, cl._id, cl.is_node_link, rl.child_id, rl.parent_id, suppnode_id
+											FROM osf_noderelation rl
+											INNER JOIN children_nodes cl
+											ON cl.child_id = rl.parent_id),
+
+	 /* dedpublicate resulting relations since single suppnode can be connected to mulitple preprints */
+	 suppnode_relations AS (SELECT DISTINCT ON (child_id) child_id, suppnode_id, id
+								FROM children_nodes),
+	 daily_format AS (SELECT *, json_object_keys(date::json) AS download_date, json_each_text(date::json) AS daily_downloads
 						FROM osf_pagecounter
 						WHERE action = 'download'
 						LIMIT 100),
@@ -30,6 +47,10 @@ WITH daily_format AS (SELECT *, json_object_keys(date::json) AS download_date, j
 								 LEFT JOIN (SELECT DISTINCT ON (abstractnode_id) abstractnode_id, institution_id
 								 				FROM osf_abstractnode_affiliated_institutions) AS deduped_inst_nodes
 								 ON osf_abstractnode.id = deduped_inst_nodes.abstractnode_id
+
+								 /* nodes can be supplements for multiple pps, so need to deduplicate */
+								 LEFT JOIN (SELECT DISTINCT ON (node_id) node_id, id
+								 				FROM osf_preprint)
 								 WHERE target_content_type_id = 30)
 
 

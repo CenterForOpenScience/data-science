@@ -1,0 +1,108 @@
+---
+title: "Preprint Impact Queries"
+output: html_notebook
+---
+
+This is a notebook that collects commonly used preprint impact queries that need to be run from time to time outside of specific reports/larger analyses.  
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#loading libraries
+library(httr)
+library(tidyverse)
+library(here)
+library(jsonlite)
+library(lubridate)
+library(reticulate)
+
+url <- 'https://api.osf.io/_/metrics/preprints/'
+osf_auth <- Sys.getenv("osf_preprintimpact_auth")
+auth_header <- httr::add_headers('Authorization' = paste('Bearer', osf_auth))
+
+use_condaenv(condaenv = "myenv", conda = "/Users/courtneysoderberg/opt/anaconda3/bin/python")
+```
+
+
+```{python}
+# intitial python setup of tokens and post URL, which needs to be included with any of the python queries below
+import requests
+
+METRICS_BASE = r.url
+TOKEN = r.osf_auth
+
+headers = {
+    'Content-Type': 'application/vnd.api+json',
+    'Authorization': 'Bearer {}'.format(TOKEN)
+}
+
+post_url = '{}views/'.format(METRICS_BASE) # can change to '{}downloads' as well
+```
+
+
+# Queries related to total/by provider views/downloads per unit of time
+
+```{python}
+
+# Preprint views, by provider per month, for 2020 
+
+query = {
+     "aggs" : {
+        "preprints_from_2020": {
+            "filter": {
+                "range" : {
+                    "timestamp" : {
+                        "gte" : "2020-01-01",
+                        "lt" : "2020-03-24"
+                    }
+                }
+            },
+            "aggs": {
+                "provider" : {
+                    "terms" : {
+                        "field" : "provider_id",
+                        "size" : 30,   # set size higher than total number of providers to get all
+                    },
+                    "aggs": {
+                      "views_per_month" : {
+                        "date_histogram" :{
+                          "field":"timestamp",
+                          "interval":"month",
+                          "format": "yyyy-MM-dd HH:mm"
+                            }
+                          }
+                        }
+                      }
+                    }
+                }
+            }
+        }
+
+
+payload = {
+    'data': {
+        'type': 'preprint_metrics',
+        'attributes': {
+            'query': query
+        }
+    }
+}
+
+res = requests.post(post_url, headers=headers, json=payload)
+providerviews_permonth = res.json()['aggregations']['preprints_from_2020']['provider']['buckets']
+```
+
+### R scripts to clean data from queries above
+```{r}
+
+# formatting Preprint views, by provider per month, for 2020 output into dataframe
+providerviews_permonth_df <- bind_rows(py$providerviews_permonth) %>% unnest(views_per_month)
+
+providerviews_permonth_df <- providerviews_permonth_df %>%
+                                  mutate(date = map_chr(views_per_month, 'key_as_string'),
+                                         views = map_dbl(views_per_month, 'doc_count')) %>%
+                                  rename(provider_id = key) %>%
+                                  select(-c(doc_count,views_per_month))
+```
+
+

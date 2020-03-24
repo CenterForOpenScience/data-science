@@ -45,7 +45,6 @@ post_url = '{}views/'.format(METRICS_BASE) # can change to '{}downloads' as well
 ```{python}
 
 # Preprint views, by provider per month, for 2020 
-
 query = {
      "aggs" : {
         "preprints_from_2020": {
@@ -105,4 +104,58 @@ providerviews_permonth_df <- providerviews_permonth_df %>%
                                   select(-c(doc_count,views_per_month))
 ```
 
+
+# Queries related to total/by users views/downloads per unit of time
+
+```{python}
+
+# views by user in the month of march
+query = {
+    "query": {
+         "exists" : { "field" : "user_id" }
+    },
+     "aggs" : {
+        "preprints_from_2020": {
+            "filter": {
+                "range" : {
+                    "timestamp" : {
+                        "gte" : "2020-03-01",
+                        "lt" : "2020-03-24"
+                    }
+                }
+            },
+            "aggs": {
+                "users" : {
+                    "terms" : {
+                        "field" : "user_id",
+                        "size" : 5000
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+payload = {
+    'data': {
+        'type': 'preprint_metrics',
+        'attributes': {
+            'query': query
+        }
+    }
+}
+
+res = requests.post(post_url, headers=headers, json=payload)
+views_byuser = res.json()['aggregations']['preprints_from_2020']['users']['buckets']
+```
+
+### R scripts to clean data from queries above
+```{r}
+
+# formatting 'Preprint views, by provider per month, for 2020' output into dataframe
+views_byuser_df <- bind_rows(py$views_byuser) %>%
+                     rename(user_id = key,
+                            views = doc_count)
+```
 

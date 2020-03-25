@@ -1,0 +1,43 @@
+---
+title: "preprint_vsds_collection"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# loading required libraries
+library(tidyverse)
+library(osfr)
+library(reticulate)
+library(jsonlite)
+library(lubridate)
+
+url <- 'https://api.osf.io/_/metrics/preprints/'
+osf_auth <- Sys.getenv("osf_preprintimpact_auth")
+auth_header <- httr::add_headers('Authorization' = paste('Bearer', osf_auth))
+
+use_condaenv(condaenv = "myenv", conda = "/Users/courtneysoderberg/opt/anaconda3/bin/python")
+
+curr_time <- now('UTC')
+yesterday <- as.Date(curr_time) - 1
+```
+
+```{r}
+# reading in preprint data
+new_pp <- read_csv('/Users/courtneysoderberg/Documents/data-science/Sloan_grant/preprint_info.csv') %>% #use absolute path for cron job
+              filter(date_published >= yesterday) %>%
+              mutate(lt = curr_time,
+                     gte = date_published,
+                     run_date = as.Date(curr_time),
+                     end_date = ymd_hms(curr_time) + days(14))
+
+coi_pp_dc <- read_csv('/Users/courtneysoderberg/Documents/data-science/Sloan_grant/coi_pp_dc.csv') %>%
+                filter(end_date >= curr_time,
+                       run_date >= yesterday) %>%
+                mutate(gte = lt,
+                       lt = curr_time,
+                       run_date = as.Date(curr_time)) %>%
+                bind_rows(new_pp)
+```
+

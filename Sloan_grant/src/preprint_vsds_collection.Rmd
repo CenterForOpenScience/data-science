@@ -41,3 +41,75 @@ coi_pp_dc <- read_csv('/Users/courtneysoderberg/Documents/data-science/Sloan_gra
                 bind_rows(new_pp)
 ```
 
+```{python}
+pp = r.new_pp #get pandas df of R object
+
+# set up query for getting views per preprint per user_id in timeframe
+query = {
+    "query": {
+         "term" : { "preprint_id" : "'"guid"'" } # example pp guid
+    },
+     "aggs" : {
+        "download_timeframe": {
+            "filter": {
+                "range" : {
+                    "timestamp" : {
+                        "gte" : "'"gte_date"'",
+                        "lte" : "'"lt_date"'"
+                    }
+                }
+            },
+            "aggs": {
+                "users" : {
+                    "terms" : {
+                        "field" : "user_id",
+                        "size" : 5000
+                    },
+                    "aggs": {
+                      "downloads_per_day" : {
+                        "date_histogram" :{
+                          "field":"timestamp",
+                          "interval":"minute",
+                          "format": "yyyy-MM-dd HH:mm:ss"
+                        }
+                      }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+payload = {
+    'data': {
+        'type': 'preprint_metrics',
+        'attributes': {
+            'query': query
+        }
+    }
+}
+
+res = requests.post(post_url, headers=headers, json=payload)
+pp_views_byuser = res.json()['aggregations']['download_timeframe']['users']['buckets']
+
+for i in range(len(pp.guid)):
+
+  # set variable names for each loop
+  lt_date = pp.lt.iloc[i]
+  gte_date = pp.gte.iloc[i]
+  guid = pp.guid.iloc[i]
+
+  
+print(pp)
+pp.date_published.iloc[2]
+
+len(pp.guid) - 1
+range(len(pp.guid))
+
+
+  print(i)
+
+type(pp)
+```
+

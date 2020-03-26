@@ -28,7 +28,9 @@ yesterday <- as.Date(curr_time) - 1
 new_pp <- read_csv('/Users/courtneysoderberg/Documents/data-science/Sloan_grant/preprint_info.csv') %>% #use absolute path for cron job
               filter(date_published >= yesterday) %>%
               mutate(lt = curr_time,
-                     gte = date_published,
+                     lt_string = gsub(" ", "T", lt),
+                     gte = date_published, 
+                     gte_string = gsub(" ", "T", gte),
                      run_date = as.Date(curr_time),
                      end_date = ymd_hms(curr_time) + days(14))
 
@@ -56,8 +58,8 @@ headers = {
 
 post_url = '{}views/'.format(METRICS_BASE)
 
-lt_date = pp.loc[0, 'lt']
-gte_date = pp.loc[0, 'gte']
+lte_date = pp.iloc[4,6]
+gte_date = pp.iloc[4,8]
 guid = pp.iloc[4,1]
 
 # set up query for getting views per preprint per user_id in timeframe
@@ -70,8 +72,8 @@ query = {
             "filter": {
                 "range" : {
                     "timestamp" : {
-                        "gte" : "2020-03-20",
-                        "lte" : "2020-03-26"
+                        "gte" : gte_date,
+                        "lte" : lte_date
                     }
                 }
             },
@@ -107,7 +109,7 @@ payload = {
 }
 
 res = requests.post(post_url, headers=headers, json=payload)
-pp_views_byuser134 = res.json()['aggregations']['download_timeframe']['users']['buckets']
+pp_views_byuser01 = res.json()['aggregations']['download_timeframe']['users']['buckets']
 
 
 #for i in range(len(pp.guid)):
@@ -135,6 +137,6 @@ pp_views_byuser134 = res.json()['aggregations']['download_timeframe']['users']['
 print(pp)
 print(guid)
 print(guids)
-print(lt_date)
+print(gte_date)
 ```
 

@@ -44,18 +44,34 @@ coi_pp_dc <- read_csv('/Users/courtneysoderberg/Documents/data-science/Sloan_gra
 ```{python}
 pp = r.new_pp #get pandas df of R object
 
+import requests
+
+METRICS_BASE = r.url
+TOKEN = r.osf_auth
+
+headers = {
+    'Content-Type': 'application/vnd.api+json',
+    'Authorization': 'Bearer {}'.format(TOKEN)
+}
+
+post_url = '{}views/'.format(METRICS_BASE)
+
+lt_date = pp.loc[0, 'lt']
+gte_date = pp.loc[0, 'gte']
+guid = pp.iloc[4,1]
+
 # set up query for getting views per preprint per user_id in timeframe
 query = {
     "query": {
-         "term" : { "preprint_id" : "'"guid"'" } # example pp guid
+         "term" : { "preprint_id" : guid } # example pp guid
     },
      "aggs" : {
         "download_timeframe": {
             "filter": {
                 "range" : {
                     "timestamp" : {
-                        "gte" : "'"gte_date"'",
-                        "lte" : "'"lt_date"'"
+                        "gte" : "2020-03-20",
+                        "lte" : "2020-03-26"
                     }
                 }
             },
@@ -91,25 +107,34 @@ payload = {
 }
 
 res = requests.post(post_url, headers=headers, json=payload)
-pp_views_byuser = res.json()['aggregations']['download_timeframe']['users']['buckets']
+pp_views_byuser134 = res.json()['aggregations']['download_timeframe']['users']['buckets']
 
-for i in range(len(pp.guid)):
+
+#for i in range(len(pp.guid)):
 
   # set variable names for each loop
-  lt_date = pp.lt.iloc[i]
-  gte_date = pp.gte.iloc[i]
-  guid = pp.guid.iloc[i]
+#  lt_date = pp.loc[i, 'lt']
+#  gte_date = pp.loc[i, 'gte']
+#  guid = pp.loc[i, 'guid']
+  
+  
+
+#  payload = {
+#      'data': {
+#          'type': 'preprint_metrics',
+#          'attributes': {
+#              'query': query
+#         }
+#     }
+#  }
+
+#  res = requests.post(post_url, headers=headers, json=payload)
+#  pp_views_byuser = res.json()['aggregations']['download_timeframe']['users']['buckets']
 
   
 print(pp)
-pp.date_published.iloc[2]
-
-len(pp.guid) - 1
-range(len(pp.guid))
-
-
-  print(i)
-
-type(pp)
+print(guid)
+print(guids)
+print(lt_date)
 ```
 

@@ -60,7 +60,8 @@ headers = {
 post_url = '{}views/'.format(METRICS_BASE)
 
 # set up empty dataframe with the right column names
-test_df = pd.DataFrame(columns=['guid', 'user_id', 'date', 'view_count'])
+views_df = pd.DataFrame(columns=['guid', 'user_id', 'date', 'view_count'])
+empty_lists = 0
 
 # loop through all the guids that need to be called that day
 for i in range(len(pp.guid)):
@@ -127,15 +128,15 @@ for i in range(len(pp.guid)):
     for x in range(len(pp_views_byuser)):
       
       # for each person, save their dictionary that contatins their actions
-      test_keyaccess = pp_views_byuser[x][key]
+      user_actions = pp_views_byuser[x][key]
       
       # loop through each item in their 'buckets' which in this case is each timestamp
-      for j in range(len(test_keyaccess['buckets'])):
+      for j in range(len(user_actions['buckets'])):
         
         # append new row with info for the preprint, the user, the timestamp, and the action count
-        test_df = test_df.append({'guid': guid, 'user_id': pp_views_byuser[x]['key'], 'date': test_keyaccess['buckets'][j]['key_as_string'], 'view_count': test_keyaccess['buckets'][j]['doc_count']}, ignore_index= True)
+        views_df = views_df.append({'guid': guid, 'user_id': pp_views_byuser[x]['key'], 'date': user_actions['buckets'][j]['key_as_string'], 'view_count': user_actions['buckets'][j]['doc_count']}, ignore_index= True)
   else:
-    print('length 0')
+    empty_lists = empty_lists + 1
 ```
 
 ```{python}

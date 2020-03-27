@@ -59,10 +59,13 @@ headers = {
 
 post_url = '{}views/'.format(METRICS_BASE)
 
+# set up empty dataframe with the right column names
 test_df = pd.DataFrame(columns=['guid', 'user_id', 'date', 'view_count'])
 
+# loop through all the guids that need to be called that day
 for i in range(len(pp.guid)):
 
+  # get guid, and start and end days to use in query for each preprint
   lte_date = pp['lt_string'][i]
   gte_date = pp['gte_string'][i]
   guid = pp['guid'][i]
@@ -113,13 +116,23 @@ for i in range(len(pp.guid)):
       }
   }
   
+  # make call using query & payload from above
   res = requests.post(post_url, headers=headers, json=payload)
   pp_views_byuser = res.json()['aggregations']['download_timeframe']['users']['buckets']
 
-  if len(pp_views_byuser) > 0:
+
+  if len(pp_views_byuser) > 0: # only parse query output if there were actually views/downloads to parse
+    
+    # loop through each person in output
     for x in range(len(pp_views_byuser)):
+      
+      # for each person, save their dictionary that contatins their actions
       test_keyaccess = pp_views_byuser[x][key]
+      
+      # loop through each item in their 'buckets' which in this case is each timestamp
       for j in range(len(test_keyaccess['buckets'])):
+        
+        # append new row with info for the preprint, the user, the timestamp, and the action count
         test_df = test_df.append({'guid': guid, 'user_id': pp_views_byuser[x]['key'], 'date': test_keyaccess['buckets'][j]['key_as_string'], 'view_count': test_keyaccess['buckets'][j]['doc_count']}, ignore_index= True)
   else:
     print('length 0')

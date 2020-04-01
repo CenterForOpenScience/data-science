@@ -135,3 +135,48 @@ sheets_append(user_data, ss = user_gdrive_file)
 sheets_append(download_data, ss = download_gdrive_file)
 sheets_append(preprint_data, ss = preprint_gdrive_file)
 
+
+## calculating monthly numbers
+
+#calculate start and end of needed range
+end_2_month <- floor_date(now('utc'), 'day') - months(1) - days(1)
+end_last_month <- floor_date(now('utc'), 'day') - days(1)
+
+# set up function to return only needed rows for each sheet
+startend_dates <- function(gsheet) {
+                    
+                    #retain only needed rows for calculations  
+                    startend_sheet <- read_sheet(gsheet) %>%
+                        mutate(keen.timestamp = ymd_hms(keen.timestamp)) %>%
+                        filter(keen.timestamp == end_last_month | keen.timestamp == end_2_month) 
+                      
+                    # return resulting sheet
+                    return(startend_sheet)
+}
+
+nodes_startend <- startend_dates(nodes_gdrive_file)
+files_startend <- startend_dates(files_grdrive_file)
+users_startend <- startend_dates(user_gdrive_file)
+
+# additional process for pps to collapse across providers
+preprints_startend <- startend_dates(preprint_gdrive_file) %>%
+                        group_by(keen.timestamp) %>%
+                        summarize(total_pps = sum(provider.total))
+
+# downloads are a sum rather than a difference
+read_sheet(download_gdrive_file, col_types = '??i') %>%
+  filter(keen.timestamp >= floor_date(now('utc'), 'day') - months(1)) %>%
+  summarize(total = sum(files.total))
+
+
+
+#calculate monthly values
+nodes_startend[2, 'projects.public'] - nodes_startend[1, 'projects.public']
+nodes_startend[2, 'registered_projects.total'] - nodes_startend[1, 'registered_projects.total']
+
+files_startend[2, 'osfstorage_files_including_quickfiles.public'] - files_startend[1, 'osfstorage_files_including_quickfiles.public']
+files_startend[2, 'osfstorage_files_including_quickfiles.total'] - files_startend[1, 'osfstorage_files_including_quickfiles.total']
+
+users_startend[2, 'status.active'] - users_startend[1, 'status.active']
+
+preprints_startend[2, 'total_pps'] - preprints_startend[1, 'total_pps']             

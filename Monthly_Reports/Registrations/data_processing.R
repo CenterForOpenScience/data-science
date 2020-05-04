@@ -17,7 +17,7 @@ read_sheet('https://docs.google.com/spreadsheets/d/1ti6iEgjvr-hXyMT5NwCNfAg-PJac
     mutate(registered_projects.monthly_diff = registered_projects.total - lag(registered_projects.total),
            monthly_diff_withdraws = registered_projects.withdrawn - lag(registered_projects.withdrawn),
            monthly_diff_embargo = registered_projects.embargoed_v2 - lag(registered_projects.embargoed_v2)) %>%
-    write_csv(here::here('Monthly_Reports/Registrations/', 'monthly_total_regs.csv'))
+    write_csv(path = '/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Registrations/monthly_total_regs.csv')
                     
 
 last_month <- floor_date(Sys.Date() - months(1), "month") %>%
@@ -50,5 +50,5 @@ last_month_data <- read_csv(file_name) %>%
                       rename(name = form_type)
 
 monthly_data <- bind_rows(monthly_data, last_month_data)
-write_csv(monthly_data, here::here('Monthly_Reports/Registrations/', 'form_type_monthly.csv'))
+write_csv(monthly_data, '/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Registrations/form_type_monthly.csv')
 

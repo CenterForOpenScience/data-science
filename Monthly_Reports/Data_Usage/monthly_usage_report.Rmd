@@ -47,10 +47,11 @@ The data used to generate this report can be found [here](https://osf.io/a7w36/)
 
 # create all difference variables
 storage_dt <- storage_data %>%
-                      filter(date >= as.Date(Sys.time()) - dyears(1)) %>%
+                      filter(date >= Sys.Date() - months(9)) %>%
                       select(month, total_tib, pubnode_tib, privatenode_tib, deleted_tib, node_tib, preprint_tib, quickfiles_tib, regs_tib) %>%
                       mutate_if(is.numeric, funs(diff = . - lag(.))) %>%
-                      column_to_rownames('month')
+                      column_to_rownames('month') %>%
+                      
 
 # transpose dataframe
 transpose_storage <- data.table::transpose(storage_dt)
@@ -73,6 +74,8 @@ transpose_storage <- transpose_storage %>%
 
 \
 \
+\
+
 
 ```{r, warning=FALSE, echo=FALSE}
 # overall storage
@@ -103,6 +106,8 @@ transpose_storage %>%
   )
 
 ```
+
+\
 \
 \
 
@@ -160,6 +165,9 @@ data_graph$storage_type <- fct_recode(data_graph$storage_type, Quickfiles = 'prc
 data_graph$storage_type <- fct_relevel(data_graph$storage_type, c('Public Nodes', 'Private Nodes', 'Preprints', 'Quickfiles', 'Registrations', 'Deleted Content'))
 ```
 
+\
+\
+\
 
 ```{r, warning=FALSE, echo=FALSE}
 # graph of monthly storage by percent

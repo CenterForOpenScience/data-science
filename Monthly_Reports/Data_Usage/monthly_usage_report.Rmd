@@ -47,10 +47,13 @@ The data used to generate this report can be found [here](https://osf.io/a7w36/)
 
 # create all difference variables
 storage_dt <- storage_data %>%
-                      filter(date >= Sys.Date() - months(9)) %>%
-                      select(month, total_tib, pubnode_tib, privatenode_tib, deleted_tib, node_tib, preprint_tib, quickfiles_tib, regs_tib) %>%
+                      filter(date >= as.Date(Sys.time()) - dyears(1)) %>%
+                      select(date, month, total_tib, pubnode_tib, privatenode_tib, deleted_tib, node_tib, preprint_tib, quickfiles_tib, regs_tib) %>%                    
                       mutate_if(is.numeric, funs(diff = . - lag(.))) %>%
+                      filter(date >= as.Date(Sys.time()) - months(9)) %>%
+                      select(-date) %>%
                       column_to_rownames('month')
+                      
                       
 
 # transpose dataframe

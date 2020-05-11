@@ -38,6 +38,21 @@ storage_data <- read_csv('/Users/courtneysoderberg/Documents/data-science/Monthl
                            prct_pri_nodes = 100*(nd_private_nodes/total))
 ```
 
+```{r, warning=FALSE, include=FALSE}
+
+# create public & private storage counts by root_id of non-deleted files and nodes
+by_node_storage <- read_csv('nondel_nodedata.csv', col_types = cols(deleted_on = col_skip(),
+                                                                  target_object = col_skip(),
+                                                                  target_type = col_skip(),
+                                                                  target_is_fork = col_skip(),
+                                                                  target_is_deleted = col_skip())) %>%
+                 group_by(target_root, target_is_public) %>%
+                 summarize(tot_size = sum(size)) %>%
+                 mutate(gig_tot_size = round(tot_size/(1024^3),3))
+                 
+```
+
+
 #### Total storage increased by `r round(100 * (storage_data$total[nrow(storage_data)]/storage_data$total[nrow(storage_data) - 1]) - 100,2)`% this month.
 
 The data used to generate this report can be found [here](https://osf.io/a7w36/). 
@@ -185,6 +200,7 @@ graph
 
 
 ```
+
 
 
 

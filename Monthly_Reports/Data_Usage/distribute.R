@@ -20,13 +20,15 @@ unzip('/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Data_Usag
       exdir = '/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Data_Usage/raw_data')
 
 # create 1 file of all raw data
-all_raw_nodedata <- list.files(path = '/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Data_Usage/raw_data', pattern = "*node*") %>% 
+nondel_nodedata <- list.files(path = '/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Data_Usage/raw_data', pattern = "*node*") %>% 
   map_df(~read_csv(paste0('/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Data_Usage/raw_data/',.), col_types = cols(deleted_on = col_datetime(),
                                                                                                                                       target_spam_status = col_double()))) %>%
   filter(target_type == "b'osf.node'" & target_is_deleted == FALSE & is.na(deleted_on)) %>%
-  select(-c(target_content_type_id, region, target_title, target_spam_status, target_is_supplementary_node))
+  select(-c(target_content_type_id, region, target_title, target_spam_status, target_is_supplementary_node)) %>%
+  mutate(target_guid = str_sub(target_guid, 3, 7)) %>%
+  mutate(target_root = str_sub(target_root, 3, 7))
 
-write_csv(all_raw_nodedata, 'all_raw_nodedata.csv')
+write_csv(nondel_nodedata, 'nondel_nodedata.csv')
 
 rmarkdown::render("/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Data_Usage/monthly_usage_report.Rmd", 'html_document')
 

@@ -201,6 +201,20 @@ graph
 
 ```
 
+\
+\
+\
+
+# Data storage on Nodes by Root_id
+
+```{r}
+ggplot(by_node_storage, aes(gig_tot_size, color = target_is_public)) +
+  geom_freqpoly(bins = 100) +
+  scale_y_log10() +
+  scale_x_continuous(breaks=seq(0, max(by_node_storage$gig_tot_size), by = 500))
+```
+
+
 
 
 

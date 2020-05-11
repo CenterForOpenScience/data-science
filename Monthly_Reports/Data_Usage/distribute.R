@@ -17,7 +17,16 @@ osf_retrieve_node('https://osf.io/r83uz/') %>%
   osf_download(path = '/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Data_Usage/raw_data.zip', overwrite = T)
 
 unzip('/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Data_Usage/raw_data.zip', 
-      exdir = '/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Data_Usage/raw_data')  
+      exdir = '/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Data_Usage/raw_data')
+
+# create 1 file of all raw data
+all_raw_nodedata <- list.files(path = '/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Data_Usage/raw_data', pattern = "*node*") %>% 
+  map_df(~read_csv(paste0('/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Data_Usage/raw_data/',.), col_types = cols(deleted_on = col_datetime(),
+                                                                                                                                      target_spam_status = col_double()))) %>%
+  filter(target_type == "b'osf.node'" & target_is_deleted == FALSE & is.na(deleted_on)) %>%
+  select(-c(target_content_type_id, region, target_title, target_spam_status, target_is_supplementary_node))
+
+write_csv(all_raw_nodedata, 'all_raw_nodedata.csv')
 
 rmarkdown::render("/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Data_Usage/monthly_usage_report.Rmd", 'html_document')
 

@@ -208,7 +208,7 @@ graph
 
 # Data storage on Nodes by Root_id
 
-```{r}
+```{r, warning=FALSE, echo=FALSE}
 ggplot(by_node_storage, aes(gig_tot_size, color = target_is_public)) +
   geom_freqpoly(bins = 100) +
   scale_y_log10() +
@@ -218,13 +218,13 @@ ggplot(by_node_storage, aes(gig_tot_size, color = target_is_public)) +
 \
 \
 
-```{r}
+```{r, warning=FALSE, echo=FALSE}
 by_node_storage %>% 
         filter(target_is_public == FALSE) %>% 
         select(target_root, gig_tot_size) %>% 
         arrange(desc(gig_tot_size)) %>%
   datatable(colnames = c('Project GUID', 'Storage in GB'),
-            caption = 'Public Storage',
+            caption = 'Private Storage',
             extensions = 'Buttons',  
             options = list(dom = 'Bfrtip', buttons = list( list(extend = 'collection', buttons = list(list(extend='csv',filename='reg_form_counts.csv'),
                                                                  list(extend='excel', filename = 'reg_form_counts.xlsx') ),text="Download"))))
@@ -233,7 +233,7 @@ by_node_storage %>%
 \
 \
 
-```{r}
+```{r, warning=FALSE, echo=FALSE}
 by_node_storage %>% 
         filter(target_is_public == TRUE) %>% 
         select(target_root, gig_tot_size) %>% 

@@ -46,3 +46,34 @@ SELECT COUNT(DISTINCT root_id) AS num_toplevel_reg,
 	LEFT JOIN osf_fileversion
 	ON osf_basefileversionsthrough.fileversion_id = osf_fileversion.id
 	WHERE registrationschema_id = 26 AND is_deleted IS FALSE
+
+/* number of different object types and storage by 3 example OSF4I */
+SELECT osf_institution.name,
+		COUNT(DISTINCT (CASE WHEN nodes.type = 'osf.node' THEN root_id END)) AS num_topleve_projects,
+		COUNT(DISTINCT (CASE WHEN nodes.type = 'osf.registration' THEN root_id END)) AS num_topleve_reg,
+		COUNT(DISTINCT (CASE WHEN nodes.type = 'osf.node' THEN nodes.id END)) AS num_nonreg_nodes,
+		COUNT(DISTINCT (CASE WHEN nodes.type = 'osf.registration' THEN nodes.id END)) AS num_reg_nodes,
+		COUNT(DISTINCT (CASE WHEN nodes.type = 'osf.node' THEN osf_files.id END)) AS num_nonreg_files,
+		COUNT(DISTINCT (CASE WHEN nodes.type = 'osf.registration' THEN osf_files.id END)) AS num_reg_files,
+		COUNT(DISTINCT (CASE WHEN nodes.type = 'osf.node' THEN osf_fileversion.id END)) AS num_nonreg_file_version,
+		COUNT(DISTINCT (CASE WHEN nodes.type = 'osf.registration' THEN osf_fileversion.id END)) AS num_reg_file_versions,
+		SUM(size) AS storage
+	FROM osf_abstractnode_affiliated_institutions
+	LEFT JOIN (SELECT *
+				FROM osf_abstractnode
+				WHERE is_deleted IS FALSE) AS nodes
+	ON osf_abstractnode_affiliated_institutions.abstractnode_id = nodes.id
+	LEFT JOIN osf_institution
+	ON osf_abstractnode_affiliated_institutions.institution_id = osf_institution.id
+	LEFT JOIN (SELECT *
+				 FROM osf_basefilenode
+				 WHERE type = 'osf.osfstoragefile') as osf_files
+	ON nodes.id = osf_files.target_object_id
+	LEFT JOIN osf_basefileversionsthrough
+	ON osf_files.id = osf_basefileversionsthrough.basefilenode_id
+	LEFT JOIN osf_fileversion
+	ON osf_basefileversionsthrough.fileversion_id = osf_fileversion.id
+	WHERE osf_abstractnode_affiliated_institutions.institution_id = 17 OR 
+			osf_abstractnode_affiliated_institutions.institution_id = 58 OR 
+			osf_abstractnode_affiliated_institutions.institution_id = 52
+	GROUP BY osf_institution.name

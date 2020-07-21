@@ -23,7 +23,7 @@ WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id, username, is_registered
 	 						date_trunc('month', date_confirmed) as month, name
 						FROM user_tag_info
 						WHERE is_registered IS TRUE AND is_invited IS FALSE AND 
-								date_confirmed >= date_trunc('month', current_date - interval '3' month)
+								date_confirmed < '2020-07-01'
 						GROUP BY name, date_trunc('month', date_confirmed)),
 	 
 	 /* count up number of invited users by source provider (overall, not by month, since we don't have time of tag creation and an unconfirmed user could be added to multiple products across a number of months*/
@@ -38,7 +38,7 @@ WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id, username, is_registered
 	 					   date_trunc('month', date_confirmed) as month, name
 	 				FROM user_tag_info
 	 				WHERE is_invited IS TRUE AND date_confirmed IS NOT NULL AND
-	 						date_confirmed >= date_trunc('month', current_date - interval '3' month)
+	 						date_confirmed < '2020-07-01'
 	 				GROUP BY name, date_trunc('month', date_confirmed))
 
 /* combine all queries together to get one datafile with all information*/

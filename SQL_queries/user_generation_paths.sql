@@ -48,7 +48,7 @@ WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id,
 	 				FROM user_tag_info
 	 				WHERE is_invited IS TRUE AND date_confirmed IS NOT NULL AND
 	 						date_confirmed < '2020-07-01' AND tag_type = 'claimed'
-	 				GROUP BY name, date_trunc('month', date_confirmed))
+	 				GROUP BY product, date_trunc('month', date_confirmed))
 
 /* combine all queries together to get one datafile with all information*/
 SELECT new_signups, new_claims, new_invitees, sso_newsignups, sso_newclaims, new_signups.name, new_signups.month

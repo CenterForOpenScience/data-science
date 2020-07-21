@@ -4,7 +4,9 @@
 /* intital query to get info about users with system tags, dates, and SSO */
 
 /* get all non-spam, non-deactived confirmed/not yet confirmed users and their source/claimed tags */
-WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id, username, is_registered, is_invited, date_registered, date_confirmed, date_disabled, is_active, deleted, spam_status, osf_tag.name, institution_id
+WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id, username, is_registered, is_invited, date_registered, date_confirmed, date_disabled, is_active, deleted, spam_status, osf_tag.name, institution_id,
+						CASE WHEN osf_tag.name LIKE 'source%' THEN 'source' WHEN osf_tag.name LIKE 'claimed%' THEN 'claimed' END AS tag_type,
+						regexp_replace(osf_tag.name, 'source:|claimed:', '') AS product
 						FROM osf_osfuser
 						LEFT JOIN osf_osfuser_tags
 						ON osf_osfuser.id = osf_osfuser_tags.osfuser_id
@@ -44,9 +46,9 @@ WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id, username, is_registered
 /* combine all queries together to get one datafile with all information*/
 SELECT new_signups, new_claims, new_sources, sso_newsignups, sso_newclaims, new_signups.name, new_signups.month
 	FROM new_signups
-	LEFT JOIN new_claims
+	FULL JOIN new_claims
 	ON new_signups.name = new_claims.name AND new_signups.month = new_claims.month
-	LEFT JOIN new_invites
+	FULL JOIN new_invites
 	ON new_signups.name = new_invites.name;
 	
 

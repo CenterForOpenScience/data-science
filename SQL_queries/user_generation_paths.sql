@@ -10,7 +10,9 @@ WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id, username, is_registered
 						ON osf_osfuser_tags.tag_id = osf_tag.id
 						LEFT JOIN osf_osfuser_affiliated_institutions
 						ON osf_osfuser.id = osf_osfuser_affiliated_institutions.osfuser_id
-						WHERE osf_tag.system IS TRUE AND 
+						WHERE osf_osfuser.date_disabled IS NULL AND
+							(osf_osfuser.spam_status IS NULL OR osf_osfuser.spam_status = 4 OR osf_osfuser.spam_status = 1) AND 
+							osf_tag.system IS TRUE AND 
 							(osf_tag.name LIKE 'source%' OR osf_tag.name LIKE 'claimed%')),
 	 new_signups AS (SELECT COUNT(user_id) AS new_signups, 
 	 						COUNT(CASE WHEN institution_id IS NOT NULL THEN 1 END) AS sso_newsignups, 

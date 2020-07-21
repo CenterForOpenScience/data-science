@@ -4,7 +4,14 @@
 /* intital query to get info about users with system tags, dates, and SSO */
 
 /* get all non-spam, non-deactived confirmed/not yet confirmed users and their source/claimed tags */
-WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id, username, is_registered, is_invited, date_registered, date_confirmed, date_disabled, is_active, deleted, spam_status, osf_tag.name, institution_id,
+WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id, 
+							is_registered, 
+							is_invited, 
+							date_registered, 
+							date_confirmed, 
+							date_disabled, 
+							osf_tag.name, 
+							institution_id,
 						CASE WHEN osf_tag.name LIKE 'source%' THEN 'source' WHEN osf_tag.name LIKE 'claimed%' THEN 'claimed' END AS tag_type,
 						regexp_replace(osf_tag.name, 'source:|claimed:', '') AS product
 						FROM osf_osfuser

@@ -36,7 +36,7 @@ WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id,
 						GROUP BY product, date_trunc('month', date_confirmed)),
 	 
 	 /* count up number of invited users by source provider (overall, not by month, since we don't have time of tag creation and an unconfirmed user could be added to multiple products across a number of months*/
-	 new_invites AS (SELECT COUNT(user_id) AS new_invitees, product, '2020-06-01' AS month
+	 new_invites AS (SELECT COUNT(user_id) AS new_invitees, product, date_trunc('month', '2020-06-01'::DATE) AS month
  						FROM user_tag_info
  						WHERE is_invited IS TRUE AND tag_type = 'source'
  						GROUP BY product),

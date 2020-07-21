@@ -48,28 +48,28 @@ WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id,
 	 				FROM user_tag_info
 	 				WHERE is_invited IS TRUE AND date_confirmed IS NOT NULL AND
 	 						date_confirmed < '2020-07-01' AND tag_type = 'claimed'
-	 				GROUP BY product, date_trunc('month', date_confirmed))
+	 				GROUP BY product, date_trunc('month', date_confirmed)),
 
   	 /* cross-join all possible dates & tags to get date for all months */
   	 dates AS (SELECT month
 					FROM generate_series(date_trunc('month', '2012-04-01'::DATE), 
 							date_trunc('month', '2020-06-01'::DATE), '1 month'::interval) as month),
-	 setup AS (SELECT dates.month, tag_names.tag_type, tag_names.product
+	 setup AS (SELECT dates.month, tag_names.product
 				FROM dates
-				CROSS JOIN (SELECT DISTINCT(osf_tag.name) AS name,
-								CASE WHEN osf_tag.name LIKE 'source%' THEN 'source' WHEN osf_tag.name LIKE 'claimed%' THEN 'claimed' END AS tag_type,
-								regexp_replace(osf_tag.name, 'source:|claimed:', '') AS product
+				CROSS JOIN (SELECT DISTINCT(regexp_replace(osf_tag.name, 'source:|claimed:', '')) AS product
 							FROM osf_tag
 							WHERE osf_tag.system IS TRUE AND (osf_tag.name LIKE 'source%' OR osf_tag.name LIKE 'claimed%')) AS tag_names)
 
 
 
 /* combine all queries together to get one datafile with all information*/
-SELECT new_signups, new_claims, new_invitees, sso_newsignups, sso_newclaims, new_signups.product, new_signups.month
-	FROM new_signups
-	FULL JOIN new_claims
-	ON new_signups.product = new_claims.product AND new_signups.month = new_claims.month
-	FULL JOIN new_invites
-	ON new_signups.product = new_invites.product AND new_signups.month = new_invites.month;
+SELECT new_signups, new_claims, new_invitees, sso_newsignups, sso_newclaims, setup.product, setup.month
+	FROM setup
+	LEFT JOIN new_signups
+	ON setup.product = new_signups.product AND setup.month = new_signups.month
+	LEFT JOIN new_claims
+	ON setup.product = new_claims.product AND setup.month = new_claims.month
+	LEFT JOIN new_invites
+	ON setup.product = new_invites.product AND setup.month = new_invites.month;
 	
 

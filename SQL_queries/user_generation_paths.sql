@@ -29,33 +29,33 @@ WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id,
 	/* count up, by month, new direct sign-ups by source provider */
 	 new_signups AS (SELECT COUNT(user_id) AS new_signups, 
 	 						COUNT(CASE WHEN institution_id IS NOT NULL THEN 1 END) AS sso_newsignups, 
-	 						date_trunc('month', date_confirmed) as month, name
+	 						date_trunc('month', date_confirmed) as month, product
 						FROM user_tag_info
-						WHERE is_registered IS TRUE AND is_invited IS FALSE AND 
+						WHERE is_registered IS TRUE AND is_invited IS FALSE AND tag_type = 'source' AND
 								date_confirmed < '2020-07-01'
-						GROUP BY name, date_trunc('month', date_confirmed)),
+						GROUP BY product, date_trunc('month', date_confirmed)),
 	 
 	 /* count up number of invited users by source provider (overall, not by month, since we don't have time of tag creation and an unconfirmed user could be added to multiple products across a number of months*/
-	 new_invites AS (SELECT COUNT(user_id) AS new_sources, name
+	 new_invites AS (SELECT COUNT(user_id) AS new_invitees, product
  						FROM user_tag_info
- 						WHERE is_invited IS TRUE
- 						GROUP BY name),
+ 						WHERE is_invited IS TRUE AND tag_type = 'source'
+ 						GROUP BY product),
 
 	 /* count up, by month, new invited users who have claimed their account by source provider, based on when they claimed */
   	 new_claims AS (SELECT COUNT(user_id) AS new_claims,
 	 					   COUNT(CASE WHEN institution_id IS NOT NULL THEN 1 END) AS sso_newclaims, 
-	 					   date_trunc('month', date_confirmed) as month, name
+	 					   date_trunc('month', date_confirmed) as month, product
 	 				FROM user_tag_info
 	 				WHERE is_invited IS TRUE AND date_confirmed IS NOT NULL AND
-	 						date_confirmed < '2020-07-01'
+	 						date_confirmed < '2020-07-01' AND tag_type = 'claimed'
 	 				GROUP BY name, date_trunc('month', date_confirmed))
 
 /* combine all queries together to get one datafile with all information*/
-SELECT new_signups, new_claims, new_sources, sso_newsignups, sso_newclaims, new_signups.name, new_signups.month
+SELECT new_signups, new_claims, new_invitees, sso_newsignups, sso_newclaims, new_signups.name, new_signups.month
 	FROM new_signups
 	FULL JOIN new_claims
-	ON new_signups.name = new_claims.name AND new_signups.month = new_claims.month
+	ON new_signups.product = new_claims.product AND new_signups.month = new_claims.month
 	FULL JOIN new_invites
-	ON new_signups.name = new_invites.name;
+	ON new_signups.product = new_invites.product;
 	
 

@@ -136,6 +136,7 @@ user_generation_data %>%
 
 ```{r}
 user_generation_data %>%
+  filter(month >= '2020-05-01') %>%
   hchart(., type = 'line',
          hcaes(x = month,
                y = new_claims,
@@ -267,6 +268,7 @@ user_generation_data %>%
 
 ```{r}
 user_generation_data %>%
+  filter(month >= '2020-05-01') %>%
   hchart(., type = 'line',
          hcaes(x = month,
                y = cum_new_claims,

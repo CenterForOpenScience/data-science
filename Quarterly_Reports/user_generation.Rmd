@@ -16,8 +16,10 @@ library(dichromat)
 library(DT)
 library(kableExtra)
 library(knitr)
+library(lubridate)
 
-user_generation_data <- read_csv(here::here('data_for_mockup.csv'))
+user_generation_data <- read_csv(here::here('full_hist_cat_date.csv')) %>%
+                            mutate(month = as.Date(month))
 
 cols <- c('#34495D', '#3277A2', '#14A4EB', '#A8C8DD')
 ```
@@ -54,25 +56,31 @@ Column {data-width=500}
 
 ```{r}
 quarterly_numbers <- user_generation_data %>%
-                        group_by(product, user_type) %>%
-                        slice(1L) %>%
-                        ungroup() %>%
-                        select(-date, -sso_users) %>%
-                        pivot_wider(names_from = user_type, values_from = new_n)
+                        arrange(desc(month)) %>%
+                        group_by(product_type) %>%
+                        slice_head(n = 3) %>%
+                        summarize(new_signups = sum(new_signups), new_invitees = sum(new_invitees), new_claims = sum(new_claims))
 
 sso_percentages <- user_generation_data %>%
-                        group_by(product, user_type) %>%
-                        slice(1L) %>%
+                        arrange(desc(month)) %>%
+                        group_by(product_type) %>%
+                        slice_head(n = 3) %>%
+                        select(-starts_with('cum')) %>%
+                        summarise(across(where(is.numeric), sum)) %>%
                         ungroup() %>%
-                        mutate(user_type_ssoprc = paste0(round(100 *sso_users/new_n,2), '%')) %>%
-                        select(-date, -new_n, -sso_users) %>%
-                        pivot_wider(names_from = user_type, values_from = user_type_ssoprc)
+                        mutate(newsignups_ssoprc = paste0(round(100 *sso_newsignups/new_signups,2), '%'),
+                               newsources_ssoprc = paste0(0, '%'),
+                               new_claims_ssoprc = paste0(round(100 *sso_newclaims/new_claims,2), '%')) %>%
+                        select(product_type, ends_with('ssoprc')) %>%
+                        rename(new_signups = newsignups_ssoprc,
+                               new_invitees = newsources_ssoprc,
+                               new_claims = new_claims_ssoprc)
 
 rbind(quarterly_numbers, sso_percentages) %>%
-    rename(` ` = 'product',
-           `New Signed-Ups` = 'new_active',
-           `New Invites` = 'nonreg_added',
-           `New claims` = 'nonreg_claimed') %>%
+    rename(` ` = 'product_type',
+           `New Signed-Ups` = 'new_signups',
+           `New Invites` = 'new_invitees',
+           `New claims` = 'new_claims') %>%
     kable(align = 'c') %>%
     kable_styling('striped', full_width = F) %>%
     pack_rows('Raw Counts', 1, 4) %>%
@@ -83,11 +91,10 @@ rbind(quarterly_numbers, sso_percentages) %>%
 
 ```{r}
 user_generation_data %>%
-  filter(user_type == 'nonreg_added') %>%
   hchart(., type = 'line',
-         hcaes(x = date,
-               y = new_n,
-               group = product)) %>%
+         hcaes(x = month,
+               y = new_invitees,
+               group = product_type)) %>%
   hc_tooltip(table = TRUE, sort = TRUE) %>%
   hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
   hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
@@ -109,11 +116,10 @@ Column {data-width=500}
 
 ```{r}
 user_generation_data %>%
-  filter(user_type == 'new_active') %>%
   hchart(., type = 'line',
-         hcaes(x = date,
-               y = new_n,
-               group = product)) %>%
+         hcaes(x = month,
+               y = new_signups,
+               group = product_type)) %>%
   hc_tooltip(table = TRUE, sort = TRUE) %>%
   hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
   hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
@@ -130,11 +136,10 @@ user_generation_data %>%
 
 ```{r}
 user_generation_data %>%
-  filter(user_type == 'nonreg_claimed') %>%
   hchart(., type = 'line',
-         hcaes(x = date,
-               y = new_n,
-               group = product)) %>%
+         hcaes(x = month,
+               y = new_claims,
+               group = product_type)) %>%
   hc_tooltip(table = TRUE, sort = TRUE) %>%
   hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
   hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
@@ -179,26 +184,34 @@ Column {data-width = 500}
 ### Cumulative Total Table {data-height=500}
 
 ```{r}
-quarterly_numbers <- user_generation_data %>%
-                        group_by(product, user_type) %>%
+cum_numbers <- user_generation_data %>%
+                        arrange(desc(month)) %>%
+                        group_by(product_type) %>%
                         slice(1L) %>%
                         ungroup() %>%
-                        select(-date, -sso_users) %>%
-                        pivot_wider(names_from = user_type, values_from = new_n)
+                        select(product_type, cum_new_signups, cum_new_claims, cum_new_sources) %>%
+                        rename(new_signups = cum_new_signups,
+                               new_sources = cum_new_sources,
+                               new_claims = cum_new_claims)
 
-sso_percentages <- user_generation_data %>%
-                        group_by(product, user_type) %>%
+cum_sso_percentages <- user_generation_data %>%
+                        arrange(desc(month)) %>%
+                        group_by(product_type) %>%
                         slice(1L) %>%
                         ungroup() %>%
-                        mutate(user_type_ssoprc = paste0(round(100 *sso_users/new_n,2), '%')) %>%
-                        select(-date, -new_n, -sso_users) %>%
-                        pivot_wider(names_from = user_type, values_from = user_type_ssoprc)
+                        mutate(cum_newsignups_ssoprc = paste0(round(100 *cum_sso_newsignups/cum_new_signups,2), '%'),
+                               cum_newsources_ssoprc = paste0(0, '%'),
+                               cum_new_claims_ssoprc = paste0(round(100 *cum_sso_newclaims/cum_new_claims,2), '%')) %>%
+                        select(product_type, ends_with('ssoprc')) %>%
+                        rename(new_signups = cum_newsignups_ssoprc,
+                               new_sources = cum_newsources_ssoprc,
+                               new_claims = cum_new_claims_ssoprc)
 
-rbind(quarterly_numbers, sso_percentages) %>%
-    rename(` ` = 'product',
-           `New Signed-Ups` = 'new_active',
-           `New Invites` = 'nonreg_added',
-           `New claims` = 'nonreg_claimed') %>%
+rbind(cum_numbers, cum_sso_percentages) %>%
+    rename(` ` = 'product_type',
+           `New Signed-Ups` = 'new_signups',
+           `New Invites` = 'new_sources',
+           `New Claims` = 'new_claims') %>%
     kable(align = 'c') %>%
     kable_styling('striped', full_width = F) %>%
     pack_rows('Raw Counts', 1, 4) %>%
@@ -210,11 +223,10 @@ rbind(quarterly_numbers, sso_percentages) %>%
 
 ```{r}
 user_generation_data %>%
-  filter(user_type == 'nonreg_added') %>%
   hchart(., type = 'line',
-         hcaes(x = date,
-               y = new_n,
-               group = product)) %>%
+         hcaes(x = month,
+               y = cum_new_sources,
+               group = product_type)) %>%
   hc_tooltip(table = TRUE, sort = TRUE) %>%
   hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
   hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
@@ -235,11 +247,10 @@ Column {data-width = 500}
 
 ```{r}
 user_generation_data %>%
-  filter(user_type == 'new_active') %>%
   hchart(., type = 'line',
-         hcaes(x = date,
-               y = new_n,
-               group = product)) %>%
+         hcaes(x = month,
+               y = cum_new_signups,
+               group = product_type)) %>%
   hc_tooltip(table = TRUE, sort = TRUE) %>%
   hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
   hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
@@ -256,11 +267,10 @@ user_generation_data %>%
 
 ```{r}
 user_generation_data %>%
-  filter(user_type == 'nonreg_claimed') %>%
   hchart(., type = 'line',
-         hcaes(x = date,
-               y = new_n,
-               group = product)) %>%
+         hcaes(x = month,
+               y = cum_new_claims,
+               group = product_type)) %>%
   hc_tooltip(table = TRUE, sort = TRUE) %>%
   hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
   hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds

@@ -63,7 +63,8 @@ WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id,
 
 
 /* combine all queries together to get one datafile with all information*/
-SELECT new_signups, new_claims, new_invitees, sso_newsignups, sso_newclaims, setup.product, setup.month
+SELECT coalesce(new_signups, 0) AS new_signups, coalesce(new_claims, 0) AS new_claims, coalesce(new_invitees, 0) AS new_invitees, 
+		coalesce(sso_newsignups, 0) AS sso_newsignups, coalesce(sso_newclaims, 0) AS sso_newclaims, setup.product, setup.month
 	FROM setup
 	LEFT JOIN new_signups
 	ON setup.product = new_signups.product AND setup.month = new_signups.month

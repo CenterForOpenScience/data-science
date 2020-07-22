@@ -11,7 +11,7 @@ osf_retrieve_file() %>%
 
 # read in quarterly & historic data
 qrt_data <- read_csv()
-hist_data <- read_csv()
+hist_data <- read_csv('user_generation_sources.csv')
 
 # append new quarterly data to historic data
 hist_data <- bind_rows(hist_data, qrt_data)
@@ -25,12 +25,12 @@ osf_upload()
 
 # get monthly numbers by product type
 hist_cat_data <- hist_data %>%
-                    mutate(product_type = case_when(grepl('preprints', name) ~ 'preprints',
-                                                    grepl('osf4m', name) ~ 'osf4m',
-                                                    grepl('campaign', name) | grepl('regist', name) ~ 'registries',
-                                                    TRUE ~ 'osf')) %>%
+                    mutate(product_type = case_when(grepl('preprint', product) ~ 'preprints',
+                                                    grepl('osf4m', product) ~ 'osf4m',
+                                                    grepl('campaign', product) | grepl('regist', product) ~ 'registries',
+                                                    grepl('osf', product) ~ 'osf')) %>%
                     group_by(product_type, month) %>%
-                    summarize(new_signups = sum(new_signups), new_claims = sum(new_claims), new_sources = sum(new_sources), 
+                    summarize(new_signups = sum(new_signups), new_claims = sum(new_claims), new_invitees = sum(new_invitees), 
                               sso_newsignups = sum(sso_newsignups), sso_newclaims = sum(sso_newclaims))
 
 # get monthly data for all product types for all months (so add in 0s)

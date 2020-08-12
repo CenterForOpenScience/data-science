@@ -18,7 +18,7 @@ WITH collection_files AS (SELECT osf_collection.title,
 										 FROM osf_basefilenode
 										 WHERE type = 'osf.osfstoragefile') as osf_files
 							ON project_nodes.id = osf_files.target_object_id
-							WHERE (collection_id = 711617 OR collection_id = 709754)),
+							WHERE (collection_id = 711617 OR collection_id = 709754 OR collection_id = 775210)),
 	file_actions AS (SELECT file_id, Min(_id), action, Max(total),
 							CASE WHEN action = 'download' THEN Max(total) ELSE 0 END AS downloads,
 							CASE WHEN action = 'view' THEN Max(total) ELSE 0 END AS views
@@ -147,3 +147,73 @@ SELECT name,
 				 GROUP BY file_id) as actions_file
 	ON osf4I_files.file_id = actions_file.file_id
 	GROUP BY name
+
+
+
+
+/* number of OSF4I nodes that are above the potential storage capts */
+WITH institutional_storage AS (SELECT nodes.id, 
+									 institution_id,
+									 is_deleted,
+									 is_fork,
+									 is_public,
+									 nodes.type,
+									 SUM(size) AS storage
+							  	FROM (SELECT DISTINCT(abstractnode_id), institution_id
+							  			FROM osf_abstractnode_affiliated_institutions
+							  			WHERE institution_id != 12) AS institution /* exclude COS osf4I nodes */
+								LEFT JOIN (SELECT *
+											FROM osf_abstractnode
+											WHERE is_deleted IS FALSE) AS nodes
+								ON institution.abstractnode_id = nodes.id
+								LEFT JOIN (SELECT *
+											 FROM osf_basefilenode
+											 WHERE type = 'osf.osfstoragefile') as osf_files
+								ON nodes.id = osf_files.target_object_id
+								LEFT JOIN osf_basefileversionsthrough
+								ON osf_files.id = osf_basefileversionsthrough.basefilenode_id
+								LEFT JOIN osf_fileversion
+								ON osf_basefileversionsthrough.fileversion_id = osf_fileversion.id
+								WHERE nodes.type = 'osf.node' AND is_deleted IS FALSE
+								GROUP BY nodes.id, institution_id, is_deleted, is_fork, is_public, nodes.type)
+SELECT
+	sum(CASE WHEN storage > 5*1024^3 AND is_public IS FALSE THEN 1 ELSE 0 END) AS private_overlimit,
+	sum(CASE WHEN storage >= 4*1014^3 AND storage <= 5*1024^3 AND is_public IS FALSE THEN 1 ELSE 0 END) AS private_nearlimit,
+	sum(CASE WHEN storage > 50*1024^3 AND is_public IS TRUE THEN 1 ELSE 0 END) AS public_overlimit,
+	sum(CASE WHEN storage >= 45*1024^3 AND storage <= 50*1024^3 AND is_public IS TRUE THEN 1 ELSE 0 END) AS public_nearlimit 
+	FROM institutional_storage
+	WHERE storage IS NOT NULL;
+
+/* number of forked nodes that are over potential storage caps */
+WITH fork_storage AS (SELECT nodes.id, 
+									 is_deleted,
+									 is_fork,
+									 is_public,
+									 nodes.type,
+									 SUM(size) AS storage
+								FROM (SELECT *
+											FROM osf_abstractnode
+											WHERE is_deleted IS FALSE AND type = 'osf.node' AND is_fork IS TRUE) AS nodes
+								LEFT JOIN (SELECT *
+											 FROM osf_basefilenode
+											 WHERE type = 'osf.osfstoragefile') as osf_files
+								ON nodes.id = osf_files.target_object_id
+								LEFT JOIN osf_basefileversionsthrough
+								ON osf_files.id = osf_basefileversionsthrough.basefilenode_id
+								LEFT JOIN osf_fileversion
+								ON osf_basefileversionsthrough.fileversion_id = osf_fileversion.id
+								GROUP BY nodes.id, is_deleted, is_fork, is_public, nodes.type)
+SELECT
+	sum(CASE WHEN storage > 5*1024^3 AND is_public IS FALSE THEN 1 ELSE 0 END) AS private_overlimit,
+	sum(CASE WHEN storage >= 4*1014^3 AND storage <= 5*1024^3 AND is_public IS FALSE THEN 1 ELSE 0 END) AS private_nearlimit,
+	sum(CASE WHEN storage > 50*1024^3 AND is_public IS TRUE THEN 1 ELSE 0 END) AS public_overlimit,
+	sum(CASE WHEN storage >= 45*1024^3 AND storage <= 50*1024^3 AND is_public IS TRUE THEN 1 ELSE 0 END) AS public_nearlimit 
+	FROM fork_storage
+	WHERE storage IS NOT NULL;
+
+
+SELECT COUNT(id), is_public
+	FROM osf_abstractnode
+	WHERE is_deleted IS FALSE AND type = 'osf.node' AND (spam_status = 1 OR spam_status = 4 OR spam_status IS NULL) AND title NOT LIKE 'Bookmarks'
+	GROUP BY is_public 
+

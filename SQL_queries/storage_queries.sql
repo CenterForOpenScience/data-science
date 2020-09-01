@@ -119,8 +119,8 @@ WITH osf4I_files AS (SELECT root_id,
 						GROUP BY file_id, action)
 
 SELECT name,
-		COUNT(DISTINCT (CASE WHEN type = 'osf.node' THEN root_id END)) AS num_topleve_projects,
-		COUNT(DISTINCT (CASE WHEN type = 'osf.registration' THEN root_id END)) AS num_topleve_reg,
+		COUNT(DISTINCT (CASE WHEN type = 'osf.node' THEN root_id END)) AS num_toplevel_projects,
+		COUNT(DISTINCT (CASE WHEN type = 'osf.registration' THEN root_id END)) AS num_toplevel_reg,
 		COUNT(DISTINCT (CASE WHEN type = 'osf.node' THEN node_id END)) AS num_nonreg_nodes,
 		COUNT(DISTINCT (CASE WHEN type = 'osf.registration' THEN node_id END)) AS num_reg_nodes,
 		COUNT(DISTINCT (CASE WHEN type = 'osf.node' THEN osf4I_files.file_id END)) AS num_nonreg_files,

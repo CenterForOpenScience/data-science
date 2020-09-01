@@ -12,7 +12,7 @@ WITH collection_files AS (SELECT osf_collection.title,
 							ON osf_collectionsubmission.guid_id = node_guids.id
 							LEFT JOIN (SELECT *
 										FROM osf_abstractnode
-										WHERE type = 'osf.node' AND is_deleted IS FALSE AND is_public IS TRUE AND (spam_status IS NULL OR spam_status = 4 OR spam_status = 1) AND title IS NOT LIKE 'Bookmarks') as project_nodes
+										WHERE type = 'osf.node' AND is_deleted IS FALSE AND is_public IS TRUE AND (spam_status IS NULL OR spam_status = 4 OR spam_status = 1) AND title NOT LIKE 'Bookmarks') as project_nodes
 							ON node_guids.object_id = project_nodes.root_id
 							LEFT JOIN (SELECT *
 										 FROM osf_basefilenode
@@ -27,10 +27,10 @@ WITH collection_files AS (SELECT osf_collection.title,
 							GROUP BY file_id, action)
 
 SELECT collection_files.title,  
-	   COUNT(DISTINCT root_id) AS num_projects,
-	   COUNT(DISTINCT node_id) AS num_nodes,
-	   COUNT(DISTINCT collection_files.file_id) AS num_files,
-	   COALESCE(SUM(num_versions),0) AS num_versions,
+	   COUNT(DISTINCT root_id) AS num_toplevel_projects,
+	   COUNT(DISTINCT node_id) AS num_nonreg_nodes,
+	   COUNT(DISTINCT collection_files.file_id) AS num_nonreg_files,
+	   COALESCE(SUM(num_versions),0) AS num_nonreg_file_versions,
 	   COALESCE(SUM(storage),0) AS storage,
 	   COALESCE(SUM(downloads),0) AS downloads,
 	   COALESCE(SUM(views),0) AS views

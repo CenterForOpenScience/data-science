@@ -102,7 +102,7 @@ WITH osf4I_files AS (SELECT root_id,
 						FROM osf_abstractnode_affiliated_institutions
 						LEFT JOIN (SELECT *
 									FROM osf_abstractnode
-									WHERE is_deleted IS FALSE AND (spam_status IS NULL OR spam_status = 4 OR spam_status = 1) AND title IS NOT LIKE 'Bookmarks') AS nodes
+									WHERE is_deleted IS FALSE AND (spam_status IS NULL OR spam_status = 4 OR spam_status = 1) AND title NOT LIKE 'Bookmarks') AS nodes
 						ON osf_abstractnode_affiliated_institutions.abstractnode_id = nodes.id
 						LEFT JOIN osf_institution
 						ON osf_abstractnode_affiliated_institutions.institution_id = osf_institution.id

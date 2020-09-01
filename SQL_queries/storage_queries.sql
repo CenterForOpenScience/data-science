@@ -17,8 +17,7 @@ WITH collection_files AS (SELECT osf_collection.title,
 							LEFT JOIN (SELECT *
 										 FROM osf_basefilenode
 										 WHERE type = 'osf.osfstoragefile') as osf_files
-							ON project_nodes.id = osf_files.target_object_id
-							WHERE (collection_id = 711617 OR collection_id = 709754 OR collection_id = 775210)),
+							ON project_nodes.id = osf_files.target_object_id),
 	file_actions AS (SELECT file_id, Min(_id), action, Max(total),
 							CASE WHEN action = 'download' THEN Max(total) ELSE 0 END AS downloads,
 							CASE WHEN action = 'view' THEN Max(total) ELSE 0 END AS views
@@ -30,10 +29,10 @@ SELECT collection_files.title,
 	   COUNT(DISTINCT root_id) AS num_projects,
 	   COUNT(DISTINCT node_id) AS num_nodes,
 	   COUNT(DISTINCT collection_files.file_id) AS num_files,
-	   SUM(num_versions) AS num_versions,
-	   SUM(storage) AS storage,
-	   SUM(downloads) AS downloads,
-	   SUM(views) AS views
+	   COALESCE(SUM(num_versions),0) AS num_versions,
+	   COALESCE(SUM(storage),0) AS storage,
+	   COALESCE(SUM(downloads),0) AS downloads,
+	   COALESCE(SUM(views),0) AS views
 	FROM collection_files
 	LEFT JOIN (SELECT osf_basefilenode.id, Max(target_object_id) as target_object_id, SUM(size) AS storage, COUNT(DISTINCT osf_fileversion.id) AS num_versions
 					FROM osf_basefilenode

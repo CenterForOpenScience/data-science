@@ -12,13 +12,13 @@ WITH collection_files AS (SELECT osf_collection.title,
 							ON osf_collectionsubmission.guid_id = node_guids.id
 							LEFT JOIN (SELECT *
 										FROM osf_abstractnode
-										WHERE type = 'osf.node' AND is_deleted IS FALSE AND is_public IS TRUE AND (spam_status IS NULL OR spam_status = 4 OR spam_status = 1) AND name IS NOT LIKE 'Bookmarks') as project_nodes
+										WHERE type = 'osf.node' AND is_deleted IS FALSE AND is_public IS TRUE AND (spam_status IS NULL OR spam_status = 4 OR spam_status = 1) AND title IS NOT LIKE 'Bookmarks') as project_nodes
 							ON node_guids.object_id = project_nodes.root_id
 							LEFT JOIN (SELECT *
 										 FROM osf_basefilenode
 										 WHERE type = 'osf.osfstoragefile') as osf_files
 							ON project_nodes.id = osf_files.target_object_id
-							WHERE (collection_id = 711617 OR collection_id = 709754 OR collection_id = 775210 OR collection_id = 735729))),
+							WHERE (collection_id = 711617 OR collection_id = 709754 OR collection_id = 775210 OR collection_id = 735729)),
 	file_actions AS (SELECT file_id, Min(_id), action, Max(total),
 							CASE WHEN action = 'download' THEN Max(total) ELSE 0 END AS downloads,
 							CASE WHEN action = 'view' THEN Max(total) ELSE 0 END AS views
@@ -102,7 +102,7 @@ WITH osf4I_files AS (SELECT root_id,
 						FROM osf_abstractnode_affiliated_institutions
 						LEFT JOIN (SELECT *
 									FROM osf_abstractnode
-									WHERE is_deleted IS FALSE AND (spam_status IS NULL OR spam_status = 4 OR spam_status = 1) AND name IS NOT LIKE 'Bookmarks') AS nodes
+									WHERE is_deleted IS FALSE AND (spam_status IS NULL OR spam_status = 4 OR spam_status = 1) AND title IS NOT LIKE 'Bookmarks') AS nodes
 						ON osf_abstractnode_affiliated_institutions.abstractnode_id = nodes.id
 						LEFT JOIN osf_institution
 						ON osf_abstractnode_affiliated_institutions.institution_id = osf_institution.id

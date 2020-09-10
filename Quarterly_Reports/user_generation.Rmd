@@ -69,7 +69,7 @@ sso_percentages <- user_generation_data %>%
                         summarise(across(where(is.numeric), sum)) %>%
                         ungroup() %>%
                         mutate(newsignups_ssoprc = paste0(round(100 *sso_newsignups/new_signups,2), '%'),
-                               newsources_ssoprc = paste0(0, '%'),
+                               newsources_ssoprc = 'NA',
                                new_claims_ssoprc = paste0(round(100 *sso_newclaims/new_claims,2), '%')) %>%
                         select(product_type, ends_with('ssoprc')) %>%
                         rename(new_signups = newsignups_ssoprc,
@@ -91,6 +91,7 @@ rbind(quarterly_numbers, sso_percentages) %>%
 
 ```{r}
 user_generation_data %>%
+  filter(month >= '2020-05-01') %>%
   hchart(., type = 'line',
          hcaes(x = month,
                y = new_invitees,

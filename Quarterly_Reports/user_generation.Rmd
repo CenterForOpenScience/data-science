@@ -155,7 +155,7 @@ user_generation_data %>%
 ```
 
 
-Cumulative Totals
+Percentage Monthly Increase
 ===================================== 
 
 Column {data-width=200}
@@ -183,41 +183,20 @@ Column {data-width=200}
 Column {data-width = 500}
 -----------------------------------------------------------------------
 
-### Cumulative Total Table {data-height=500}
+### Percentage Quarterly User Generation {data-height=500}
 
 ```{r}
-cum_numbers <- user_generation_data %>%
-                        arrange(desc(month)) %>%
-                        group_by(product_type) %>%
-                        slice(1L) %>%
-                        ungroup() %>%
-                        select(product_type, cum_new_signups, cum_new_claims, cum_new_sources) %>%
-                        rename(new_signups = cum_new_signups,
-                               new_sources = cum_new_sources,
-                               new_claims = cum_new_claims)
+perc_numbers <- quarterly_numbers %>% 
+                  mutate(across(where(is.numeric), ~paste0(round(100 *./sum(.),2),'%')))
 
-cum_sso_percentages <- user_generation_data %>%
-                        arrange(desc(month)) %>%
-                        group_by(product_type) %>%
-                        slice(1L) %>%
-                        ungroup() %>%
-                        mutate(cum_newsignups_ssoprc = paste0(round(100 *cum_sso_newsignups/cum_new_signups,2), '%'),
-                               cum_newsources_ssoprc = paste0(0, '%'),
-                               cum_new_claims_ssoprc = paste0(round(100 *cum_sso_newclaims/cum_new_claims,2), '%')) %>%
-                        select(product_type, ends_with('ssoprc')) %>%
-                        rename(new_signups = cum_newsignups_ssoprc,
-                               new_sources = cum_newsources_ssoprc,
-                               new_claims = cum_new_claims_ssoprc)
 
-rbind(cum_numbers, cum_sso_percentages) %>%
+perc_numbers %>%
     rename(` ` = 'product_type',
            `New Signed-Ups` = 'new_signups',
-           `New Invites` = 'new_sources',
+           `New Invites` = 'new_invitees',
            `New Claims` = 'new_claims') %>%
     kable(align = 'c') %>%
-    kable_styling('striped', full_width = F) %>%
-    pack_rows('Raw Counts', 1, 4) %>%
-    pack_rows('SSO perc', 5, 8)
+    kable_styling('striped', full_width = F)
 ```
 
 

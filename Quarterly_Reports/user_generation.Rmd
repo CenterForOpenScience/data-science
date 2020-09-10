@@ -228,18 +228,22 @@ user_generation_data %>%
 Column {data-width = 500}
 -----------------------------------------------------------------------
 
-### Cumulative direct user sign-ups {data-height=500}
+### Percentage direct user sign-ups {data-height=500}
 
 ```{r}
 user_generation_data %>%
+  filter(month >= '2012-08-01') %>%
+  group_by(month) %>% 
+  mutate(perc_signups = round(100 * new_signups/sum(new_signups),2)) %>%
+  ungroup() %>%
   hchart(., type = 'line',
          hcaes(x = month,
-               y = cum_new_signups,
+               y = perc_signups,
                group = product_type)) %>%
   hc_tooltip(table = TRUE, sort = TRUE) %>%
   hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
   hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
-  hc_yAxis(title = list(text = "Number of Users")) %>%
+  hc_yAxis(title = list(text = "Percentage of Users")) %>%
   hc_colors(cols) %>%
   hc_exporting(
     enabled = TRUE, filename="newuser_generation", 
@@ -248,19 +252,22 @@ user_generation_data %>%
                text="Export", theme=list(fill="transparent"))))
 ```
 
-### Cumulative unregistered accounts claimed {data-height=500}
+### Percentage unregistered accounts claimed {data-height=500}
 
 ```{r}
 user_generation_data %>%
   filter(month >= '2020-05-01') %>%
+  group_by(month) %>% 
+  mutate(perc_claims = round(100 * new_claims/sum(new_claims),2)) %>%
+  ungroup() %>%
   hchart(., type = 'line',
          hcaes(x = month,
-               y = cum_new_claims,
+               y = perc_claims,
                group = product_type)) %>%
   hc_tooltip(table = TRUE, sort = TRUE) %>%
   hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
   hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
-  hc_yAxis(title = list(text = "Number of Users")) %>%
+  hc_yAxis(title = list(text = "Percentage of Users")) %>%
   hc_colors(cols) %>%
   hc_exporting(
     enabled = TRUE, filename="newuser_generation", 

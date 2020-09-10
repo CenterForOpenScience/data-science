@@ -200,24 +200,28 @@ perc_numbers %>%
 ```
 
 
-### Cumulative unregistered contributor invitations {data-height=500}
+### Percentage unregistered contributor invitations {data-height=500}
 
 ```{r}
 user_generation_data %>%
+  filter(month >= '2020-05-01') %>%
+  group_by(month) %>% 
+  mutate(perc_invitees = round(100 * new_invitees/sum(new_invitees),2)) %>%
+  ungroup() %>%
   hchart(., type = 'line',
          hcaes(x = month,
-               y = cum_new_sources,
+               y = perc_invitees,
                group = product_type)) %>%
   hc_tooltip(table = TRUE, sort = TRUE) %>%
   hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
   hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
-  hc_yAxis(title = list(text = "Number of Users")) %>%
+  hc_yAxis(title = list(text = "Percentage of Users")) %>%
   hc_colors(cols) %>%
   hc_exporting(
     enabled = TRUE, filename="newuser_generation", 
               formAttributes=list(target="_blank"),
                buttons=list(contextButton=list(
-               text="Export", theme=list(fill="transparent"))))
+               text="Export", theme=list(fill="transparent"))))  
 ```
 
 

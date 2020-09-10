@@ -22,7 +22,7 @@ WITH
 	 /*break apart json field into one line for each day with download info*/
 	 daily_format AS (SELECT *, json_object_keys(date::json) AS download_date, json_each_text(date::json) AS daily_downloads
 						FROM osf_pagecounter
-						WHERE action = 'download'
+						WHERE action = 'download' AND version IS NULL
 						LIMIT 100),
 
 	 /*for each day, extract total download numbers for that day*/
@@ -34,14 +34,22 @@ WITH
 							ON daily_format.file_id = osf_basefilenode.id),
 
 	 /*categorize each file by node/file type and connections*/
- 	file_categorization AS (SELECT daily_downloads.id, target_object_id, osf_abstractnode.id, download_date, total, type, spam_status, name,
+ 	file_categorization AS (SELECT daily_downloads.id, 
+ 									target_object_id, 
+ 									target_content_type_id,
+ 									osf_abstractnode.id, 
+ 									download_date, 
+ 									total, 
+ 									type, 
+ 									spam_status, 
+ 									name,
  									CASE WHEN institution_id IS NOT NULL THEN 1 ELSE 0 END as inst_affil,
  									CASE WHEN sr_child.suppnode_id IS NOT NULL OR sr_parent.suppnode_id IS NOT NULL THEN 1 ELSE 0 END as supp_node
 								 FROM daily_downloads
 								 
 								 /*join in node info for node type [node vs. registration]*/
 								 LEFT JOIN osf_abstractnode
-								 ON daily_downloads.target_object_id = osf_abstractnode.id
+								 ON daily_downloads.target_object_id = osf_abstractnode.id AND daily_downloads.target_content_type_id = 30
 								 
 								 /*identify and merge in tags for osf4m nodes*/
 								 LEFT JOIN (SELECT *

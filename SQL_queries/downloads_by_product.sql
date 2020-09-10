@@ -18,22 +18,32 @@ WITH
 	 /* dedpublicate resulting relations since single suppnode can be connected to mulitple preprints */
 	 suppnode_relations AS (SELECT DISTINCT ON (child_id) child_id, suppnode_id, parent_id, id
 								FROM children_nodes),
+
+	 /*break apart json field into one line for each day with download info*/
 	 daily_format AS (SELECT *, json_object_keys(date::json) AS download_date, json_each_text(date::json) AS daily_downloads
 						FROM osf_pagecounter
 						WHERE action = 'download'
 						LIMIT 100),
+
+	 /*for each day, extract total download numbers for that day*/
 	 daily_downloads AS (SELECT daily_format.id, file_id, resource_id,TO_DATE(download_date, 'YYYY/MM/DD') AS download_date, 
 								(SELECT regexp_matches(daily_downloads::text, '\{""total"": ([0-9]*)'))[1] AS total,
 								target_content_type_id, target_object_id
 							FROM daily_format
 							LEFT JOIN osf_basefilenode
 							ON daily_format.file_id = osf_basefilenode.id),
+
+	 /*categorize each file by node/file type and connections*/
  	file_categorization AS (SELECT daily_downloads.id, target_object_id, osf_abstractnode.id, download_date, total, type, spam_status, name,
  									CASE WHEN institution_id IS NOT NULL THEN 1 ELSE 0 END as inst_affil,
  									CASE WHEN sr_child.suppnode_id IS NOT NULL OR sr_parent.suppnode_id IS NOT NULL THEN 1 ELSE 0 END as supp_node
 								 FROM daily_downloads
+								 
+								 /*join in node info for node type [node vs. registration]*/
 								 LEFT JOIN osf_abstractnode
 								 ON daily_downloads.target_object_id = osf_abstractnode.id
+								 
+								 /*identify and merge in tags for osf4m nodes*/
 								 LEFT JOIN (SELECT *
 								 				FROM osf_abstractnode_tags
 								 				LEFT JOIN osf_tag

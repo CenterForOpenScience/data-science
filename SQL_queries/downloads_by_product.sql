@@ -43,6 +43,7 @@ WITH
  									type, 
  									spam_status, 
  									name,
+ 									tag_id,
  									CASE WHEN institution_id IS NOT NULL THEN 1 ELSE 0 END as inst_affil,
  									CASE WHEN sr_child.suppnode_id IS NOT NULL OR sr_parent.suppnode_id IS NOT NULL THEN 1 ELSE 0 END as supp_node
 								 FROM daily_downloads
@@ -51,12 +52,10 @@ WITH
 								 LEFT JOIN osf_abstractnode
 								 ON daily_downloads.target_object_id = osf_abstractnode.id AND daily_downloads.target_content_type_id = 30
 								 
-								 /*identify and merge in tags for osf4m nodes*/
+								 /*identify and merge in osf4m tags on nodes*/
 								 LEFT JOIN (SELECT *
 								 				FROM osf_abstractnode_tags
-								 				LEFT JOIN osf_tag
-								 				ON osf_abstractnode_tags.tag_id = osf_tag.id
-								 				WHERE name = 'osf4m') AS project_tags
+								 				WHERE tag_id = 26265) AS project_tags
 								 ON osf_abstractnode.id = project_tags.abstractnode_id
 
 								 /* nodes can be affiliated with multiple institutions, so need to deduplicate before joining in to keep 1 row per node */ 

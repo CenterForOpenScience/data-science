@@ -42,10 +42,10 @@ WITH
  									total, 
  									type, 
  									spam_status, 
- 									name,
  									tag_id,
  									CASE WHEN institution_id IS NOT NULL THEN 1 ELSE 0 END as inst_affil,
- 									CASE WHEN sr_child.suppnode_id IS NOT NULL OR sr_parent.suppnode_id IS NOT NULL THEN 1 ELSE 0 END as supp_node
+ 									CASE WHEN sr_child.suppnode_id IS NOT NULL OR sr_parent.suppnode_id IS NOT NULL THEN 1 ELSE 0 END as supp_node,
+ 									CASE WHEN tag_id = 26265 THEN 1 ELSE 0 END as osf4m
 								 FROM daily_downloads
 								 
 								 /*join in node info for node type [node vs. registration]*/
@@ -53,9 +53,10 @@ WITH
 								 ON daily_downloads.target_object_id = osf_abstractnode.id AND daily_downloads.target_content_type_id = 30
 								 
 								 /*identify and merge in osf4m tags on nodes*/
-								 LEFT JOIN (SELECT *
+								 LEFT JOIN (SELECT abstractnode_id, MAX(tag_id) AS tag_id
 								 				FROM osf_abstractnode_tags
-								 				WHERE tag_id = 26265) AS project_tags
+								 				WHERE tag_id = 26265 OR tag_id = 26294
+								 				GROUP BY abstractnode_id) AS project_tags
 								 ON osf_abstractnode.id = project_tags.abstractnode_id
 
 								 /* nodes can be affiliated with multiple institutions, so need to deduplicate before joining in to keep 1 row per node */ 

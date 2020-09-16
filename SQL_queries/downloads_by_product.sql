@@ -61,7 +61,8 @@ WITH
 
 								 /* nodes can be affiliated with multiple institutions, so need to deduplicate before joining in to keep 1 row per node */ 
 								 LEFT JOIN (SELECT DISTINCT ON (abstractnode_id) abstractnode_id, institution_id
-								 				FROM osf_abstractnode_affiliated_institutions) AS deduped_inst_nodes
+								 				FROM osf_abstractnode_affiliated_institutions
+								 				WHERE institution_id != 12) AS deduped_inst_nodes
 								 ON osf_abstractnode.id = deduped_inst_nodes.abstractnode_id
 
 								 /* join in parents and children suppnodes seperately to categorize both */

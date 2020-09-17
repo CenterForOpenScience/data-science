@@ -3,15 +3,15 @@
 WITH 
 
 	/* get all nested components under connected suppnode to also classify them as suppnodes */
-	RECURSIVE children_nodes AS (SELECT osf_noderelation.id, osf_noderelation._id, is_node_link, child_id, parent_id, parent_id AS suppnode_id, osf_preprint.id AS preprint_id
+	RECURSIVE supp_children_nodes AS (SELECT osf_noderelation.id, osf_noderelation._id, is_node_link, child_id, parent_id, parent_id AS suppnode_id
 										FROM osf_preprint
 										LEFT JOIN osf_noderelation
 										ON osf_preprint.node_id = osf_noderelation.parent_id
 										WHERE is_node_link IS FALSE
 									UNION
-										SELECT cl.id, cl._id, cl.is_node_link, rl.child_id, rl.parent_id, suppnode_id, preprint_id
+										SELECT cl.id, cl._id, cl.is_node_link, rl.child_id, rl.parent_id, suppnode_id
 											FROM osf_noderelation rl
-											INNER JOIN children_nodes cl
+											INNER JOIN supp_children_nodes cl
 											ON cl.child_id = rl.parent_id
 											WHERE rl.is_node_link IS FALSE),
 
@@ -49,14 +49,19 @@ WITH
  									type, 
  									spam_status, 
  									tag_id,
- 									date_supp_added,
- 									node_id,
- 									pp_created,
+ 									pp_suppnode_info.date_supp_added,
+ 									pp_suppnode_info.node_id,
+ 									pp_suppnode_info.pp_created,
+ 									child_id,
+ 									supp_nodes.date_supp_added AS date_parent_supp_added,
+ 									supp_nodes.pp_created AS date_parent_pp_created,
  									CASE WHEN institution_id IS NOT NULL THEN 1 ELSE 0 END as inst_affil,
  									CASE WHEN tag_id = 26265 THEN 1 ELSE 0 END as osf4m,
  									CASE WHEN target_content_type_id = 47 THEN 1 ELSE 0 END as preprint,
- 									CASE WHEN node_id IS NOT NULL AND download_date >= date_trunc('day', date_supp_added) THEN 1 
- 										 WHEN node_id IS NOT NULL AND date_supp_added IS NULL AND download_date >= date_trunc('day', pp_created) THEN 1 
+ 									CASE WHEN node_id IS NOT NULL AND download_date >= date_trunc('day', pp_suppnode_info.date_supp_added) THEN 1 
+ 										 WHEN node_id IS NOT NULL AND pp_suppnode_info.date_supp_added IS NULL AND download_date >= date_trunc('day', pp_suppnode_info.pp_created) THEN 1 
+ 										 WHEN child_id IS NOT NULL AND download_date >= date_trunc('day', supp_nodes.date_supp_added) THEN 1
+ 										 WHEN child_id IS NOT NULL AND supp_nodes.date_supp_added IS NULL AND download_date >= date_trunc('day', supp_nodes.pp_created) THEN 1
  										 ELSE 0 END as supp_node
 
 								 FROM daily_downloads
@@ -79,7 +84,13 @@ WITH
 								 ON osf_abstractnode.id = deduped_inst_nodes.abstractnode_id
 
 								 LEFT JOIN pp_suppnode_info
-								 ON osf_abstractnode.id = pp_suppnode_info.node_id)
+								 ON osf_abstractnode.id = pp_suppnode_info.node_id
+
+								 LEFT JOIN (SELECT Distinct(child_id), date_supp_added, pp_created
+								 				FROM supp_children_nodes
+								 				LEFT JOIN pp_suppnode_info
+								 				ON supp_children_nodes.suppnode_id = pp_suppnode_info.node_id) AS supp_nodes
+								 ON osf_abstractnode.id = supp_nodes.child_id)
 
 /* calculate monthly downloads for all product types*/
 SELECT *

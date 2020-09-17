@@ -15,26 +15,15 @@ WITH
 											ON cl.child_id = rl.parent_id
 											WHERE rl.is_node_link IS FALSE),
 
-	/*get info about when each suppnode added to pp, and for nodes added to multiple pps, when was the first time they were added as a suppnode?*/
-	pp_suppnode_info AS (SELECT preprint_id, MIN(date_supp_added), node_id
+	/*get info about when each suppnode added to pp, and for nodes added to multiple pps, when was the first time they were added*/
+	pp_suppnode_info AS (SELECT MIN(date_supp_added) AS date_supp_added, node_id, MIN(created) AS pp_created
 							FROM osf_preprint
 							LEFT JOIN (SELECT preprint_id, MAX(created) AS date_supp_added
  											 FROM osf_preprintlog
  											 WHERE action = 'supplement_node_added'
  											 GROUP BY preprint_id) AS preprint_suppnode 
 							ON osf_preprint.id = preprint_suppnode.preprint_id
-							GROUP BY node_id, preprint_id),
-
-	 /* dedpublicate resulting relations since single suppnode can be connected to mulitple preprints */ /*this only ids suppnodes that have children, doesn't include suppnodes that don't have kids*/
-	 suppnode_relations AS (SELECT child_id, suppnode_id, parent_id, children_nodes.preprint_id, date_supp_added, node_id
-								FROM children_nodes
-								LEFT JOIN osf_preprint
-								ON osf_preprint.node_id = suppnode_id
-								LEFT JOIN (SELECT preprint_id, MAX(created) AS date_supp_added
- 											 FROM osf_preprintlog
- 											 WHERE action = 'supplement_node_added'
- 											 GROUP BY preprint_id) AS preprint_suppnode
- 								ON osf_preprint.id = preprint_suppnode.preprint_id),
+							GROUP BY node_id),
 
 	 /*break apart json field into one line for each day with download info*/
 	 daily_format AS (SELECT *, json_object_keys(date::json) AS download_date, json_each_text(date::json) AS daily_downloads
@@ -60,10 +49,15 @@ WITH
  									type, 
  									spam_status, 
  									tag_id,
+ 									date_supp_added,
+ 									node_id,
+ 									pp_created,
  									CASE WHEN institution_id IS NOT NULL THEN 1 ELSE 0 END as inst_affil,
- 									CASE WHEN sr_child.suppnode_id IS NOT NULL OR sr_parent.suppnode_id IS NOT NULL THEN 1 ELSE 0 END as supp_node,
  									CASE WHEN tag_id = 26265 THEN 1 ELSE 0 END as osf4m,
- 									CASE WHEN target_content_type_id = 47 THEN 1 ELSE 0 END as preprint
+ 									CASE WHEN target_content_type_id = 47 THEN 1 ELSE 0 END as preprint,
+ 									CASE WHEN node_id IS NOT NULL AND download_date >= date_trunc('day', date_supp_added) THEN 1 
+ 										 WHEN node_id IS NOT NULL AND date_supp_added IS NULL AND download_date >= date_trunc('day', pp_created) THEN 1 
+ 										 ELSE 0 END as supp_node
 
 								 FROM daily_downloads
 								 
@@ -82,7 +76,10 @@ WITH
 								 LEFT JOIN (SELECT DISTINCT ON (abstractnode_id) abstractnode_id, institution_id
 								 				FROM osf_abstractnode_affiliated_institutions
 								 				WHERE institution_id != 12) AS deduped_inst_nodes /*exclude node only affiliated with COS institution*/
-								 ON osf_abstractnode.id = deduped_inst_nodes.abstractnode_id)
+								 ON osf_abstractnode.id = deduped_inst_nodes.abstractnode_id
+
+								 LEFT JOIN pp_suppnode_info
+								 ON osf_abstractnode.id = pp_suppnode_info.node_id)
 
 /* calculate monthly downloads for all product types*/
 SELECT *
@@ -97,6 +94,20 @@ SELECT *
 			action = 'download'
 
 
+
+
+CASE WHEN sr_child.suppnode_id IS NOT NULL OR sr_parent.suppnode_id IS NOT NULL THEN 1 ELSE 0 END as supp_node,
+
+ /* dedpublicate resulting relations since single suppnode can be connected to mulitple preprints */ /*this only ids suppnodes that have children, doesn't include suppnodes that don't have kids*/
+	 suppnode_relations AS (SELECT child_id, suppnode_id, parent_id, children_nodes.preprint_id, date_supp_added, node_id
+								FROM children_nodes
+								LEFT JOIN osf_preprint
+								ON osf_preprint.node_id = suppnode_id
+								LEFT JOIN (SELECT preprint_id, MAX(created) AS date_supp_added
+ 											 FROM osf_preprintlog
+ 											 WHERE action = 'supplement_node_added'
+ 											 GROUP BY preprint_id) AS preprint_suppnode
+ 								ON osf_preprint.id = preprint_suppnode.preprint_id),
 
 
  /* join in parents and children suppnodes seperately to categorize both */
@@ -115,3 +126,6 @@ SELECT *
 																GROUP BY preprint_id) AS pp_suppnode_adds
  												ON osf_preprint.id = pp_suppnode_adds.preprint_id) AS pp_info
  								ON daily_downloads.target_object_id = pp_info.preprint_id AND daily_downloads.target_content_type_id = 47
+
+
+ 								953047

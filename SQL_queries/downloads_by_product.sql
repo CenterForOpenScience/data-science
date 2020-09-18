@@ -47,7 +47,8 @@ WITH
  									download_date, 
  									total, 
  									type, 
- 									spam_status, 
+ 									osf_abstractnode.spam_status AS node_spam,
+ 									osf_preprint.spam_status AS pp_spam, 
  									tag_id,
  									pp_suppnode_info.date_supp_added,
  									pp_suppnode_info.node_id,
@@ -87,6 +88,9 @@ WITH
 								 LEFT JOIN pp_suppnode_info
 								 ON osf_abstractnode.id = pp_suppnode_info.node_id
 
+								 LEFT JOIN osf_preprint
+								 ON daily_downloads.file_id = osf_preprint.primary_file_id
+
 								 LEFT JOIN (SELECT Distinct(child_id), date_supp_added, pp_created
 								 				FROM supp_children_nodes
 								 				LEFT JOIN pp_suppnode_info
@@ -106,8 +110,9 @@ WITH
 								 ON osf_abstractnode.id = collection_nodes.node_id)
 
 /* calculate monthly downloads for all product types*/
-SELECT *
-	FROM file_categorization
+SELECT date_trunc('month', download_date) AS date,
+
+	GROUP BY date_trunc('month', download_date)
 
 
 /* downloads by product type per quater */

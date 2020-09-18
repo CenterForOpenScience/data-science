@@ -114,7 +114,12 @@ SELECT date_trunc('month', download_date) AS date,
 		SUM(CASE WHEN osf4m = 1 THEN total ELSE 0 END) AS osf4m_downloads,
 		SUM(CASE WHEN type = 'osf.quickfilesnode' THEN total ELSE 0 END) AS quickfile_downloads,
 		SUM(CASE WHEN type = 'osf.registration' THEN total ELSE 0 END) AS reg_downloads,
-		SUM(CASE WHEN target_content_type_id = 47 THEN total ELSE 0 END) AS pp_downloads
+		SUM(CASE WHEN target_content_type_id = 47 THEN total ELSE 0 END) AS pp_downloads,
+		SUM(CASE WHEN supp_node = 1 THEN total ELSE 0 END) AS suppnode_downloads,
+		SUM(CASE WHEN inst_affil = 1 THEN total ELSE 0 END) AS inst_downloads,
+		SUM(CASE WHEN collection = 1 THEN total ELSE 0 END) AS collection_downloads,
+		SUM(CASE WHEN type = 'osf.node' THEN total ELSE 0 END) AS osfnode_download,
+		SUM(CASE WHEN type = 'osf.node' AND osf4m = 0 AND supp_node = 0 AND inst_affil = 0 AND collection = 0 THEN total ELSE 0 END) AS osfgen_download
 	FROM file_categorization
 	WHERE (node_spam IS NULL OR node_spam != 2) AND (pp_spam IS NULL OR pp_spam !=2)
 	GROUP BY date_trunc('month', download_date)

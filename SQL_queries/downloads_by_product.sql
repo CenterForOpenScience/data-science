@@ -43,8 +43,6 @@ WITH
  	file_categorization AS (SELECT daily_downloads.id AS file_id, 
  									target_object_id, 
  									target_content_type_id,
- 									osf_abstractnode.id AS node_id, 
- 									root_id,
  									collection_id, 
  									download_date, 
  									total, 
@@ -64,7 +62,8 @@ WITH
  										 WHEN pp_suppnode_info.node_id IS NOT NULL AND pp_suppnode_info.date_supp_added IS NULL AND download_date >= date_trunc('day', pp_suppnode_info.pp_created) THEN 1 
  										 WHEN child_id IS NOT NULL AND download_date >= date_trunc('day', supp_nodes.date_supp_added) THEN 1
  										 WHEN child_id IS NOT NULL AND supp_nodes.date_supp_added IS NULL AND download_date >= date_trunc('day', supp_nodes.pp_created) THEN 1
- 										 ELSE 0 END as supp_node
+ 										 ELSE 0 END as supp_node,
+ 									CASE WHEN collection_id IS NOT NULL THEN 1 ELSE 0 END as collection
 
 								 FROM daily_downloads
 								 
@@ -117,40 +116,3 @@ SELECT *
 	FROM osf_pagecounter
 	WHERE modified >= date_trunc('month', current_date - interval '3' month) AND
 			action = 'download'
-
-
-
-
-CASE WHEN sr_child.suppnode_id IS NOT NULL OR sr_parent.suppnode_id IS NOT NULL THEN 1 ELSE 0 END as supp_node,
-
- /* dedpublicate resulting relations since single suppnode can be connected to mulitple preprints */ /*this only ids suppnodes that have children, doesn't include suppnodes that don't have kids*/
-	 suppnode_relations AS (SELECT child_id, suppnode_id, parent_id, children_nodes.preprint_id, date_supp_added, node_id
-								FROM children_nodes
-								LEFT JOIN osf_preprint
-								ON osf_preprint.node_id = suppnode_id
-								LEFT JOIN (SELECT preprint_id, MAX(created) AS date_supp_added
- 											 FROM osf_preprintlog
- 											 WHERE action = 'supplement_node_added'
- 											 GROUP BY preprint_id) AS preprint_suppnode
- 								ON osf_preprint.id = preprint_suppnode.preprint_id),
-
-
- /* join in parents and children suppnodes seperately to categorize both */
-								 LEFT JOIN suppnode_relations sr_child
-								 ON osf_abstractnode.id = sr_child.child_id
-								 LEFT JOIN (SELECT DISTINCT ON (parent_id) parent_id, suppnode_id, child_id
-				 								FROM suppnode_relations) AS sr_parent
-								 ON osf_abstractnode.id = sr_parent.parent_id
-
- 								/* join in preprint information */
- 								LEFT JOIN (SELECT osf_preprint.id AS preprint_id, add_date, node_id
- 											 FROM osf_preprint
- 												LEFT JOIN (SELECT preprint_id, MAX(created) AS add_date
- 																FROM osf_preprintlog
-				 												WHERE action = 'supplement_node_added'
-																GROUP BY preprint_id) AS pp_suppnode_adds
- 												ON osf_preprint.id = pp_suppnode_adds.preprint_id) AS pp_info
- 								ON daily_downloads.target_object_id = pp_info.preprint_id AND daily_downloads.target_content_type_id = 47
-
-
- 								953047

@@ -28,8 +28,7 @@ WITH
 	 /*break apart json field into one line for each day with download info*/
 	 daily_format AS (SELECT *, json_object_keys(date::json) AS download_date, json_each_text(date::json) AS daily_downloads
 						FROM osf_pagecounter
-						WHERE action = 'download' AND version IS NULL
-						LIMIT 100),
+						WHERE action = 'download' AND version IS NULL),
 
 	 /*for each day, extract total download numbers for that day*/
 	 daily_downloads AS (SELECT daily_format.id, file_id, resource_id,TO_DATE(download_date, 'YYYY/MM/DD') AS download_date, 

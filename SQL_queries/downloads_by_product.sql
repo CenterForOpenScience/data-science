@@ -40,10 +40,12 @@ WITH
 							ON daily_format.file_id = osf_basefilenode.id),
 
 	 /*categorize each file by node/file type and connections*/
- 	file_categorization AS (SELECT daily_downloads.id, 
+ 	file_categorization AS (SELECT daily_downloads.id AS file_id, 
  									target_object_id, 
  									target_content_type_id,
- 									osf_abstractnode.id, 
+ 									osf_abstractnode.id AS node_id, 
+ 									root_id,
+ 									collection_id, 
  									download_date, 
  									total, 
  									type, 
@@ -58,8 +60,8 @@ WITH
  									CASE WHEN institution_id IS NOT NULL THEN 1 ELSE 0 END as inst_affil,
  									CASE WHEN tag_id = 26265 THEN 1 ELSE 0 END as osf4m,
  									CASE WHEN target_content_type_id = 47 THEN 1 ELSE 0 END as preprint,
- 									CASE WHEN node_id IS NOT NULL AND download_date >= date_trunc('day', pp_suppnode_info.date_supp_added) THEN 1 
- 										 WHEN node_id IS NOT NULL AND pp_suppnode_info.date_supp_added IS NULL AND download_date >= date_trunc('day', pp_suppnode_info.pp_created) THEN 1 
+ 									CASE WHEN pp_suppnode_info.node_id IS NOT NULL AND download_date >= date_trunc('day', pp_suppnode_info.date_supp_added) THEN 1 
+ 										 WHEN pp_suppnode_info.node_id IS NOT NULL AND pp_suppnode_info.date_supp_added IS NULL AND download_date >= date_trunc('day', pp_suppnode_info.pp_created) THEN 1 
  										 WHEN child_id IS NOT NULL AND download_date >= date_trunc('day', supp_nodes.date_supp_added) THEN 1
  										 WHEN child_id IS NOT NULL AND supp_nodes.date_supp_added IS NULL AND download_date >= date_trunc('day', supp_nodes.pp_created) THEN 1
  										 ELSE 0 END as supp_node
@@ -90,7 +92,19 @@ WITH
 								 				FROM supp_children_nodes
 								 				LEFT JOIN pp_suppnode_info
 								 				ON supp_children_nodes.suppnode_id = pp_suppnode_info.node_id) AS supp_nodes
-								 ON osf_abstractnode.id = supp_nodes.child_id)
+								 ON osf_abstractnode.id = supp_nodes.child_id
+
+								 LEFT JOIN (SELECT collection_id,
+												   	COALESCE(project_nodes.id, object_id) AS node_id
+												FROM osf_collectionsubmission
+												LEFT JOIN (SELECT *
+															FROM osf_guid
+															WHERE content_type_id = 30) as node_guids
+												ON osf_collectionsubmission.guid_id = node_guids.id
+												LEFT JOIN osf_abstractnode as project_nodes
+												ON node_guids.object_id = project_nodes.root_id
+												WHERE (collection_id = 711617 OR collection_id = 709754 OR collection_id = 775210 OR collection_id = 735729)) AS collection_nodes
+								 ON osf_abstractnode.id = collection_nodes.node_id)
 
 /* calculate monthly downloads for all product types*/
 SELECT *

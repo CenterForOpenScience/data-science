@@ -189,7 +189,6 @@ Column {data-width = 500}
 perc_numbers <- quarterly_numbers %>% 
                   mutate(across(where(is.numeric), ~paste0(round(100 *./sum(.),2),'%')))
 
-
 perc_numbers %>%
     rename(` ` = 'product_type',
            `New Signed-Ups` = 'new_signups',

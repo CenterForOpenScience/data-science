@@ -19,13 +19,26 @@ osf_retrieve_file('https://osf.io/y2v74/') %>%
   osf_download()
 
 download_data <- read_csv(here::here('/product_downloads/monthly_product_downloads.csv')) %>%
-                    mutate(total = osf4m_downloads + quickfile_downloads + reg_downloads + pp_downloads + osfnode_download)
+                    mutate(total = osf4m_downloads + quickfile_downloads + reg_downloads + pp_downloads + osfnode_download,
+                           date = as.Date(date))
 ```
 
-### Chart A
+### Total monthly downloads
 
 ```{r}
-
+download_data  %>%
+  hchart(., type = 'line',
+         hcaes(x = date,
+               y = total)) %>%
+  hc_tooltip(table = TRUE, sort = TRUE) %>%
+  hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
+  hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
+  hc_yAxis(title = list(text = "Downloads")) %>%
+  hc_exporting(
+    enabled = TRUE, filename="total_downloads", 
+              formAttributes=list(target="_blank"),
+               buttons=list(contextButton=list(
+               text="Export", theme=list(fill="transparent"))))
 ```
 
 ### Chart B

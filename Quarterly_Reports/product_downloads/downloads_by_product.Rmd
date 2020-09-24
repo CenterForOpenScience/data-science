@@ -1,0 +1,34 @@
+---
+title: "Downloads by Product"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    theme: bootstrap
+    vertical_layout: scroll
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(highcharter)
+library(lubridate)
+```
+
+### Chart A
+
+```{r}
+
+```
+
+### Chart B
+
+```{r}
+
+```
+
+### Chart C
+
+```{r}
+
+```
+

@@ -91,9 +91,51 @@ download_data  %>%
                text="Export", theme=list(fill="transparent"))))
 ```
 
-### Chart C
+Row {.tabset .tabset-fade}
+-------------------------------------
+
+### Raw Downloads by OSF type
 
 ```{r}
+download_data  %>%
+  select(date, osf4m_downloads, suppnode_downloads, inst_downloads, collection_downloads, osfgen_download) %>%
+  pivot_longer(cols = osf4m_downloads:osfgen_download, names_to = 'product', values_to = 'downloads') %>%
+  hchart(., type = 'line',
+         hcaes(x = date,
+               y = downloads,
+               group = product)) %>%
+  hc_tooltip(table = TRUE, sort = TRUE) %>%
+  hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
+  hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
+  hc_yAxis(title = list(text = "Downloads")) %>%
+  hc_exporting(
+    enabled = TRUE, filename="osf_product_downloads", 
+              formAttributes=list(target="_blank"),
+               buttons=list(contextButton=list(
+               text="Export", theme=list(fill="transparent"))))
+```
 
+
+### Percentage Downloads by OSF type
+
+```{r}
+download_data  %>%
+  mutate(denominator = osfnode_download + reg_downloads) %>%
+  select(date, osf4m_downloads, suppnode_downloads, inst_downloads, collection_downloads, osfgen_download, denominator) %>%
+  pivot_longer(cols = osf4m_downloads:osfgen_download, names_to = 'product', values_to = 'downloads') %>%
+  mutate(perc = round(100 * downloads/denominator),2) %>%
+  hchart(., type = 'line',
+         hcaes(x = date,
+               y = perc,
+               group = product)) %>%
+  hc_tooltip(table = TRUE, sort = TRUE) %>%
+  hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
+  hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
+  hc_yAxis(title = list(text = "Downloads")) %>%
+  hc_exporting(
+    enabled = TRUE, filename="osf_product_downloads", 
+              formAttributes=list(target="_blank"),
+               buttons=list(contextButton=list(
+               text="Export", theme=list(fill="transparent"))))
 ```
 

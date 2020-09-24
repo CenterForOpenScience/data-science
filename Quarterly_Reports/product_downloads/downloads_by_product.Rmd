@@ -2,7 +2,7 @@
 title: "Downloads by Product"
 output: 
   flexdashboard::flex_dashboard:
-    orientation: columns
+    orientation: rows
     theme: bootstrap
     vertical_layout: scroll
 ---
@@ -23,6 +23,9 @@ download_data <- read_csv(here::here('/product_downloads/monthly_product_downloa
                            date = as.Date(date))
 ```
 
+Row 
+-------------------------------------
+
 ### Total monthly downloads
 
 ```{r}
@@ -41,10 +44,51 @@ download_data  %>%
                text="Export", theme=list(fill="transparent"))))
 ```
 
-### Chart B
+Row {.tabset .tabset-fade}
+-------------------------------------
+
+### Raw Downloads by Product
 
 ```{r}
+download_data  %>%
+  select(date, quickfile_downloads, reg_downloads, pp_downloads, osfnode_download) %>%
+  pivot_longer(cols = quickfile_downloads:osfnode_download, names_to = 'product', values_to = 'downloads') %>%
+  hchart(., type = 'line',
+         hcaes(x = date,
+               y = downloads,
+               group = product)) %>%
+  hc_tooltip(table = TRUE, sort = TRUE) %>%
+  hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
+  hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
+  hc_yAxis(title = list(text = "Downloads")) %>%
+  hc_exporting(
+    enabled = TRUE, filename="product_downloads", 
+              formAttributes=list(target="_blank"),
+               buttons=list(contextButton=list(
+               text="Export", theme=list(fill="transparent"))))
+```
 
+### Percentage Downloads by Product
+
+```{r}
+download_data  %>%
+  select(date, quickfile_downloads, reg_downloads, pp_downloads, osfnode_download) %>%
+  pivot_longer(cols = quickfile_downloads:osfnode_download, names_to = 'product', values_to = 'downloads') %>%
+  group_by(date) %>%
+  mutate(perc = round((100 * downloads)/sum(downloads),2)) %>%
+  hchart(., type = 'line',
+         hcaes(x = date,
+               y = perc,
+               group = product)) %>%
+  hc_tooltip(table = TRUE, sort = TRUE) %>%
+  hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
+  hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
+  hc_yAxis(title = list(text = "Percent Downloads")) %>%
+  hc_exporting(
+    enabled = TRUE, filename="product_perc_downloads", 
+              formAttributes=list(target="_blank"),
+               buttons=list(contextButton=list(
+               text="Export", theme=list(fill="transparent"))))
 ```
 
 ### Chart C

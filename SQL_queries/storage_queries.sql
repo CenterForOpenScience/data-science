@@ -153,6 +153,7 @@ SELECT name,
 WITH institutional_storage AS (SELECT nodes.id, 
 									 osf_institution._id,
 									 is_public,
+									 osf_guid._id AS guid,
 									 SUM(size) AS storage
 							  	FROM (SELECT DISTINCT(abstractnode_id), institution_id
 							  			FROM osf_abstractnode_affiliated_institutions
@@ -163,6 +164,8 @@ WITH institutional_storage AS (SELECT nodes.id,
 								ON institution.abstractnode_id = nodes.id
 								LEFT JOIN osf_institution
 								ON institution.institution_id = osf_institution.id
+								LEFT JOIN osf_guid
+								ON nodes.id = osf_guid.object_id AND content_type_id = 30
 								LEFT JOIN (SELECT *
 											 FROM osf_basefilenode
 											 WHERE type = 'osf.osfstoragefile') as osf_files
@@ -172,7 +175,7 @@ WITH institutional_storage AS (SELECT nodes.id,
 								LEFT JOIN osf_fileversion
 								ON osf_basefileversionsthrough.fileversion_id = osf_fileversion.id
 								WHERE nodes.type = 'osf.node' AND nodes.is_deleted IS FALSE
-								GROUP BY nodes.id, osf_institution._id, is_public)
+								GROUP BY nodes.id, osf_institution._id, is_public, osf_guid._id)
 SELECT
 	sum(CASE WHEN storage > 5*1024^3 AND is_public IS FALSE THEN 1 ELSE 0 END) AS private_overlimit,
 	sum(CASE WHEN storage > 50*1024^3 AND is_public IS TRUE THEN 1 ELSE 0 END) AS public_overlimit,

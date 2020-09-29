@@ -149,7 +149,7 @@ SELECT name,
 
 
 
-/* number of OSF4I nodes that are above the potential storage capts by institution*/
+/* number of OSF4I nodes and affiliated users that are above the potential storage capts by institution*/
 WITH institutional_storage AS (SELECT nodes.id, 
 									 osf_institution._id,
 									 is_public,
@@ -196,7 +196,27 @@ WITH institutional_storage AS (SELECT nodes.id,
 											ON osf_osfuser_affiliated_institutions.institution_id = osf_institution.id
 											WHERE osf_osfuser_affiliated_institutions.osfuser_id IS NOT NULL AND osf_osfuser_affiliated_institutions.institution_id != 12) AS user_instit
 							 ON cap_filter.node_id = user_instit.node_id
-							 WHERE public_overlimit = 1 OR private_overlimit = 1);
+							 WHERE public_overlimit = 1 OR private_overlimit = 1)
+
+SELECT hit_cap.institution, node_info.public_overlimit, node_info.private_overlimit, MIN(num_nodes) AS num_nodes, MIN(num_affil_users) AS num_affil_users
+	FROM hit_cap
+	LEFT JOIN (SELECT COUNT(DISTINCT node_guid) AS num_nodes, 
+							public_overlimit, 
+							private_overlimit, 
+							institution
+				FROM hit_cap
+				GROUP BY public_overlimit, private_overlimit, institution) node_info
+	ON hit_cap.institution = node_info.institution
+	LEFT JOIN (SELECT COUNT(DISTINCT user_id) AS num_affil_users,
+								public_overlimit,
+								private_overlimit,
+								user_instit
+					FROM hit_cap
+					WHERE institution = user_instit
+					GROUP BY public_overlimit, private_overlimit, user_instit) user_info
+	ON hit_cap.institution = user_info.user_instit
+	WHERE node_info.public_overlimit = user_info.public_overlimit AND node_info.private_overlimit = user_info.private_overlimit
+	GROUP BY hit_cap.institution, node_info.public_overlimit, node_info.private_overlimit;
 
 /* number of forked nodes that are over potential storage caps */
 WITH fork_storage AS (SELECT nodes.id, 

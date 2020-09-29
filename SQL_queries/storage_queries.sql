@@ -149,13 +149,10 @@ SELECT name,
 
 
 
-/* number of OSF4I nodes that are above the potential storage capts */
+/* number of OSF4I nodes that are above the potential storage capts by institution*/
 WITH institutional_storage AS (SELECT nodes.id, 
-									 institution_id,
-									 is_deleted,
-									 is_fork,
+									 osf_institution._id,
 									 is_public,
-									 nodes.type,
 									 SUM(size) AS storage
 							  	FROM (SELECT DISTINCT(abstractnode_id), institution_id
 							  			FROM osf_abstractnode_affiliated_institutions
@@ -164,6 +161,8 @@ WITH institutional_storage AS (SELECT nodes.id,
 											FROM osf_abstractnode
 											WHERE is_deleted IS FALSE) AS nodes
 								ON institution.abstractnode_id = nodes.id
+								LEFT JOIN osf_institution
+								ON institution.institution_id = osf_institution.id
 								LEFT JOIN (SELECT *
 											 FROM osf_basefilenode
 											 WHERE type = 'osf.osfstoragefile') as osf_files
@@ -172,15 +171,15 @@ WITH institutional_storage AS (SELECT nodes.id,
 								ON osf_files.id = osf_basefileversionsthrough.basefilenode_id
 								LEFT JOIN osf_fileversion
 								ON osf_basefileversionsthrough.fileversion_id = osf_fileversion.id
-								WHERE nodes.type = 'osf.node' AND is_deleted IS FALSE
-								GROUP BY nodes.id, institution_id, is_deleted, is_fork, is_public, nodes.type)
+								WHERE nodes.type = 'osf.node' AND nodes.is_deleted IS FALSE
+								GROUP BY nodes.id, osf_institution._id, is_public)
 SELECT
 	sum(CASE WHEN storage > 5*1024^3 AND is_public IS FALSE THEN 1 ELSE 0 END) AS private_overlimit,
-	sum(CASE WHEN storage >= 4*1014^3 AND storage <= 5*1024^3 AND is_public IS FALSE THEN 1 ELSE 0 END) AS private_nearlimit,
 	sum(CASE WHEN storage > 50*1024^3 AND is_public IS TRUE THEN 1 ELSE 0 END) AS public_overlimit,
-	sum(CASE WHEN storage >= 45*1024^3 AND storage <= 50*1024^3 AND is_public IS TRUE THEN 1 ELSE 0 END) AS public_nearlimit 
+	_id AS institution
 	FROM institutional_storage
-	WHERE storage IS NOT NULL;
+	WHERE storage IS NOT NULL
+	GROUP BY _id;
 
 /* number of forked nodes that are over potential storage caps */
 WITH fork_storage AS (SELECT nodes.id, 

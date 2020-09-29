@@ -175,14 +175,28 @@ WITH institutional_storage AS (SELECT nodes.id,
 								LEFT JOIN osf_fileversion
 								ON osf_basefileversionsthrough.fileversion_id = osf_fileversion.id
 								WHERE nodes.type = 'osf.node' AND nodes.is_deleted IS FALSE
-								GROUP BY nodes.id, osf_institution._id, is_public, osf_guid._id)
-SELECT
-	sum(CASE WHEN storage > 5*1024^3 AND is_public IS FALSE THEN 1 ELSE 0 END) AS private_overlimit,
-	sum(CASE WHEN storage > 50*1024^3 AND is_public IS TRUE THEN 1 ELSE 0 END) AS public_overlimit,
-	_id AS institution
-	FROM institutional_storage
-	WHERE storage IS NOT NULL
-	GROUP BY _id;
+								GROUP BY nodes.id, osf_institution._id, is_public, osf_guid._id),
+				cap_filter AS (SELECT
+								CASE WHEN storage > 5*1024^3 AND is_public IS FALSE THEN 1 ELSE 0 END AS private_overlimit,
+								CASE WHEN storage > 50*1024^3 AND is_public IS TRUE THEN 1 ELSE 0 END AS public_overlimit,
+								id AS node_id,
+								_id AS institution,
+								storage,
+								is_public,
+								guid
+								FROM institutional_storage
+								WHERE storage IS NOT NULL),
+				hit_cap AS (SELECT private_overlimit, public_overlimit, institution, storage, is_public, guid as node_guid, user_id, user_instit._id AS user_instit
+							 FROM cap_filter
+							 LEFT JOIN (SELECT *
+											FROM osf_contributor
+											LEFT JOIN osf_osfuser_affiliated_institutions
+											ON osf_contributor.user_id = osf_osfuser_affiliated_institutions.osfuser_id
+											LEFT JOIN osf_institution
+											ON osf_osfuser_affiliated_institutions.institution_id = osf_institution.id
+											WHERE osf_osfuser_affiliated_institutions.osfuser_id IS NOT NULL AND osf_osfuser_affiliated_institutions.institution_id != 12) AS user_instit
+							 ON cap_filter.node_id = user_instit.node_id
+							 WHERE public_overlimit = 1 OR private_overlimit = 1);
 
 /* number of forked nodes that are over potential storage caps */
 WITH fork_storage AS (SELECT nodes.id, 

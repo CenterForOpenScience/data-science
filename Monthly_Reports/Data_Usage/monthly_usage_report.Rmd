@@ -51,7 +51,7 @@ by_node_storage <- read_csv('nondel_nodedata.csv', col_types = cols(deleted_on =
                                                                   target_type = col_skip(),
                                                                   target_is_fork = col_skip(),
                                                                   target_is_deleted = col_skip())) %>%
-                 group_by(target_guid, target_is_public) %>%
+                 group_by(target_guid, target_is_public, target_root) %>%
                  summarize(tot_size = sum(size)) %>%
                  mutate(gig_tot_size = round(tot_size/(1024^3),3))
                  
@@ -225,27 +225,60 @@ graph
 \
 \
 
-# Data storage on Nodes 
+# Storage Cap Information
 
-Storage calculated for all nodes individually, nesting of nodes within top-level projects is not taken into account
+* Number of public nodes at/above cap: `r nrow(by_node_storage %>% 
+        filter(target_is_public == TRUE & gig_tot_size >= 50))`%
+* Percentage of public nodes at/above cap: `r round(100 * nrow(by_node_storage %>% 
+        filter(target_is_public == TRUE & gig_tot_size >= 50))/nrow(by_node_storage %>% 
+        filter(target_is_public == TRUE)),2)`%
 
-```{r, warning=FALSE, echo=FALSE}
-ggplot(by_node_storage, aes(gig_tot_size, color = target_is_public)) +
-  geom_freqpoly(bins = 100) +
-  scale_y_log10() +
-  scale_x_continuous(breaks=seq(0, max(by_node_storage$gig_tot_size), by = 500))
-```
+\
+
+* Number of private nodes at/above cap: `r nrow(by_node_storage %>% 
+        filter(target_is_public == FALSE & gig_tot_size >= 5))`%
+* Percentage of private nodes at/above cap: `r round(100 * nrow(by_node_storage %>% 
+        filter(target_is_public == FALSE & gig_tot_size >= 5))/nrow(by_node_storage %>% 
+        filter(target_is_public == FALSE)),2)`%
+
+\
+
+* Percentage of Top-level projects with at least 1 node that exceed the storage cap: 
+    + public: `r round(100 * (by_node_storage %>% 
+        filter(target_is_public == TRUE) %>%
+        group_by(target_root) %>%
+        summarise(num_nodes = n(), gig_tot_size = sum(gig_tot_size)) %>%
+        filter(num_nodes > 1 & gig_tot_size >= 50) %>%
+        nrow())/(by_node_storage %>% 
+        filter(target_is_public == TRUE) %>%
+        group_by(target_root) %>%
+        summarise(num_nodes = n(), gig_tot_size = sum(gig_tot_size)) %>%
+        filter(num_nodes > 1) %>%
+        nrow()),2)`%
+    + private: `r round(100 * (by_node_storage %>% 
+        filter(target_is_public == FALSE) %>%
+        group_by(target_root) %>%
+        summarise(num_nodes = n(), gig_tot_size = sum(gig_tot_size)) %>%
+        filter(num_nodes > 1 & gig_tot_size >= 5) %>%
+        nrow())/(by_node_storage %>% 
+        filter(target_is_public == FALSE) %>%
+        group_by(target_root) %>%
+        summarise(num_nodes = n(), gig_tot_size = sum(gig_tot_size)) %>%
+        filter(num_nodes > 1) %>%
+        nrow()),2)`%
 
 \
 \
+
+### Specific nodes above cap
 
 ```{r, warning=FALSE, echo=FALSE}
 by_node_storage %>% 
-        filter(target_is_public == FALSE) %>% 
+        filter(target_is_public == FALSE & gig_tot_size >= 5) %>% 
         select(target_guid, gig_tot_size) %>% 
         arrange(desc(gig_tot_size)) %>%
   datatable(colnames = c('Node GUID', 'Storage in GB'),
-            caption = 'Private Storage',
+            caption = 'Private nodes above limit',
             extensions = 'Buttons',  
             options = list(dom = 'Bfrtip', buttons = list( list(extend = 'collection', buttons = list(list(extend='csv',filename='reg_form_counts.csv'),
                                                                  list(extend='excel', filename = 'reg_form_counts.xlsx') ),text="Download"))))
@@ -256,11 +289,11 @@ by_node_storage %>%
 
 ```{r, warning=FALSE, echo=FALSE}
 by_node_storage %>% 
-        filter(target_is_public == TRUE) %>% 
+        filter(target_is_public == TRUE & gig_tot_size >= 50) %>% 
         select(target_guid, gig_tot_size) %>% 
         arrange(desc(gig_tot_size)) %>%
   datatable(colnames = c('Node GUID', 'Storage in GB'),
-            caption = 'Public Storage',
+            caption = 'Public nodes at limit',
             extensions = 'Buttons',  
             options = list(dom = 'Bfrtip', buttons = list( list(extend = 'collection', buttons = list(list(extend='csv',filename='reg_form_counts.csv'),
                                                                  list(extend='excel', filename = 'reg_form_counts.xlsx') ),text="Download"))))

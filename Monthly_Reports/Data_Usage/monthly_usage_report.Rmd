@@ -22,6 +22,10 @@ storage_data <- read_csv('/Users/courtneysoderberg/Documents/data-science/Monthl
                     mutate(date = rollback(date, roll_to_first = FALSE)) %>%
                     mutate(month = month(date, label = T),
                     year = year(date)) %>%
+                    mutate(total = case_when(date > '2020-08-31' ~ total - deleted,
+                                             TRUE ~ total),
+                           deleted = case_when(date > '2020-08-31' ~ 0,
+                                             TRUE ~ deleted)) %>%
                     mutate(total_tib = round(total/(1024^3),2),
                            deleted_tib = round(deleted/(1024^3),2),
                            regs_tib = round(registrations/(1024^3),2),
@@ -47,7 +51,7 @@ by_node_storage <- read_csv('nondel_nodedata.csv', col_types = cols(deleted_on =
                                                                   target_type = col_skip(),
                                                                   target_is_fork = col_skip(),
                                                                   target_is_deleted = col_skip())) %>%
-                 group_by(target_root, target_is_public) %>%
+                 group_by(target_guid, target_is_public) %>%
                  summarize(tot_size = sum(size)) %>%
                  mutate(gig_tot_size = round(tot_size/(1024^3),3))
                  
@@ -122,7 +126,22 @@ transpose_storage %>%
       columns = vars(Type),
       rows = c(2, 6)
     )
+  ) %>%
+  tab_footnote(
+    footnote = 'No deleted files [even ones > 30 days old] counted starting Sept 2020',
+    locations = cells_data(
+      columns = vars(Type),
+      rows = c(4, 8)
+    )
+  ) %>%
+  tab_footnote(
+    footnote = 'After consult with product, no deleted files [even ones > 30 days old] included in total starting Sept 2020',
+    locations = cells_data(
+      columns = vars(Type),
+      rows = c(1, 5)
+    )
   )
+
 
 ```
 
@@ -206,7 +225,9 @@ graph
 \
 \
 
-# Data storage on Nodes by Root_id
+# Data storage on Nodes 
+
+Storage calculated for all nodes individually, nesting of nodes within top-level projects is not taken into account
 
 ```{r, warning=FALSE, echo=FALSE}
 ggplot(by_node_storage, aes(gig_tot_size, color = target_is_public)) +
@@ -221,9 +242,9 @@ ggplot(by_node_storage, aes(gig_tot_size, color = target_is_public)) +
 ```{r, warning=FALSE, echo=FALSE}
 by_node_storage %>% 
         filter(target_is_public == FALSE) %>% 
-        select(target_root, gig_tot_size) %>% 
+        select(target_guid, gig_tot_size) %>% 
         arrange(desc(gig_tot_size)) %>%
-  datatable(colnames = c('Project GUID', 'Storage in GB'),
+  datatable(colnames = c('Node GUID', 'Storage in GB'),
             caption = 'Private Storage',
             extensions = 'Buttons',  
             options = list(dom = 'Bfrtip', buttons = list( list(extend = 'collection', buttons = list(list(extend='csv',filename='reg_form_counts.csv'),
@@ -236,9 +257,9 @@ by_node_storage %>%
 ```{r, warning=FALSE, echo=FALSE}
 by_node_storage %>% 
         filter(target_is_public == TRUE) %>% 
-        select(target_root, gig_tot_size) %>% 
+        select(target_guid, gig_tot_size) %>% 
         arrange(desc(gig_tot_size)) %>%
-  datatable(colnames = c('Project GUID', 'Storage in GB'),
+  datatable(colnames = c('Node GUID', 'Storage in GB'),
             caption = 'Public Storage',
             extensions = 'Buttons',  
             options = list(dom = 'Bfrtip', buttons = list( list(extend = 'collection', buttons = list(list(extend='csv',filename='reg_form_counts.csv'),

@@ -228,7 +228,7 @@ graph
 # Storage Cap Information
 
 * Number of public nodes at/above cap: `r nrow(by_node_storage %>% 
-        filter(target_is_public == TRUE & gig_tot_size >= 50))`%
+        filter(target_is_public == TRUE & gig_tot_size >= 50))`
 * Percentage of public nodes at/above cap: `r round(100 * nrow(by_node_storage %>% 
         filter(target_is_public == TRUE & gig_tot_size >= 50))/nrow(by_node_storage %>% 
         filter(target_is_public == TRUE)),2)`%
@@ -236,7 +236,7 @@ graph
 \
 
 * Number of private nodes at/above cap: `r nrow(by_node_storage %>% 
-        filter(target_is_public == FALSE & gig_tot_size >= 5))`%
+        filter(target_is_public == FALSE & gig_tot_size >= 5))`
 * Percentage of private nodes at/above cap: `r round(100 * nrow(by_node_storage %>% 
         filter(target_is_public == FALSE & gig_tot_size >= 5))/nrow(by_node_storage %>% 
         filter(target_is_public == FALSE)),2)`%
@@ -274,6 +274,7 @@ graph
 
 ```{r, warning=FALSE, echo=FALSE}
 by_node_storage %>% 
+        ungroup() %>%
         filter(target_is_public == FALSE & gig_tot_size >= 5) %>% 
         select(target_guid, gig_tot_size) %>% 
         arrange(desc(gig_tot_size)) %>%
@@ -289,6 +290,7 @@ by_node_storage %>%
 
 ```{r, warning=FALSE, echo=FALSE}
 by_node_storage %>% 
+        ungroup() %>%
         filter(target_is_public == TRUE & gig_tot_size >= 50) %>% 
         select(target_guid, gig_tot_size) %>% 
         arrange(desc(gig_tot_size)) %>%

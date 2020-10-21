@@ -46,8 +46,6 @@ WITH
  									download_date, 
  									total::INTEGER, 
  									type, 
- 									osf_abstractnode.spam_status AS node_spam,
- 									osf_preprint.spam_status AS pp_spam, 
  									osf_preprint.created AS pp_created,
  									tag_id,
  									pp_suppnode_info.date_supp_added,
@@ -122,7 +120,6 @@ SELECT date_trunc('month', download_date) AS date,
 		SUM(CASE WHEN type = 'osf.node' THEN total ELSE 0 END) AS osfnode_download,
 		SUM(CASE WHEN type = 'osf.node' AND osf4m = 0 AND supp_node = 0 AND inst_affil = 0 AND collection = 0 THEN total ELSE 0 END) AS osfgen_download
 	FROM file_categorization
-	WHERE (node_spam IS NULL OR node_spam != 2) AND (pp_spam IS NULL OR pp_spam !=2)
 	GROUP BY date_trunc('month', download_date)
 
 
@@ -174,8 +171,6 @@ WITH
  									download_date, 
  									total::INTEGER, 
  									type, 
- 									osf_abstractnode.spam_status AS node_spam,
- 									osf_preprint.spam_status AS pp_spam, 
  									osf_preprint.created AS pp_created,
  									tag_id,
  									pp_suppnode_info.date_supp_added,
@@ -238,7 +233,7 @@ WITH
 												WHERE (collection_id = 711617 OR collection_id = 709754 OR collection_id = 775210 OR collection_id = 735729)) AS collection_nodes
 								 ON osf_abstractnode.id = collection_nodes.node_id
 
-								 # only get information for downloads that happened last quarter [assuming you're running the script sometime in the 1st month of the new quarter]
+								 /* only get information for downloads that happened last quarter [assuming you're running the script sometime in the 1st month of the new quarter] */
 								 WHERE download_date >= date_trunc('month', current_date - interval '3' month) AND download_date < date_trunc('month', current_date))
 
 /* calculate monthly downloads for all product types*/
@@ -253,5 +248,4 @@ SELECT date_trunc('month', download_date) AS date,
 		SUM(CASE WHEN type = 'osf.node' THEN total ELSE 0 END) AS osfnode_download,
 		SUM(CASE WHEN type = 'osf.node' AND osf4m = 0 AND supp_node = 0 AND inst_affil = 0 AND collection = 0 THEN total ELSE 0 END) AS osfgen_download
 	FROM file_categorization
-	WHERE (node_spam IS NULL OR node_spam != 2) AND (pp_spam IS NULL OR pp_spam !=2)
 	GROUP BY date_trunc('month', download_date)

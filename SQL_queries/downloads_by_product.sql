@@ -64,7 +64,7 @@ WITH
  										 WHEN child_id IS NOT NULL AND download_date >= date_trunc('day', supp_nodes.date_supp_added) THEN 1
  										 WHEN child_id IS NOT NULL AND supp_nodes.date_supp_added IS NULL AND download_date >= date_trunc('day', supp_nodes.pp_created) THEN 1
  										 ELSE 0 END as supp_node,
- 									CASE WHEN collection_id IS NOT NULL THEN 1 ELSE 0 END as collection
+ 									CASE WHEN collection_id IS NOT NULL AND download_date >= date_trunc('day', collection_submit_date) THEN 1 ELSE 0 END as collection
 
 								 FROM daily_downloads
 								 
@@ -98,7 +98,8 @@ WITH
 								 ON osf_abstractnode.id = supp_nodes.child_id
 
 								 LEFT JOIN (SELECT collection_id,
-												   	COALESCE(project_nodes.id, object_id) AS node_id
+												   	COALESCE(project_nodes.id, object_id) AS node_id,
+												   	osf_collectionsubmission.created AS collection_submit_date
 												FROM osf_collectionsubmission
 												LEFT JOIN (SELECT *
 															FROM osf_guid
@@ -191,7 +192,7 @@ WITH
  										 WHEN child_id IS NOT NULL AND download_date >= date_trunc('day', supp_nodes.date_supp_added) THEN 1
  										 WHEN child_id IS NOT NULL AND supp_nodes.date_supp_added IS NULL AND download_date >= date_trunc('day', supp_nodes.pp_created) THEN 1
  										 ELSE 0 END as supp_node,
- 									CASE WHEN collection_id IS NOT NULL THEN 1 ELSE 0 END as collection
+ 									CASE WHEN collection_id IS NOT NULL AND download_date >= date_trunc('day', collection_submit_date) THEN 1 ELSE 0 END as collection
 
 								 FROM daily_downloads
 								 
@@ -225,7 +226,8 @@ WITH
 								 ON osf_abstractnode.id = supp_nodes.child_id
 
 								 LEFT JOIN (SELECT collection_id,
-												   	COALESCE(project_nodes.id, object_id) AS node_id
+												   	COALESCE(project_nodes.id, object_id) AS node_id,
+												   	osf_collectionsubmission.created AS collection_submit_date
 												FROM osf_collectionsubmission
 												LEFT JOIN (SELECT *
 															FROM osf_guid
@@ -239,5 +241,17 @@ WITH
 								 # only get information for downloads that happened last quarter [assuming you're running the script sometime in the 1st month of the new quarter]
 								 WHERE download_date >= date_trunc('month', current_date - interval '3' month) AND download_date < date_trunc('month', current_date))
 
-SELECT *
-	FROM daily_format;
+/* calculate monthly downloads for all product types*/
+SELECT date_trunc('month', download_date) AS date,
+		SUM(CASE WHEN osf4m = 1 THEN total ELSE 0 END) AS osf4m_downloads,
+		SUM(CASE WHEN type = 'osf.quickfilesnode' THEN total ELSE 0 END) AS quickfile_downloads,
+		SUM(CASE WHEN type = 'osf.registration' THEN total ELSE 0 END) AS reg_downloads,
+		SUM(CASE WHEN preprint = 1 THEN total ELSE 0 END) AS pp_downloads,
+		SUM(CASE WHEN supp_node = 1 THEN total ELSE 0 END) AS suppnode_downloads,
+		SUM(CASE WHEN inst_affil = 1 THEN total ELSE 0 END) AS inst_downloads,
+		SUM(CASE WHEN collection = 1 THEN total ELSE 0 END) AS collection_downloads,
+		SUM(CASE WHEN type = 'osf.node' THEN total ELSE 0 END) AS osfnode_download,
+		SUM(CASE WHEN type = 'osf.node' AND osf4m = 0 AND supp_node = 0 AND inst_affil = 0 AND collection = 0 THEN total ELSE 0 END) AS osfgen_download
+	FROM file_categorization
+	WHERE (node_spam IS NULL OR node_spam != 2) AND (pp_spam IS NULL OR pp_spam !=2)
+	GROUP BY date_trunc('month', download_date)

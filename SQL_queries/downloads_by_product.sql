@@ -46,7 +46,7 @@ WITH
  									download_date, 
  									total::INTEGER, 
  									type, 
- 									osf_preprint.created AS pp_created,
+ 									preprints.created AS pp_created,
  									tag_id,
  									pp_suppnode_info.date_supp_added,
  									pp_suppnode_info.node_id,
@@ -56,7 +56,7 @@ WITH
  									supp_nodes.pp_created AS date_parent_pp_created,
  									CASE WHEN institution_id IS NOT NULL THEN 1 ELSE 0 END as inst_affil,
  									CASE WHEN tag_id = 26265 THEN 1 ELSE 0 END as osf4m,
- 									CASE WHEN target_content_type_id = 47 AND download_date >= date_trunc('day', osf_preprint.created) THEN 1 ELSE 0 END as preprint,
+ 									CASE WHEN target_content_type_id = 47 AND download_date >= date_trunc('day', preprints.created) THEN 1 ELSE 0 END as preprint,
  									CASE WHEN pp_suppnode_info.node_id IS NOT NULL AND download_date >= date_trunc('day', pp_suppnode_info.date_supp_added) THEN 1 
  										 WHEN pp_suppnode_info.node_id IS NOT NULL AND pp_suppnode_info.date_supp_added IS NULL AND download_date >= date_trunc('day', pp_suppnode_info.pp_created) THEN 1 
  										 WHEN child_id IS NOT NULL AND download_date >= date_trunc('day', supp_nodes.date_supp_added) THEN 1
@@ -86,8 +86,11 @@ WITH
 								 LEFT JOIN pp_suppnode_info
 								 ON osf_abstractnode.id = pp_suppnode_info.node_id
 
-								 LEFT JOIN osf_preprint
-								 ON daily_downloads.file_id = osf_preprint.primary_file_id
+								 /* same file are primary files on multiple pps */
+								 LEFT JOIN (SELECT primary_file_id, MIN(created) AS created
+								 				FROM osf_preprint
+								 				GROUP BY primary_file_id) AS preprints
+								 ON daily_downloads.file_id = preprints.primary_file_id
 
 								 LEFT JOIN (SELECT Distinct(child_id), date_supp_added, pp_created
 								 				FROM supp_children_nodes
@@ -171,7 +174,7 @@ WITH
  									download_date, 
  									total::INTEGER, 
  									type, 
- 									osf_preprint.created AS pp_created,
+ 									preprints.created AS pp_created,
  									tag_id,
  									pp_suppnode_info.date_supp_added,
  									pp_suppnode_info.node_id,
@@ -181,7 +184,7 @@ WITH
  									supp_nodes.pp_created AS date_parent_pp_created,
  									CASE WHEN institution_id IS NOT NULL THEN 1 ELSE 0 END as inst_affil,
  									CASE WHEN tag_id = 26265 THEN 1 ELSE 0 END as osf4m,
- 									CASE WHEN target_content_type_id = 47 AND download_date >= date_trunc('day', osf_preprint.created) THEN 1 ELSE 0 END as preprint,
+ 									CASE WHEN target_content_type_id = 47 AND download_date >= date_trunc('day', preprints.created) THEN 1 ELSE 0 END as preprint,
  									CASE WHEN pp_suppnode_info.node_id IS NOT NULL AND download_date >= date_trunc('day', pp_suppnode_info.date_supp_added) THEN 1 
  										 WHEN pp_suppnode_info.node_id IS NOT NULL AND pp_suppnode_info.date_supp_added IS NULL AND download_date >= date_trunc('day', pp_suppnode_info.pp_created) THEN 1 
  										 WHEN child_id IS NOT NULL AND download_date >= date_trunc('day', supp_nodes.date_supp_added) THEN 1
@@ -211,8 +214,11 @@ WITH
 								 LEFT JOIN pp_suppnode_info
 								 ON osf_abstractnode.id = pp_suppnode_info.node_id
 
-								 LEFT JOIN osf_preprint
-								 ON daily_downloads.file_id = osf_preprint.primary_file_id
+								 /* same file are primary files on multiple pps */
+								 LEFT JOIN (SELECT primary_file_id, MIN(created) AS created
+								 				FROM osf_preprint
+								 				GROUP BY primary_file_id) AS preprints
+								 ON daily_downloads.file_id = preprints.primary_file_id
 
 								 LEFT JOIN (SELECT Distinct(child_id), date_supp_added, pp_created
 								 				FROM supp_children_nodes

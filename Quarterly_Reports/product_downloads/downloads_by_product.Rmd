@@ -4,7 +4,6 @@ output:
   flexdashboard::flex_dashboard:
     orientation: rows
     theme: bootstrap
-    vertical_layout: scroll
 ---
 
 ```{r setup, include=FALSE}
@@ -15,13 +14,23 @@ library(lubridate)
 library(osfr)
 
 #download & read-in data
-osf_retrieve_file('https://osf.io/y2v74/') %>%
+osf_retrieve_file('https://osf.io/wd7gs/') %>%
   osf_download()
 
-download_data <- read_csv(here::here('/product_downloads/monthly_product_downloads.csv')) %>%
+last_quarter_data <- read_csv(here::here('/product_downloads/last_Q_downloads.csv'))
+
+download_data <- read_csv(here::here('product_downloads/monthly_downloads_by_product.csv')) %>%
+                    rbind(last_quarter_data) %>%
                     mutate(total = osf4m_downloads + quickfile_downloads + reg_downloads + pp_downloads + osfnode_download,
-                           date = as.Date(date))
+                           date = as.Date(date)) %>%
+                    arrange(date)
 ```
+
+Inputs {.sidebar}
+-------------------------------------
+
+Here is some text to try about exactly which downloads are counted and what does in each bin
+
 
 Row 
 -------------------------------------

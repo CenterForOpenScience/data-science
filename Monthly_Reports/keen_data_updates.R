@@ -3,6 +3,7 @@ library(tidyverse)
 library(httr)
 library(jsonlite)
 library(googlesheets4)
+library(lubridate)
 
 # get keys
 keen_projectid <- Sys.getenv("production_osfprivate_projectid")
@@ -64,7 +65,7 @@ node_data <- clean_api_response(nodesummary_output) %>%
                        projects.public = public) %>%             
   
                 #make sure column order correct
-                select(keen.created_at, keen.timestamp, projects.public, registered_projects.total, registered_projects.withdrawn, registered_projects.embargoed_v2)
+                dplyr::select(keen.created_at, keen.timestamp, projects.public, registered_projects.total, registered_projects.withdrawn, registered_projects.embargoed_v2)
 
 file_data <- clean_api_response(filesummary_output) %>%
 
@@ -75,7 +76,7 @@ file_data <- clean_api_response(filesummary_output) %>%
                        osfstorage_files_including_quickfiles.public = public) %>%             
                
                 #make sure column order correct
-                select(keen.timestamp, keen.created_at, osfstorage_files_including_quickfiles.public, osfstorage_files_including_quickfiles.total)
+                dplyr::select(keen.timestamp, keen.created_at, osfstorage_files_including_quickfiles.public, osfstorage_files_including_quickfiles.total)
 
 user_data <- clean_api_response(usersummary_output) %>%
   
@@ -85,7 +86,7 @@ user_data <- clean_api_response(usersummary_output) %>%
                              status.active = active) %>%
                       
                       #make sure column order correct
-                      select(keen.created_at, keen.timestamp, status.active)
+                      dplyr::select(keen.created_at, keen.timestamp, status.active)
 
 download_data <- clean_api_response(download_output) %>%
   
@@ -96,7 +97,7 @@ download_data <- clean_api_response(download_output) %>%
                            files.total = total) %>%
                     
                     #make sure column order correct
-                    select(keen.timestamp, keen.created_at, files.total)
+                    dplyr::select(keen.timestamp, keen.created_at, files.total)
 
 # can't use function for preprint data b/c need to handling groupings differently
 preprint_data <- fromJSON(prettify(preprint_output))$result %>%
@@ -119,7 +120,7 @@ preprint_data <- fromJSON(prettify(preprint_output))$result %>%
                            provider.total = total) %>%
                     
                     #make sure column order correct
-                    select(keen.created_at, keen.timestamp, provider.name, provider.total)
+                    dplyr::select(keen.created_at, keen.timestamp, provider.name, provider.total)
 
 ##existing sheet IDs
 nodes_gdrive_file <- 'https://docs.google.com/spreadsheets/d/1ti6iEgjvr-hXyMT5NwCNfAg-PJaczrMUX9sr6Cj6_kM/'
@@ -129,18 +130,18 @@ download_gdrive_file <- 'https://docs.google.com/spreadsheets/d/1vs-yRamfmBo_dYs
 preprint_gdrive_file <- 'https://docs.google.com/spreadsheets/d/14K6dlo0G5-PA0W14d2DDg4ZHK8cG40JQ8XybQ9yWQYY/'
 
 ## append new data to googlesheet
-sheets_append(node_data, ss = nodes_gdrive_file)
-sheets_append(file_data, ss = files_grdrive_file)
-sheets_append(user_data, ss = user_gdrive_file)
-sheets_append(download_data, ss = download_gdrive_file)
-sheets_append(preprint_data, ss = preprint_gdrive_file)
+sheet_append(node_data, ss = nodes_gdrive_file)
+sheet_append(file_data, ss = files_grdrive_file)
+sheet_append(user_data, ss = user_gdrive_file)
+sheet_append(download_data, ss = download_gdrive_file)
+sheet_append(preprint_data, ss = preprint_gdrive_file)
 
 
 ## calculating monthly numbers
 
 #calculate start and end of needed range
-end_2_month <- floor_date(now('utc'), 'day') - months(1) - days(1)
-end_last_month <- floor_date(now('utc'), 'day') - days(1)
+end_2_month <- floor_date(now('utc'), 'month') - months(1) - days(1)
+end_last_month <- floor_date(now('utc'), 'month') - days(1)
 
 # set up function to return only needed rows for each sheet
 startend_dates <- function(gsheet) {
@@ -165,9 +166,8 @@ preprints_startend <- startend_dates(preprint_gdrive_file) %>%
 
 # downloads are a sum rather than a difference
 read_sheet(download_gdrive_file, col_types = '??i') %>%
-  filter(keen.timestamp >= floor_date(now('utc'), 'day') - months(1)) %>%
+  filter(keen.timestamp >= floor_date(now('utc'), 'month') - months(1) & keen.timestamp < floor_date(now('utc'), 'month')) %>%
   summarize(total = sum(files.total))
-
 
 
 #calculate monthly values

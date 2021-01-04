@@ -19,8 +19,8 @@ library(googlesheets4)
 
 ##data imports
 
-form_data <- read_csv(here::here('Monthly_Reports/Registrations/form_type_monthly.csv')) 
-total_regs <- read_csv(here::here('Monthly_Reports/Registrations/monthly_total_regs.csv')) %>%
+form_data <- read_csv(paste0(here::here('Registrations/', 'form_type_monthly.csv'))) 
+total_regs <- read_csv(paste0(here::here('Registrations/', 'monthly_total_regs.csv'))) %>%
                     mutate(keen.timestamp = as.Date(keen.timestamp))
 reg_targets <- read_sheet('https://docs.google.com/spreadsheets/d/1b7Rgo_tdUvNmmjO_EUIn_e3ZJfecVDiycBN_d9HoEB4/') %>%
                   select(date, registered_projects.targets) %>%
@@ -43,7 +43,7 @@ valueBox(value = total_regs %>% arrange(desc(keen.timestamp)) %>% slice(1L) %>% 
     color = ifelse(total_regs %>% arrange(desc(keen.timestamp)) %>% slice(1L) %>% select(registered_projects.monthly_diff) < (total_regs %>% arrange(desc(keen.timestamp)) %>% slice(1L) %>% select(registered_projects.targets)) * .9, 'warning', 'primary'))
 ```
 
-### New Top-Level Embargoed Registrations  {.value-box}
+### Change in Number of Embargoed Registrations  {.value-box}
 
 ```{r}
 valueBox(value = total_regs %>% arrange(desc(keen.timestamp)) %>% slice(1L) %>% select(monthly_diff_embargo),

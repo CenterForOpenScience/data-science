@@ -18,7 +18,7 @@ library(DT)
 options(digits=10)
 
 # creating additional variables
-storage_data <- read_csv('/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Data_Usage/osf_storage_metrics.csv', col_types = cols(date = col_datetime())) %>%
+storage_data <- read_csv(paste0(here::here('Data_Usage/'), 'osf_storage_metrics.csv'), col_types = cols(date = col_datetime())) %>%
                     mutate(date = rollback(date, roll_to_first = FALSE)) %>%
                     mutate(month = month(date, label = T),
                     year = year(date)) %>%
@@ -41,12 +41,14 @@ storage_data <- read_csv('/Users/courtneysoderberg/Documents/data-science/Monthl
                            prct_preprints = 100*(nd_preprints/total),
                            prct_pub_nodes = 100*(nd_public_nodes/total),
                            prct_pri_nodes = 100*(nd_private_nodes/total))
+
+monthly_cap_info <- read_csv(paste0(here::here('Data_Usage/'), 'monthly_cap_info.csv'))
 ```
 
 ```{r, warning=FALSE, include=FALSE}
 
 # create public & private storage counts by root_id of non-deleted files and nodes
-by_node_storage <- read_csv('nondel_nodedata.csv', col_types = cols(deleted_on = col_skip(),
+by_node_storage <- read_csv(paste0(here::here('Data_Usage/'), 'nondel_nodedata.csv'), col_types = cols(deleted_on = col_skip(),
                                                                   target_object = col_skip(),
                                                                   target_type = col_skip(),
                                                                   target_is_fork = col_skip(),
@@ -225,26 +227,35 @@ graph
 \
 \
 
-# Storage Cap Information
+```{r, warning=FALSE, echo=FALSE, message = FALSE}
+# num/perc of nodes/projects by type and month:
 
-* Number of public nodes at/above cap: `r nrow(by_node_storage %>% 
-        filter(target_is_public == TRUE & gig_tot_size >= 50))`
-* Percentage of public nodes at/above cap: `r round(100 * nrow(by_node_storage %>% 
+month <- floor_date(as_datetime(Sys.time()), 'months') - days(1)
+
+num_public_above <- nrow(by_node_storage %>% 
+        filter(target_is_public == TRUE & gig_tot_size >= 50))
+
+num_private_above <- nrow(by_node_storage %>% 
+        filter(target_is_public == FALSE & gig_tot_size >= 5))
+
+perc_public_nodes <- round(100 * nrow(by_node_storage %>% 
+        filter(target_is_public == TRUE))/nrow(by_node_storage),2)
+
+perc_private_nodes <- 100 - perc_public_nodes
+
+perc_public_above <- round(100 * nrow(by_node_storage %>% 
         filter(target_is_public == TRUE & gig_tot_size >= 50))/nrow(by_node_storage %>% 
-        filter(target_is_public == TRUE)),2)`%
+        filter(target_is_public == TRUE)),2)
 
-\
+perc_public_above_5GB <- round(100 * nrow(by_node_storage %>% 
+        filter(target_is_public == TRUE & gig_tot_size > 5))/nrow(by_node_storage %>% 
+        filter(target_is_public == TRUE)),2)
 
-* Number of private nodes at/above cap: `r nrow(by_node_storage %>% 
-        filter(target_is_public == FALSE & gig_tot_size >= 5))`
-* Percentage of private nodes at/above cap: `r round(100 * nrow(by_node_storage %>% 
+perc_private_above <- round(100 * nrow(by_node_storage %>% 
         filter(target_is_public == FALSE & gig_tot_size >= 5))/nrow(by_node_storage %>% 
-        filter(target_is_public == FALSE)),2)`%
+        filter(target_is_public == FALSE)),2)
 
-\
-
-* Percentage of Top-level projects with at least 1 node that exceed the storage cap: 
-    + public: `r round(100 * (by_node_storage %>% 
+perc_toplevel_public_above <- round(100 * (by_node_storage %>% 
         filter(target_is_public == TRUE) %>%
         group_by(target_root) %>%
         summarise(num_nodes = n(), gig_tot_size = sum(gig_tot_size)) %>%
@@ -254,8 +265,9 @@ graph
         group_by(target_root) %>%
         summarise(num_nodes = n(), gig_tot_size = sum(gig_tot_size)) %>%
         filter(num_nodes > 1) %>%
-        nrow()),2)`%
-    + private: `r round(100 * (by_node_storage %>% 
+        nrow()),2)
+
+perc_toplevel_private_above <- round(100 * (by_node_storage %>% 
         filter(target_is_public == FALSE) %>%
         group_by(target_root) %>%
         summarise(num_nodes = n(), gig_tot_size = sum(gig_tot_size)) %>%
@@ -265,7 +277,38 @@ graph
         group_by(target_root) %>%
         summarise(num_nodes = n(), gig_tot_size = sum(gig_tot_size)) %>%
         filter(num_nodes > 1) %>%
-        nrow()),2)`%
+        nrow()),2)
+
+this_months_cap_info <- cbind(month, num_public_above, num_private_above, perc_public_nodes, perc_private_nodes, perc_public_above, perc_public_above_5GB, perc_private_above, perc_toplevel_public_above, perc_toplevel_private_above) %>%
+  as.data.frame() %>%
+  mutate(month = as_datetime(month))
+
+monthly_cap_info <- rbind(monthly_cap_info, this_months_cap_info)
+
+write_csv(monthly_cap_info, 'monthly_cap_info.csv')
+
+```
+
+
+
+# Storage Cap Information
+
+* Number of public nodes at/above cap since cap implemented: `r num_public_above - monthly_cap_info[1, 2]`
+* Overall percentage of public nodes: `r perc_public_nodes`%
+* Percentage of public nodes at/above cap: `r perc_public_above`%
+* Percentage of public nodes above private cap: `r perc_public_above_5GB`%
+
+\
+
+* Number of private nodes at/above cap since cap implemented: `r num_private_above - monthly_cap_info[1, 3]`
+* Overall percentage of private nodes: `r perc_private_nodes`%
+* Percentage of private nodes at/above cap: `r perc_private_above`%
+
+\
+
+* Percentage of Top-level projects with at least 1 node that exceed the storage cap: 
+    + public: `r perc_toplevel_public_above`%
+    + private: `r perc_toplevel_private_above`%
 
 \
 \

@@ -38,4 +38,4 @@ write_csv(nondel_nodedata, path = paste0(here::here('Data_Usage/'),'nondel_noded
 rmarkdown::render(paste0(here::here('Data_Usage/'), 'monthly_usage_report.Rmd'), 'html_document')
 
 osf_retrieve_node('https://osf.io/scbfy/') %>%
-osf_upload("/Users/courtneysoderberg/Documents/data-science/Monthly_Reports/Data_Usage/monthly_usage_report.html", overwrite = T)
+osf_upload(paste0(here::here('Data_Usage/'), 'monthly_usage_report.html'), conflict = 'overwrite')

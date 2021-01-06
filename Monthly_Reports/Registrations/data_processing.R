@@ -3,9 +3,13 @@ library(tidyverse)
 library(lubridate)
 remotes::install_github("ropensci/osfr") # using source b/c 'conflicts' bug fix hasn't made it to CRAN yet
 library(osfr)
+library(googledrive)
 library(googlesheets4)
 library(here)
+library(rmarkdown)
 
+# authenticate email
+gs4_auth(email = 'courtney@cos.io') #will need to change this out to someone elses email when this gets handed off
 
 # download monthly aggregates file to be appended
 osf_retrieve_file("https://osf.io/semh8/") %>% 
@@ -65,3 +69,10 @@ osf_retrieve_node('https://osf.io/r83uz/') %>%
   filter(name == 'Registries') %>%
   osf_upload(path = here::here('Registrations/form_type_monthly.csv'), conflicts = "overwrite")
 
+
+# run the flexdashboard
+rmarkdown::render(paste0(here::here('Registrations/'), 'registrations_dashboard.Rmd'))
+
+# upload resulting dashboard to osf project
+osf_retrieve_node('https://osf.io/scbfy/') %>%
+  osf_upload(paste0(here::here('Registrations/'), 'registrations_dashboard.html'), conflict = 'overwrite')

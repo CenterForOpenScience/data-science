@@ -6,5 +6,8 @@ The data and data dictionaries can be found [here](https://osf.io/r83uz/) (if yo
 To run this report:
 * Make sure you have your osf authentication token set up an saved in your env file so osfr will work
 * Open the .Rproj file in the ‘Monthly_Reports’ folder and then open the ‘data_processing.R’ file in this subfolder in the newly opened RStudio project
-* If this if your first time running the script, you will need to switch out the cos.io email address and may need to authenticate it
+* If this if your first time running the script, you will need to switch out the cos.io email address on line 12 of the script and may need to authenticate it
 * Run the whole script, which will pull in the raw data, create whatever intermediate datasets are necessary, render the Rmd file to the html report, and then upload that to the OSF project for distribution.
+
+Items to note:
+* The 'Total Registrations' draw from keen numbers, which rely on the 'created' date on a registration. The 'Registration by Form Type' relies on the 'registered_date' instead, b/c only that variable is consistenly defined across time (through sometime in 2016, 'created' for registrations was defined as the date the project they were registered from was created, rather than the actual registration date. When this definition was updated, data on older registations was not updated). This difference in variable usage will normally not matter b/c now they are usually nearly exactly the same for a given registration, except for when registations are migrated onto our system. When EGAP was migrated, the 'registered_date' were set to be the date they were originally registered on EGAP, while 'created' was left as it was to mark the date the registration was created on out system. This is why there is a large spike in 'Total Registrations' in Feb 2020 that does not appear in 'Registrations by Form Type'

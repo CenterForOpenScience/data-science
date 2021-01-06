@@ -7,6 +7,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
+#load libraries
 library(flexdashboard)
 library(tidyverse)
 library(highcharter)
@@ -63,7 +64,9 @@ Row
 
 ```{r}
 download_data  %>%
-  filter(date >= '2016-08-01') %>%
+  filter(date >= '2016-08-01') %>% # truncate x-axis to make graph more readable
+  
+  # graph overall total downloads
   hchart(., type = 'line',
          hcaes(x = date,
                y = total)) %>%
@@ -85,9 +88,11 @@ Row {.tabset .tabset-fade}
 
 ```{r}
 download_data  %>%
-  filter(date >= '2016-08-01') %>%
+  filter(date >= '2016-08-01') %>% # truncate x-axis to make graph more readable
   select(date, Quickfiles, Registrations, Preprints, `OSF Nodes`) %>%
   pivot_longer(cols = Quickfiles:`OSF Nodes`, names_to = 'product', values_to = 'downloads') %>%
+  
+  # graph raw number of downloads for each product
   hchart(., type = 'line',
          hcaes(x = date,
                y = downloads,
@@ -107,11 +112,15 @@ download_data  %>%
 
 ```{r}
 download_data  %>%
-  filter(date >= '2016-08-01') %>%
+  filter(date >= '2016-08-01') %>% # truncate x-axis to make graph more readable
   select(date, Quickfiles, Registrations, Preprints, `OSF Nodes`) %>%
+  
+  # get percentage of each months total downloads that are attritbuted to each product
   pivot_longer(cols = Quickfiles:`OSF Nodes`, names_to = 'product', values_to = 'downloads') %>%
   group_by(date) %>%
   mutate(perc = round((100 * downloads)/sum(downloads),2)) %>%
+  
+  # graph resulting percentages by product type
   hchart(., type = 'line',
          hcaes(x = date,
                y = perc,
@@ -134,9 +143,11 @@ Row {.tabset .tabset-fade}
 
 ```{r}
 download_data  %>%
-  filter(date >= '2016-08-01') %>%
+  filter(date >= '2016-08-01') %>% # truncate x-axis to make graph more readable
   select(date, OSF4M, `Supp Nodes`, Institutions, Collections, `OSF General`) %>%
   pivot_longer(cols = OSF4M:`OSF General`, names_to = 'product', values_to = 'downloads') %>%
+  
+  # graph raw numbers for each osf node type
   hchart(., type = 'line',
          hcaes(x = date,
                y = downloads,
@@ -157,11 +168,15 @@ download_data  %>%
 
 ```{r}
 download_data  %>%
-  filter(date >= '2016-08-01') %>%
+  filter(date >= '2016-08-01') %>% # truncate x-axis to make graph more readable
   mutate(denominator = `OSF Nodes`) %>%
   select(date, OSF4M, `Supp Nodes`, Institutions, Collections, `OSF General`, denominator) %>%
+  
+  # calculate % of each OSF nodes that is of each type
   pivot_longer(cols = OSF4M:`OSF General`, names_to = 'product', values_to = 'downloads') %>%
   mutate(perc = round(100 * downloads/denominator),2) %>%
+  
+  # graph resulting percentages by node type
   hchart(., type = 'line',
          hcaes(x = date,
                y = perc,

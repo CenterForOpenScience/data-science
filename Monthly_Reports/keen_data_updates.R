@@ -5,9 +5,10 @@ library(jsonlite)
 library(googlesheets4)
 library(lubridate)
 
-# get keys
-keen_projectid <- Sys.getenv("production_osfprivate_projectid")
-keen_read_key <- Sys.getenv("keen_read_key")
+# get keys/authorizations
+keen_projectid <- Sys.getenv("production_osfprivate_projectid") #must set this in your env file
+keen_read_key <- Sys.getenv("keen_read_key") #must set this in your env file
+gs4_auth(email = 'courtney@cos.io') #will need to change this out to someone elses email when this gets handed off
 
 # function to create keen calls
 keen_extraction_call <- function(event_collection, timeframe, variable_list){
@@ -135,7 +136,6 @@ sheet_append(file_data, ss = files_grdrive_file)
 sheet_append(user_data, ss = user_gdrive_file)
 sheet_append(download_data, ss = download_gdrive_file)
 sheet_append(preprint_data, ss = preprint_gdrive_file)
-
 
 ## calculating monthly numbers
 

@@ -105,7 +105,7 @@ transpose_storage <- transpose_storage %>%
 ```{r, warning=FALSE, echo=FALSE}
 # overall storage
 transpose_storage %>% 
-  filter(Type == 'Total' | Type == 'Public Nodes' | Type == 'Private Nodes' | Type == 'Deleted') %>%
+  filter(Type == 'Total' | Type == 'Public Nodes' | Type == 'Private Nodes') %>%
   gt() %>%
   cols_align(align = c('center')) %>%
   tab_header(
@@ -113,11 +113,11 @@ transpose_storage %>%
   ) %>%
   tab_row_group(
     group = 'Monthly Total',
-    rows = 1:4
+    rows = 1:3
   ) %>%
   tab_row_group(
     group = 'Monthly Increase',
-    rows = 5:8
+    rows = 4:6
   ) %>%
   tab_source_note(
     source_note = "Storage displayed in Gigabytes"
@@ -126,21 +126,14 @@ transpose_storage %>%
     footnote = 'Includes preprint supp nodes',
     locations = cells_data(
       columns = vars(Type),
-      rows = c(2, 6)
+      rows = c(2, 5)
     )
   ) %>%
   tab_footnote(
-    footnote = 'No deleted files [even ones > 30 days old] counted starting Sept 2020',
+    footnote = 'After consult with product, no deleted files [even ones > 30 days old] included in total starting 9/20. Before 9/20, deleted storage is included in Total, but not listed in the table',
     locations = cells_data(
       columns = vars(Type),
-      rows = c(4, 8)
-    )
-  ) %>%
-  tab_footnote(
-    footnote = 'After consult with product, no deleted files [even ones > 30 days old] included in total starting Sept 2020',
-    locations = cells_data(
-      columns = vars(Type),
-      rows = c(1, 5)
+      rows = c(1, 4)
     )
   )
 
@@ -293,25 +286,58 @@ write_csv(monthly_cap_info, 'monthly_cap_info.csv')
 
 # Storage Cap Information
 
-* Number of public nodes at/above cap since cap implemented: `r num_public_above - monthly_cap_info[1, 2]`
+### How many nodes are exceeding the caps?
+```{r, warning=FALSE, echo=FALSE}
+storage_fig <- monthly_cap_info %>%
+  select(month, num_public_above, num_private_above, perc_public_above, perc_private_above) %>%
+  mutate(num_private_above = num_private_above - monthly_cap_info[1, 3][[1]],
+         num_public_above = num_public_above - monthly_cap_info[1, 2][[1]]) %>%
+  pivot_longer(!month, names_to = c('type','Node Type', 'placement'), 
+               names_sep = '_',
+               values_to = 'value') %>%
+  select(-placement) %>%
+  mutate(type = case_when(type == 'num' ~ 'Change in number of nodes since Nov 2020',
+                          type == 'perc' ~ 'Percentage of nodes'),
+         month = as.Date(month)) %>%
+  ggplot(aes(x = month, y = value, color = `Node Type`)) +
+    geom_line() +
+    geom_point() + 
+    theme_minimal() + 
+    theme(axis.title = element_blank()) + 
+    facet_wrap( ~ type, ncol = 1, scales="free_y") +
+    scale_x_date(date_labels = "%b %y")
+
+ggplotly(storage_fig)
+```
+
+#### Other General Numbers
+* Overall percentage of private nodes: `r perc_private_nodes`%
 * Overall percentage of public nodes: `r perc_public_nodes`%
-* Percentage of public nodes at/above cap: `r perc_public_above`%
 * Percentage of public nodes above private cap: `r perc_public_above_5GB`%
 
-\
 
-* Number of private nodes at/above cap since cap implemented: `r num_private_above - monthly_cap_info[1, 3]`
-* Overall percentage of private nodes: `r perc_private_nodes`%
-* Percentage of private nodes at/above cap: `r perc_private_above`%
+### Are users getting around the cap by creating nested projects?
 
-\
+If there is an unexpectedly large incrase in node storage, but not a spike in projects getting around the node caps, it could be that a large number of individual projects were made, which would show up in the KPIs, or that users have switched to more nested projects to spread files to multiple nodes to get around caps. 
 
-* Percentage of Top-level projects with at least 1 node that exceed the storage cap: 
-    + public: `r perc_toplevel_public_above`%
-    + private: `r perc_toplevel_private_above`%
+```{r, warning=FALSE, echo=FALSE}
+nested_storage_fig <- monthly_cap_info %>%
+  select(month, perc_toplevel_public_above, perc_toplevel_private_above) %>%
+  pivot_longer(!month, 
+               names_to = 'Node Type', 
+               values_to = 'Percentage') %>%
+  mutate(`Node Type` = case_when(`Node Type` == 'perc_toplevel_public_above' ~ 'public',
+                          `Node Type` == 'perc_toplevel_private_above' ~ 'private'),
+         month = as.Date(month)) %>%
+  ggplot(aes(x = month, y = Percentage, color = `Node Type`)) +
+    geom_line() +
+    geom_point() + 
+    theme_minimal() + 
+    theme(axis.title = element_blank()) + 
+    scale_x_date(date_labels = "%b %y")
 
-\
-\
+ggplotly(nested_storage_fig)
+```
 
 ### Specific nodes above cap
 

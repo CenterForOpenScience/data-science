@@ -15,7 +15,7 @@ library(osfr)
 
 #download & read-in data
 osf_retrieve_file('https://osf.io/wd7gs/') %>%
-  osf_download()
+  osf_download(path = here::here('product_downloads/'), conflicts = "overwrite")
 
 last_quarter_data <- read_csv(here::here('/product_downloads/last_Q_downloads.csv'))
 
@@ -23,13 +23,37 @@ download_data <- read_csv(here::here('product_downloads/monthly_downloads_by_pro
                     rbind(last_quarter_data) %>%
                     mutate(total = osf4m_downloads + quickfile_downloads + reg_downloads + pp_downloads + osfnode_download,
                            date = as.Date(date)) %>%
-                    arrange(date)
+                    arrange(date) %>%
+                    rename(Quickfiles = quickfile_downloads,
+                           Registrations = reg_downloads,
+                           Preprints = pp_downloads,
+                           `OSF Nodes` = osfnode_download,
+                           Collections = collection_downloads,
+                           Institutions = inst_downloads,
+                           OSF4M = osf4m_downloads,
+                           `Supp Nodes` = suppnode_downloads,
+                           `OSF General` = osfgen_download)
+
+# reupload OSF data
+write_csv(download_data, 'monthly_downloads_by_product.csv')
+
+osf_retrieve_node('https://osf.io/5hw9s/') %>%
+  osf_ls_files() %>%
+  filter(name == 'Downloads by Product') %>%
+  osf_upload('monthly_downloads_by_product.csv', conflicts = 'overwrite')
 ```
 
 Inputs {.sidebar}
 -------------------------------------
 
-Here is some text to try about exactly which downloads are counted and what does in each bin
+* **OSF Nodes** counts any osf node, regardless of its 'type' (e.g. osf4m, collection, suppnode)
+* **Preprints** are download of preprint files, startign the day they became preprints
+* **Registrations** are downloads of files on registrations
+* **Collections** count downloads on files anywhere in a project connected to a collection, starting from when the project was submitted to the collection
+* **Instituions** count downloads for files connected to affiliated nodes
+* **OSF4M** count downloads of osf4m nodes
+* **Supp Nodes** count downloads of files on preprint suppnodes, starting the day the node was connected as a suppnode
+* **OSF General** count downloads of files on non-registration osf nodes that are not: in a collection, a suppnode, an osf4m, or affiliated
 
 
 Row 
@@ -39,6 +63,7 @@ Row
 
 ```{r}
 download_data  %>%
+  filter(date >= '2016-08-01') %>%
   hchart(., type = 'line',
          hcaes(x = date,
                y = total)) %>%
@@ -60,8 +85,9 @@ Row {.tabset .tabset-fade}
 
 ```{r}
 download_data  %>%
-  select(date, quickfile_downloads, reg_downloads, pp_downloads, osfnode_download) %>%
-  pivot_longer(cols = quickfile_downloads:osfnode_download, names_to = 'product', values_to = 'downloads') %>%
+  filter(date >= '2016-08-01') %>%
+  select(date, Quickfiles, Registrations, Preprints, `OSF Nodes`) %>%
+  pivot_longer(cols = Quickfiles:`OSF Nodes`, names_to = 'product', values_to = 'downloads') %>%
   hchart(., type = 'line',
          hcaes(x = date,
                y = downloads,
@@ -81,8 +107,9 @@ download_data  %>%
 
 ```{r}
 download_data  %>%
-  select(date, quickfile_downloads, reg_downloads, pp_downloads, osfnode_download) %>%
-  pivot_longer(cols = quickfile_downloads:osfnode_download, names_to = 'product', values_to = 'downloads') %>%
+  filter(date >= '2016-08-01') %>%
+  select(date, Quickfiles, Registrations, Preprints, `OSF Nodes`) %>%
+  pivot_longer(cols = Quickfiles:`OSF Nodes`, names_to = 'product', values_to = 'downloads') %>%
   group_by(date) %>%
   mutate(perc = round((100 * downloads)/sum(downloads),2)) %>%
   hchart(., type = 'line',
@@ -107,8 +134,9 @@ Row {.tabset .tabset-fade}
 
 ```{r}
 download_data  %>%
-  select(date, osf4m_downloads, suppnode_downloads, inst_downloads, collection_downloads, osfgen_download) %>%
-  pivot_longer(cols = osf4m_downloads:osfgen_download, names_to = 'product', values_to = 'downloads') %>%
+  filter(date >= '2016-08-01') %>%
+  select(date, OSF4M, `Supp Nodes`, Institutions, Collections, `OSF General`) %>%
+  pivot_longer(cols = OSF4M:`OSF General`, names_to = 'product', values_to = 'downloads') %>%
   hchart(., type = 'line',
          hcaes(x = date,
                y = downloads,
@@ -129,9 +157,10 @@ download_data  %>%
 
 ```{r}
 download_data  %>%
-  mutate(denominator = osfnode_download + reg_downloads) %>%
-  select(date, osf4m_downloads, suppnode_downloads, inst_downloads, collection_downloads, osfgen_download, denominator) %>%
-  pivot_longer(cols = osf4m_downloads:osfgen_download, names_to = 'product', values_to = 'downloads') %>%
+  filter(date >= '2016-08-01') %>%
+  mutate(denominator = `OSF Nodes`) %>%
+  select(date, OSF4M, `Supp Nodes`, Institutions, Collections, `OSF General`, denominator) %>%
+  pivot_longer(cols = OSF4M:`OSF General`, names_to = 'product', values_to = 'downloads') %>%
   mutate(perc = round(100 * downloads/denominator),2) %>%
   hchart(., type = 'line',
          hcaes(x = date,

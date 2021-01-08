@@ -5,7 +5,7 @@ WITH emails AS (SELECT SPLIT_PART(address, '@', 2) AS institution, user_id, addr
 	FROM osf_email
 	LEFT JOIN osf_osfuser
 	ON osf_email.user_id = osf_osfuser.id
-	WHERE is_registered IS TRUE)
+	WHERE is_registered IS TRUE AND (spam_status IS NULL OR spam_status != 2))
 
 /* count up the number of users by institution*/	
 SELECT COUNT(user_id), institution

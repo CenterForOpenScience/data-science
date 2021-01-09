@@ -40,8 +40,10 @@ WITH RECURSIVE collection_tree AS (SELECT osf_abstractprovider.name AS name,
 								ON files.target_object_id = cn_roots.collection_root
 								LEFT JOIN collection_nodes AS cn_child
 								ON files.target_object_id = cn_child.child_id),
-				collection_files AS (SELECT DISTINCT file_id, target_object_id, COALESCE(root_name, child_name) AS collection_name, collection_root, child_id
+				collection_files AS (SELECT DISTINCT file_id, target_object_id, COALESCE(root_name, child_name) AS collection_name, collection_root, child_id, is_deleted, is_public
 										FROM file_info
+										LEFT JOIN osf_abstractnode
+										ON file_info.child_id = osf_abstractnode.id
 										WHERE root_name IS NOT NULL OR child_name IS NOT NULL),
 				file_actions AS (SELECT file_id, Min(_id), action, Max(total),
 										CASE WHEN action = 'download' THEN Max(total) ELSE 0 END AS downloads,
@@ -78,6 +80,7 @@ SELECT date_trunc('month', current_date) AS date,
 				 FROM file_actions
 				 GROUP BY file_id) as actions_file
 	ON collection_files.file_id = actions_file.file_id
+	WHERE (is_deleted IS NULL OR is_deleted IS FALSE) AND (is_public IS NULL OR is_public IS TRUE)
 	GROUP BY collection_files.collection_name;
 
 

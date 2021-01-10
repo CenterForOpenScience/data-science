@@ -7,6 +7,7 @@ To run this report:
 * Make sure you have your osf authentication token set up an saved in your env file so osfr will work
 * Open the .Rproj file in the ‘Monthly_Reports’ folder and then open the ‘data_processing.R’ file in this subfolder in the newly opened RStudio project
 * If this if your first time running the script, you will need to switch out the cos.io email address on line 12 of the script and may need to authenticate it
+* After launching the .Rproj for the first time, use `renv::restore()` to get the local project library on your machine. If you have already done this step before running either the keen or data usage scripts in the same R session, you do not have to do it again.
 * Run the whole script, which will pull in the raw data, create whatever intermediate datasets are necessary, render the Rmd file to the html report, and then upload that to the OSF project for distribution.
 
 Items to note:

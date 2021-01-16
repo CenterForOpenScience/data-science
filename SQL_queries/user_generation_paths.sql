@@ -77,7 +77,9 @@ SELECT coalesce(new_signups, 0) AS new_signups, coalesce(new_claims, 0) AS new_c
 
 
 
-/* intital query to get info about users with system tags, dates, and SSO */
+
+
+/* intital query to get info about users with system tags, dates, and SSO  - DO NOT RUN EVERY QUARTER*/
 
 /* get all non-spam, non-deactived confirmed/not yet confirmed users and their source/claimed tags */
 WITH user_tag_info AS (SELECT osf_osfuser.id AS user_id, 

@@ -12,7 +12,7 @@ library(rmarkdown)
 gs4_auth(email = 'courtney@cos.io') #will need to change this out to someone elses email when this gets handed off
 
 # download monthly aggregates file to be appended
-osf_retrieve_file("https://osf.io/semh8/") %>% 
+osf_retrieve_file("https://osf.io/z3dg2/") %>% 
   osf_download(path = here::here('Registrations/'), conflicts = "overwrite")
 
 monthly_data <- read_csv(paste0(here::here('Registrations/'), 'form_type_monthly.csv'))

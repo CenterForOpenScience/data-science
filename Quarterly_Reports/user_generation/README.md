@@ -12,5 +12,6 @@ To run this report:
 * Run the whole script, which will pull in the relevant data, clean it, render the Rmd file to the html report, and then upload that to the OSF project for distribution.
 
 Note:
+* User tag generation was revamped in May 2020.
 * There is currently a bug which appears to be affecting accurate tagging of user sign-ups related to instituions. The bug has been reported, but until it is fixed, numbers should be taken with a grain of salt and in a more relative fashion (affects ~200 - 300 users per quarter, depending on how many institutional signups there are)
 * User tags do not currently exist for collections or branded registries, bu there is a ticket for the work. 

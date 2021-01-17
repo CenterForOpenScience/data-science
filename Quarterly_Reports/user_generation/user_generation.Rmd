@@ -61,29 +61,41 @@ quarterly_numbers <- user_generation_data %>%
                         slice_head(n = 3) %>%
                         summarize(new_signups = sum(new_signups), new_invitees = sum(new_invitees), new_claims = sum(new_claims))
 
-sso_percentages <- user_generation_data %>%
-                        arrange(desc(month)) %>%
-                        group_by(product_type) %>%
-                        slice_head(n = 3) %>%
-                        summarise(across(where(is.numeric), sum)) %>%
-                        ungroup() %>%
-                        mutate(newsignups_ssoprc = paste0(round(100 *sso_newsignups/new_signups,2), '%'),
-                               newsources_ssoprc = 'NA',
-                               new_claims_ssoprc = paste0(round(100 *sso_newclaims/new_claims,2), '%')) %>%
-                        select(product_type, ends_with('ssoprc')) %>%
-                        rename(new_signups = newsignups_ssoprc,
-                               new_invitees = newsources_ssoprc,
-                               new_claims = new_claims_ssoprc)
+# commented this section out b/c of current bug that seems to mostly be affecting tags on SSO users, so the SSO portion of the table is really undercounting. Put back onece bug is fixed
 
-rbind(quarterly_numbers, sso_percentages) %>%
+#sso_percentages <- user_generation_data %>%
+#                        arrange(desc(month)) %>%
+#                        group_by(product_type) %>%
+#                        slice_head(n = 3) %>%
+#                        summarise(across(where(is.numeric), sum)) %>%
+#                        ungroup() %>%
+#                        mutate(newsignups_ssoprc = paste0(round(100 *sso_newsignups/new_signups,2), '%'),
+#                               newsources_ssoprc = 'NA',
+#                               new_claims_ssoprc = paste0(round(100 *sso_newclaims/new_claims,2), '%')) %>%
+#                        select(product_type, ends_with('ssoprc')) %>%
+#                        rename(new_signups = newsignups_ssoprc,
+#                               new_invitees = newsources_ssoprc,
+#                               new_claims = new_claims_ssoprc)
+
+# rbind(quarterly_numbers, sso_percentages) %>%
+#    rename(` ` = 'product_type',
+#           `New Signed-Ups` = 'new_signups',
+#           `New Invites` = 'new_invitees',
+#           `New claims` = 'new_claims') %>%
+#    kable(align = 'c') %>%
+#    kable_styling('striped', full_width = F) %>%
+#    pack_rows('Raw Counts', 1, 4) %>%
+#    pack_rows('SSO perc', 5, 8)
+
+# stand in table for while bug is being worked on. When bug is fixed, uncomment above table and remove this one
+quarterly_numbers %>%
     rename(` ` = 'product_type',
            `New Signed-Ups` = 'new_signups',
            `New Invites` = 'new_invitees',
            `New claims` = 'new_claims') %>%
     kable(align = 'c') %>%
     kable_styling('striped', full_width = F) %>%
-    pack_rows('Raw Counts', 1, 4) %>%
-    pack_rows('SSO perc', 5, 8)
+    pack_rows('Raw Counts', 1, 4)
 ```
 
 ### New unregistered contributor invitations {data-height=500}
@@ -116,6 +128,7 @@ Column {data-width=500}
 
 ```{r}
 user_generation_data %>%
+  filter(month >= '2020-05-01') %>% # restrict graph to time when new tag logic was added, even though we have some of this information historically
   hchart(., type = 'line',
          hcaes(x = month,
                y = new_signups,
@@ -230,7 +243,7 @@ Column {data-width = 500}
 
 ```{r}
 user_generation_data %>%
-  filter(month >= '2012-08-01') %>%
+  filter(month >= '2020-05-01') %>%  # restrict graph to time when new tag logic was added, even though we have some of this information historically
   group_by(month) %>% 
   mutate(perc_signups = round(100 * new_signups/sum(new_signups),2)) %>%
   ungroup() %>%

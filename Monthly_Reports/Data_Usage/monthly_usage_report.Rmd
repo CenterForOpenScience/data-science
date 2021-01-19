@@ -42,6 +42,10 @@ storage_data <- read_csv(paste0(here::here('Data_Usage/'), 'osf_storage_metrics.
                            prct_pub_nodes = 100*(nd_public_nodes/total),
                            prct_pri_nodes = 100*(nd_private_nodes/total))
 
+# download and readin monthly cap info
+osf_retrieve_file('https://osf.io/dpe2j/') %>%
+  osf_download(path = here::here('Data_Usage/'), conflicts = "overwrite")
+
 monthly_cap_info <- read_csv(paste0(here::here('Data_Usage/'), 'monthly_cap_info.csv'))
 ```
 
@@ -272,6 +276,7 @@ perc_toplevel_private_above <- round(100 * (by_node_storage %>%
         filter(num_nodes > 1) %>%
         nrow()),2)
 
+# append this monthsly numbers onto running sheet and uplaod back to osf
 this_months_cap_info <- cbind(month, num_public_above, num_private_above, perc_public_nodes, perc_private_nodes, perc_public_above, perc_public_above_5GB, perc_private_above, perc_toplevel_public_above, perc_toplevel_private_above) %>%
   as.data.frame() %>%
   mutate(month = as_datetime(month))
@@ -279,6 +284,11 @@ this_months_cap_info <- cbind(month, num_public_above, num_private_above, perc_p
 monthly_cap_info <- rbind(monthly_cap_info, this_months_cap_info)
 
 write_csv(monthly_cap_info, 'monthly_cap_info.csv')
+
+osf_retrieve_node('https://osf.io/r83uz/') %>% 
+  osf_ls_files() %>% 
+  filter(name == 'Data Storage Usage') %>%
+  osf_upload(path = here::here('Data_Usage/monthly_cap_info.csv'), conflicts = "overwrite")
 
 ```
 

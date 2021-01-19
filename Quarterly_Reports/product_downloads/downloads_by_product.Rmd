@@ -41,7 +41,7 @@ write_csv(download_data, 'monthly_downloads_by_product.csv')
 osf_retrieve_node('https://osf.io/5hw9s/') %>%
   osf_ls_files() %>%
   filter(name == 'Downloads by Product') %>%
-  osf_upload('monthly_downloads_by_product.csv', conflicts = 'overwrite')
+  osf_upload(here::here('product_downloads/monthly_downloads_by_product.csv', conflicts = "overwrite"))
 ```
 
 Inputs {.sidebar}

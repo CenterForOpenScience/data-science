@@ -53,7 +53,7 @@ osf_retrieve_node('https://osf.io/5hw9s/') %>%
 
 # get monthly numbers by product type for last quarter
 qrt_full_hist_cat_date <- fine_grained_hist_data %>%
-                            filter(month >= floor_date(Sys.Date() - months(6), 'months')) %>%
+                            filter(month >= floor_date(Sys.Date() - months(3), 'months')) %>%
                             mutate(product_type = case_when(grepl('preprint', product) ~ 'preprints',
                                                             grepl('osf4m', product) ~ 'osf4m',
                                                             grepl('campaign', product) | grepl('regist', product) ~ 'registries',
@@ -78,3 +78,6 @@ osf_retrieve_node('https://osf.io/5hw9s/') %>%
 
 # run the flexdashboard
 rmarkdown::render(paste0(here::here('user_generation/'), 'user_generation.Rmd'))
+
+osf_retrieve_node('https://osf.io/34wp6/') %>% 
+  osf_upload(path = here::here('user_generation/user_generation.html'), conflicts = "overwrite")

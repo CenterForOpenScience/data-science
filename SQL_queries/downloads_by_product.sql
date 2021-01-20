@@ -236,7 +236,9 @@ WITH
 												ON osf_collectionsubmission.guid_id = node_guids.id
 												LEFT JOIN osf_abstractnode as project_nodes
 												ON node_guids.object_id = project_nodes.root_id
-												WHERE (collection_id = 711617 OR collection_id = 709754 OR collection_id = 775210 OR collection_id = 735729)) AS collection_nodes
+												LEFT JOIN osf_abstractprovider
+												ON osf_collectionsubmission.collection_id = osf_abstractprovider.primary_collection_id
+												WHERE osf_abstractprovider.type = 'osf.collectionprovider' AND osf_abstractprovider.name != 'Test') AS collection_nodes
 								 ON osf_abstractnode.id = collection_nodes.node_id
 
 								 /* only get information for downloads that happened last quarter [assuming you're running the script sometime in the 1st month of the new quarter] */

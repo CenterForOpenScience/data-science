@@ -1,3 +1,6 @@
+/* collection of small queries related to preprints */
+
+
 /*return subjects (disciplines) on each preprint*/
 SELECT osf_preprint.id preprint_id, osf_preprint.created, osf_preprint.modified, osf_preprint.is_published, osf_preprint.date_published, machine_state, original_publication_date, ever_public, spam_status, primary_file_id, creator_id, is_public, deleted, article_doi, subject_id, text, parent_id, bepress_subject_id, osf_abstractprovider._id
 	FROM osf_preprint

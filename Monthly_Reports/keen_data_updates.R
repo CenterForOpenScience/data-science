@@ -119,9 +119,28 @@ preprint_data <- fromJSON(prettify(preprint_output))$result %>%
                            keen.created_at = created_at, 
                            provider.name = name,
                            provider.total = total) %>%
-                    
+
                     #make sure column order correct
                     dplyr::select(keen.created_at, keen.timestamp, provider.name, provider.total)
+
+#remap provider name values to longform
+pp_shortnames = c("africarxiv", "agrixiv", "arabixiv", "biohackrxiv",
+                  "bodoarxiv", "eartharxiv", "ecoevorxiv", "ecsarxiv",
+                  "edarxiv", "engrxiv", "focusarchive", "frenxiv",
+                  "inarxiv", "indiarxiv", "lawarxiv", "lissa",
+                  "livedata", "marxiv", "mediarxiv", "metaarxiv",
+                  "mindrxiv", "nutrixiv", "osf", "paleorxiv",
+                  "psyarxiv", "socarxiv", "sportrxiv", "thesiscommons")
+pp_longnames = c("AfricArXiv", "AgriXiv", "Arabixiv", "BioHackrXiv",
+                 "BodoArXiv", "EarthArXiv", "EcoEvoRxiv", "ECSarXiv",
+                 "EdArXiv", "engrXiv", "FocUS Archive", "Frenxiv",
+                 "INA-Rxiv", "IndiaRxiv", "LawArXiv", "LIS Scholarship Archive",
+                 "Research AZ", "MarXiv", "MediArXiv", "MetaArXiv",
+                 "MindRxiv", "NutriXiv", "Open Science Framework", "PaleorXiv",
+                 "PsyArXiv", "SocArXiv", "SportRxiv", "Thesis Commons")
+preprint_data$provider.name <- plyr::mapvalues(preprint_data$provider.name,
+                                               from=pp_shortnames,
+                                               to=pp_longnames)
 
 ##existing sheet IDs
 nodes_gdrive_file <- 'https://docs.google.com/spreadsheets/d/1ti6iEgjvr-hXyMT5NwCNfAg-PJaczrMUX9sr6Cj6_kM/'

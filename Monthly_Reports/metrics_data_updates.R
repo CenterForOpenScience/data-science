@@ -27,10 +27,10 @@ clean_api_response <- function(api_output){
     #handle nested dataframes in created from json output
     map_if(., is.data.frame, list) %>%
     as_tibble() %>%
-    unnest() %>%
+    unnest(attributes) %>%
     
     #handle if keen accidently ran more than once in a night
-    arrange(created_at) %>%
+    arrange(report_date) %>%
     group_by(timestamp) %>%
     slice(1L) %>%
     ungroup()
@@ -112,23 +112,23 @@ download_data <- clean_api_response(download_output) %>%
                     dplyr::select(keen.timestamp, keen.created_at, files.total)
 
 # can't use function for preprint data b/c need to handling groupings differently
-preprint_data <- fromJSON(prettify(preprint_output))$result %>%
+preprint_data <- fromJSON(prettify(preprint_output))$data %>%
 
                     #handle nested dataframes in created from json output
                     map_if(., is.data.frame, list) %>%
                     as_tibble() %>%
-                    unnest() %>%
+                    unnest(attributes) %>%
                     
                     #handle if keen accidently ran more than once in a night
-                    arrange(created_at) %>%
-                    group_by(timestamp, name) %>%
+                    arrange(report_date) %>%
+                    group_by(timestamp, provider_key) %>%
                     slice(1L) %>%
                     ungroup() %>%
                     
                     #rename to match existing column names              
                     rename(keen.timestamp = timestamp, 
-                           keen.created_at = created_at, 
-                           provider.name = name,
+                           keen.created_at = report_date, 
+                           provider.name = provider_key,
                            provider.total = total) %>%
 
                     #make sure column order correct

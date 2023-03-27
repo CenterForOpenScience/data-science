@@ -5,10 +5,10 @@ library(jsonlite)
 library(googlesheets4)
 library(lubridate)
 
-# get keys/authorizations
-keen_projectid <- Sys.getenv("production_osfprivate_projectid") #must set this in your env file
-keen_read_key <- Sys.getenv("keen_read_key") #must set this in your env file
-gs4_auth(email = 'courtney@cos.io') #will need to change this out to someone elses email when this gets handed off
+# # get keys/authorizations
+# keen_projectid <- Sys.getenv("production_osfprivate_projectid") #must set this in your env file
+# keen_read_key <- Sys.getenv("keen_read_key") #must set this in your env file
+gs4_auth(email = 'theresa@cos.io') #will need to change this out to someone elses email when this gets handed off
 
 # function to create keen calls
 metrics_extraction_call <- function(event_collection, days_back){
@@ -40,25 +40,27 @@ clean_api_response <- function(api_output){
 
 
 ### Make and store api calls
-nodesummary_output <- keen_extraction_call('node_summary',
+nodesummary_output <- metrics_extraction_call('node_summary',
                                            31,
-                                           variable_list = c('keen.created_at', 'keen.timestamp',
-                                                             'projects.public', 'registered_projects.total',
+                                           variable_list = c('keen.created_at',
+                                                             'keen.timestamp',
+                                                             'projects.public',
+                                                             'registered_projects.total',
                                                              'registered_projects.withdrawn',
                                                              'registered_projects.embargoed_v2'))
-filesummary_output <- keen_extraction_call('osfstorage_file_count',
+filesummary_output <- metrics_extraction_call('osfstorage_file_count',
                                            31,
                                            variable_list = c('keen.created_at', 'keen.timestamp',
                                                              'osfstorage_files_including_quickfiles.public',
                                                              'osfstorage_files_including_quickfiles.total'))
-usersummary_output <- keen_extraction_call('user_summary',
+usersummary_output <- metrics_extraction_call('user_summary',
                                            31,
                                            variable_list = c('keen.created_at', 'keen.timestamp',
                                                              'status.active'))
-download_output <- keen_extraction_call('download_count',
+download_output <- metrics_extraction_call('download_count',
                                         31,
                                         variable_list = c('keen.created_at', 'keen.timestamp', 'files.total'))
-preprint_output <- keen_extraction_call('preprint_summary',
+preprint_output <- metrics_extraction_call('preprint_summary',
                                         31,
                                         variable_list = c('keen.created_at', 'keen.timestamp',
                                                           'provider.name', 'provider.total'))
@@ -67,25 +69,27 @@ preprint_output <- keen_extraction_call('preprint_summary',
 
 node_data <- clean_api_response(nodesummary_output) %>%
 
-    # rename to match existing column names
+  # unnest variables
+  unnest(c(nodes, registered_projects, projects),
+         names_sep = ".") %>%
+  
+  # rename to match existing column names
     rename(keen.timestamp = report_date,
-           keen.created_at = timestamp,
-           registered_projects.total = total,
-           registered_projects.withdrawn = withdrawn,
-           registered_projects.embargoed_v2 = embargoed_v2,
-           projects.public = public) %>%
+           keen.created_at = timestamp) %>%
 
     # make sure column order correct
     dplyr::select(keen.created_at, keen.timestamp, projects.public, registered_projects.total,
                   registered_projects.withdrawn, registered_projects.embargoed_v2)
 
 file_data <- clean_api_response(filesummary_output) %>%
-
+  
+  unnest(c(files), names_sep = ".") %>%
+  
                 #rename to match existing column names              
                 rename(keen.timestamp = timestamp, 
-                       keen.created_at = created_at, 
-                       osfstorage_files_including_quickfiles.total = total, 
-                       osfstorage_files_including_quickfiles.public = public) %>%             
+                       keen.created_at = report_date, 
+                       osfstorage_files_including_quickfiles.total = files.total, 
+                       osfstorage_files_including_quickfiles.public = files.public) %>%             
                
                 #make sure column order correct
                 dplyr::select(keen.timestamp, keen.created_at, osfstorage_files_including_quickfiles.public, osfstorage_files_including_quickfiles.total)
@@ -94,7 +98,7 @@ user_data <- clean_api_response(usersummary_output) %>%
   
                       #rename to match existing column names              
                       rename(keen.timestamp = timestamp, 
-                             keen.created_at = created_at, 
+                             keen.created_at = report_date, 
                              status.active = active) %>%
                       
                       #make sure column order correct
@@ -105,8 +109,8 @@ download_data <- clean_api_response(download_output) %>%
                     
                     #rename to match existing column names              
                     rename(keen.timestamp = timestamp, 
-                           keen.created_at = created_at, 
-                           files.total = total) %>%
+                           keen.created_at = report_date, 
+                           files.total = daily_file_downloads) %>%
                     
                     #make sure column order correct
                     dplyr::select(keen.timestamp, keen.created_at, files.total)
@@ -129,7 +133,7 @@ preprint_data <- fromJSON(prettify(preprint_output))$data %>%
                     rename(keen.timestamp = timestamp, 
                            keen.created_at = report_date, 
                            provider.name = provider_key,
-                           provider.total = total) %>%
+                           provider.total = preprint_count) %>%
 
                     #make sure column order correct
                     dplyr::select(keen.created_at, keen.timestamp, provider.name, provider.total)

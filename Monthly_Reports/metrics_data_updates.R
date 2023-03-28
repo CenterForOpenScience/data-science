@@ -5,17 +5,17 @@ library(jsonlite)
 library(googlesheets4)
 library(lubridate)
 
-# # get keys/authorizations
-# keen_projectid <- Sys.getenv("production_osfprivate_projectid") #must set this in your env file
-# keen_read_key <- Sys.getenv("keen_read_key") #must set this in your env file
 gs4_auth(email = 'theresa@cos.io') #will need to change this out to someone elses email when this gets handed off
 
-# function to create keen calls
-metrics_extraction_call <- function(event_collection, days_back){
+# function to create osf calls
+metrics_extraction_call <- function(event_collection){
   output <- GET(paste0('https://api.osf.io/_/metrics/reports/',
                        event_collection,
-                       '/recent/&days_back=',
-                       days_back))
+                       '/recent/?start_date=',
+                       floor_date(Sys.Date(), "month") - months(1),
+                       '&end_date=',
+                       floor_date(Sys.Date(), 'month') - days(1)
+                       ))
   return(output)
 }
 
@@ -40,30 +40,11 @@ clean_api_response <- function(api_output){
 
 
 ### Make and store api calls
-nodesummary_output <- metrics_extraction_call('node_summary',
-                                           31,
-                                           variable_list = c('keen.created_at',
-                                                             'keen.timestamp',
-                                                             'projects.public',
-                                                             'registered_projects.total',
-                                                             'registered_projects.withdrawn',
-                                                             'registered_projects.embargoed_v2'))
-filesummary_output <- metrics_extraction_call('osfstorage_file_count',
-                                           31,
-                                           variable_list = c('keen.created_at', 'keen.timestamp',
-                                                             'osfstorage_files_including_quickfiles.public',
-                                                             'osfstorage_files_including_quickfiles.total'))
-usersummary_output <- metrics_extraction_call('user_summary',
-                                           31,
-                                           variable_list = c('keen.created_at', 'keen.timestamp',
-                                                             'status.active'))
-download_output <- metrics_extraction_call('download_count',
-                                        31,
-                                        variable_list = c('keen.created_at', 'keen.timestamp', 'files.total'))
-preprint_output <- metrics_extraction_call('preprint_summary',
-                                        31,
-                                        variable_list = c('keen.created_at', 'keen.timestamp',
-                                                          'provider.name', 'provider.total'))
+nodesummary_output <- metrics_extraction_call('node_summary')
+filesummary_output <- metrics_extraction_call('osfstorage_file_count')
+usersummary_output <- metrics_extraction_call('user_summary')
+download_output <- metrics_extraction_call('download_count')
+preprint_output <- metrics_extraction_call('preprint_summary')
 
 ### clean API results and make sure new df names and order match existing gsheets
 

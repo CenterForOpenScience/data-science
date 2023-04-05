@@ -13,7 +13,7 @@ metrics_extraction_call <- function(event_collection) {
     "https://api.osf.io/_/metrics/reports/",
     event_collection,
     "/recent/?start_date=",
-    floor_date(Sys.Date(), "month") - months(1),
+    floor_date(Sys.Date(), "month") - months(1) - days(1),
     "&end_date=",
     floor_date(Sys.Date(), "month") - days(1)
   ))
@@ -31,7 +31,10 @@ clean_api_response <- function(api_output) {
     arrange(report_date) %>%
     group_by(timestamp) %>%
     slice(1L) %>%
-    ungroup()
+    ungroup() %>%
+    # make report_date a datetime
+    mutate(report_date = paste0(report_date, "T00:00:00.000Z"))
+
   return(cleaned_result)
 }
 
@@ -66,8 +69,8 @@ file_data <- clean_api_response(filesummary_output) %>%
   unnest(c(files), names_sep = ".") %>%
   # rename to match existing column names
   rename(
-    keen.timestamp = timestamp,
-    keen.created_at = report_date,
+    keen.timestamp = report_date,
+    keen.created_at = timestamp,
     osfstorage_files_including_quickfiles.total = files.total,
     osfstorage_files_including_quickfiles.public = files.public
   ) %>%
@@ -77,8 +80,8 @@ file_data <- clean_api_response(filesummary_output) %>%
 user_data <- clean_api_response(usersummary_output) %>%
   # rename to match existing column names
   rename(
-    keen.timestamp = timestamp,
-    keen.created_at = report_date,
+    keen.timestamp = report_date,
+    keen.created_at = timestamp,
     status.active = active
   ) %>%
   # make sure column order correct
@@ -87,8 +90,8 @@ user_data <- clean_api_response(usersummary_output) %>%
 download_data <- clean_api_response(download_output) %>%
   # rename to match existing column names
   rename(
-    keen.timestamp = timestamp,
-    keen.created_at = report_date,
+    keen.timestamp = report_date,
+    keen.created_at = timestamp,
     files.total = daily_file_downloads
   ) %>%
   # make sure column order correct
@@ -107,8 +110,8 @@ preprint_data <- fromJSON(prettify(preprint_output))$data %>%
   ungroup() %>%
   # rename to match existing column names
   rename(
-    keen.timestamp = timestamp,
-    keen.created_at = report_date,
+    keen.timestamp = report_date,
+    keen.created_at = timestamp,
     provider.name = provider_key,
     provider.total = preprint_count
   ) %>%

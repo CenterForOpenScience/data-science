@@ -13,7 +13,7 @@ metrics_extraction_call <- function(event_collection) {
     "https://api.osf.io/_/metrics/reports/",
     event_collection,
     "/recent/?start_date=",
-    floor_date(Sys.Date(), "month") - months(1) - days(1),
+    floor_date(Sys.Date(), "month") - months(1),
     "&end_date=",
     floor_date(Sys.Date(), "month") - days(1)
   ))
@@ -108,6 +108,7 @@ preprint_data <- fromJSON(prettify(preprint_output))$data %>%
   group_by(timestamp, provider_key) %>%
   slice(1L) %>%
   ungroup() %>%
+  mutate(report_date = paste0(report_date, "T00:00:00.000Z")) %>%
   # rename to match existing column names
   rename(
     keen.timestamp = report_date,
@@ -117,6 +118,7 @@ preprint_data <- fromJSON(prettify(preprint_output))$data %>%
   ) %>%
   # make sure column order correct
   dplyr::select(keen.created_at, keen.timestamp, provider.name, provider.total)
+
 
 # remap provider name values to longform
 pp_shortnames <- c(

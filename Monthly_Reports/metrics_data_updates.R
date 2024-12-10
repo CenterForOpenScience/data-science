@@ -5,7 +5,7 @@ library(jsonlite)
 library(googlesheets4)
 library(lubridate)
 
-gs4_auth(email = "theresa@cos.io") # will need to change this out to someone elses email when this gets handed off
+gs4_auth(email = "krystal@cos.io", cache = FALSE) # update with user's email address
 
 # function to create osf calls
 metrics_extraction_call <- function(event_collection) {
@@ -27,7 +27,7 @@ clean_api_response <- function(api_output) {
     map_if(., is.data.frame, list) %>%
     as_tibble() %>%
     unnest(attributes) %>%
-    # handle if keen accidently ran more than once in a night
+    # handle if keen accidentally ran more than once in a night
     arrange(report_date) %>%
     group_by(timestamp) %>%
     slice(1L) %>%
@@ -38,16 +38,14 @@ clean_api_response <- function(api_output) {
   return(cleaned_result)
 }
 
-
-
-### Make and store api calls
+### Make and store api calls ----
 nodesummary_output <- metrics_extraction_call("node_summary")
 filesummary_output <- metrics_extraction_call("osfstorage_file_count")
 usersummary_output <- metrics_extraction_call("user_summary")
 download_output <- metrics_extraction_call("download_count")
 preprint_output <- metrics_extraction_call("preprint_summary")
 
-### clean API results and make sure new df names and order match existing gsheets
+### clean API results and make sure new df names and order match existing gsheets ----
 
 node_data <- clean_api_response(nodesummary_output) %>%
   # unnest variables
@@ -103,7 +101,7 @@ preprint_data <- fromJSON(prettify(preprint_output))$data %>%
   map_if(., is.data.frame, list) %>%
   as_tibble() %>%
   unnest(attributes) %>%
-  # handle if keen accidently ran more than once in a night
+  # handle if keen accidentally ran more than once in a night
   arrange(report_date) %>%
   group_by(timestamp, provider_key) %>%
   slice(1L) %>%
@@ -118,7 +116,6 @@ preprint_data <- fromJSON(prettify(preprint_output))$data %>%
   ) %>%
   # make sure column order correct
   dplyr::select(keen.created_at, keen.timestamp, provider.name, provider.total)
-
 
 # remap provider name values to longform
 pp_shortnames <- c(
@@ -165,7 +162,7 @@ sheet_append(user_data, ss = user_gdrive_file)
 sheet_append(download_data, ss = download_gdrive_file)
 sheet_append(preprint_data, ss = preprint_gdrive_file)
 
-## calculating monthly numbers
+## calculating monthly numbers ----
 
 # calculate start and end of needed range
 end_2_month <- floor_date(now("utc"), "month") - months(1) - days(1)
@@ -191,13 +188,13 @@ preprints_startend <- startend_dates(preprint_gdrive_file) %>%
   group_by(keen.timestamp) %>%
   summarize(total_pps = sum(provider.total))
 
+#### calculate monthly downloads ----
 # downloads are a sum rather than a difference
 read_sheet(download_gdrive_file, col_types = "??i") %>%
   filter(keen.timestamp >= floor_date(now("utc"), "month") - months(1) & keen.timestamp < floor_date(now("utc"), "month")) %>%
   summarize(total = sum(files.total))
 
-
-# calculate monthly values
+#### calculate monthly values ----
 nodes_startend[2, "projects.public"] - nodes_startend[1, "projects.public"]
 nodes_startend[2, "registered_projects.total"] - nodes_startend[1, "registered_projects.total"]
 

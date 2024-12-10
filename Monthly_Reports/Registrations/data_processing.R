@@ -9,9 +9,9 @@ library(here)
 library(rmarkdown)
 
 # authenticate email
-gs4_auth(email = 'courtney@cos.io') #will need to change this out to someone elses email when this gets handed off
+gs4_auth(email = 'krystal@cos.io', cache = FALSE) # update with user's email address
 
-# download monthly aggregates file to be appended
+# download monthly aggregates file to be appended ----
 osf_retrieve_file("https://osf.io/z3dg2/") %>% 
   osf_download(path = here::here('Registrations/'), conflicts = "overwrite")
 
@@ -31,7 +31,6 @@ read_sheet('https://docs.google.com/spreadsheets/d/1ti6iEgjvr-hXyMT5NwCNfAg-PJac
            monthly_diff_embargo = registered_projects.embargoed_v2 - lag(registered_projects.embargoed_v2)) %>%
     write_csv(path = here::here('Registrations/monthly_total_regs.csv'))
                     
-
 # get yyyy-mm of previous month
 last_month <- floor_date(Sys.Date() - months(1), "month") %>%
                   str_sub(1, 7)
@@ -39,15 +38,13 @@ last_month <- floor_date(Sys.Date() - months(1), "month") %>%
 # create file name to look for in osf project
 file_name <- paste0('form_types_', last_month, '.csv')
 
-# download that particular file to the directory 
+# download that previous month file to the directory ----
 osf_retrieve_node('https://osf.io/r83uz/') %>% 
   osf_ls_files() %>% 
   filter(name == 'Registries') %>% 
   osf_ls_files(n_max = 100) %>% 
   filter(name == file_name) %>%
   osf_download(path = here::here('Registrations/'))
-
-
 
 last_month_data <- read_csv(paste0(here::here('Registrations/'), file_name)) %>%
                       mutate(year = year(event_date), 
@@ -69,8 +66,7 @@ osf_retrieve_node('https://osf.io/r83uz/') %>%
   filter(name == 'Registries') %>%
   osf_upload(path = here::here('Registrations/form_type_monthly.csv'), conflicts = "overwrite")
 
-
-# run the flexdashboard
+# run the flexdashboard ----
 rmarkdown::render(paste0(here::here('Registrations/'), 'registrations_dashboard.Rmd'))
 
 # upload resulting dashboard to osf project

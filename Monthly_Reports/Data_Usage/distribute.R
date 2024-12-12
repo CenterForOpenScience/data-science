@@ -44,7 +44,7 @@ nondel_nodedata <- list.files(path = paste0(here::here('Data_Usage/'), str_sub(m
   mutate(target_guid = str_sub(target_guid, 3, 7)) %>%
   mutate(target_root = str_sub(target_root, 3, 7))
 
-write_csv(nondel_nodedata, path = paste0(here::here('Data_Usage/'),'nondel_nodedata.csv'))
+write_csv(nondel_nodedata, file = paste0(here::here('Data_Usage/'),'nondel_nodedata.csv'))
 
 # run the flexdashboard ----
 rmarkdown::render(paste0(here::here('Data_Usage/'), 'monthly_usage_report.Rmd'), 'html_document')

@@ -17,6 +17,9 @@ osf_retrieve_file("https://osf.io/z3dg2/") %>%
 
 monthly_data <- read_csv(paste0(here::here('Registrations/'), 'form_type_monthly.csv'))
 
+# # remove error message columns that would otherwise be preserved in each form_type_monthly.csv file
+# monthly_data <- monthly_data[, -(1:3)]
+
 # create monthly numbers for total registrations based on keen daily data
 read_sheet('https://docs.google.com/spreadsheets/d/1ti6iEgjvr-hXyMT5NwCNfAg-PJaczrMUX9sr6Cj6_kM/', 
            col_types = '??iiii') %>%

@@ -1,0 +1,289 @@
+---
+title: "User Generation By Product"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: column
+    theme: bootstrap
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(gt)
+library(here)
+library(highcharter)
+library(dichromat)
+library(DT)
+library(kableExtra)
+library(knitr)
+library(lubridate)
+
+user_generation_data <- read_csv(here::here('user_generation/full_hist_cat_date.csv')) %>%
+                            mutate(month = as.Date(month))
+
+cols <- c('#34495D', '#3277A2', '#14A4EB', '#A8C8DD')
+```
+
+
+Monthly Increases
+===================================== 
+
+Column {data-width=200}
+-----------------------------------------------------------------------
+
+### Users Definitions
+
+* ***New sign-ups***: Counts users who clicked the 'sign-up' button on specific pages
+
+* ***New invites***: Counts the number of unregistered contributors who were added to a new product.
+
+* ***New claims***: Counts unregistered contributors who claimed their account & which product they claimed it from.
+
+### Product Definitions
+
+* ***Registries***: Includes OSFRegistries and Pre-reg and ERP campaign pages
+
+* ***Preprints***: Includes OSFPreprints and all branded preprint pages.
+
+* ***OSF4M***: Anyone who created an account by emailing in an osf4m talk/poster.
+
+* ***OSF***: Everyone else [OSF pages, collections, instituional pages, & SSO]
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Last Quarter's New Users {data-height=500}
+
+```{r}
+quarterly_numbers <- user_generation_data %>%
+                        arrange(desc(month)) %>%
+                        group_by(product_type) %>%
+                        slice_head(n = 3) %>%
+                        summarize(new_signups = sum(new_signups), new_invitees = sum(new_invitees), new_claims = sum(new_claims))
+
+# commented this section out b/c of current bug that seems to mostly be affecting tags on SSO users, so the SSO portion of the table is really undercounting. Put back onece bug is fixed
+
+#sso_percentages <- user_generation_data %>%
+#                        arrange(desc(month)) %>%
+#                        group_by(product_type) %>%
+#                        slice_head(n = 3) %>%
+#                        summarise(across(where(is.numeric), sum)) %>%
+#                        ungroup() %>%
+#                        mutate(newsignups_ssoprc = paste0(round(100 *sso_newsignups/new_signups,2), '%'),
+#                               newsources_ssoprc = 'NA',
+#                               new_claims_ssoprc = paste0(round(100 *sso_newclaims/new_claims,2), '%')) %>%
+#                        select(product_type, ends_with('ssoprc')) %>%
+#                        rename(new_signups = newsignups_ssoprc,
+#                               new_invitees = newsources_ssoprc,
+#                               new_claims = new_claims_ssoprc)
+
+# rbind(quarterly_numbers, sso_percentages) %>%
+#    rename(` ` = 'product_type',
+#           `New Signed-Ups` = 'new_signups',
+#           `New Invites` = 'new_invitees',
+#           `New claims` = 'new_claims') %>%
+#    kable(align = 'c') %>%
+#    kable_styling('striped', full_width = F) %>%
+#    pack_rows('Raw Counts', 1, 4) %>%
+#    pack_rows('SSO perc', 5, 8)
+
+# stand in table for while bug is being worked on. When bug is fixed, uncomment above table and remove this one
+quarterly_numbers %>%
+    rename(` ` = 'product_type',
+           `New Signed-Ups` = 'new_signups',
+           `New Invites` = 'new_invitees',
+           `New claims` = 'new_claims') %>%
+    kable(align = 'c') %>%
+    kable_styling('striped', full_width = F) %>%
+    pack_rows('Raw Counts', 1, 4)
+```
+
+### New unregistered contributor invitations {data-height=500}
+
+```{r}
+user_generation_data %>%
+  filter(month >= '2020-05-01' & new_invitees != 0) %>%
+  hchart(., type = 'line',
+         hcaes(x = month,
+               y = new_invitees,
+               group = product_type)) %>%
+  hc_tooltip(table = TRUE, sort = TRUE) %>%
+  hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
+  hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
+  hc_yAxis(title = list(text = "Number of Users")) %>%
+  hc_colors(cols) %>%
+  hc_exporting(
+    enabled = TRUE, filename="newuser_generation", 
+              formAttributes=list(target="_blank"),
+               buttons=list(contextButton=list(
+               text="Export", theme=list(fill="transparent"))))
+```
+
+
+
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+### New direct user sign-ups {data-height=500}
+
+```{r}
+user_generation_data %>%
+  filter(month >= '2020-05-01') %>% # restrict graph to time when new tag logic was added, even though we have some of this information historically
+  hchart(., type = 'line',
+         hcaes(x = month,
+               y = new_signups,
+               group = product_type)) %>%
+  hc_tooltip(table = TRUE, sort = TRUE) %>%
+  hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
+  hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
+  hc_yAxis(title = list(text = "Number of Users")) %>%
+  hc_colors(cols) %>%
+  hc_exporting(
+    enabled = TRUE, filename="newuser_generation", 
+              formAttributes=list(target="_blank"),
+               buttons=list(contextButton=list(
+               text="Export", theme=list(fill="transparent"))))
+```
+
+### New unregistered accounts claimed {data-height=500}
+
+```{r}
+user_generation_data %>%
+  filter(month >= '2020-05-01') %>%
+  hchart(., type = 'line',
+         hcaes(x = month,
+               y = new_claims,
+               group = product_type)) %>%
+  hc_tooltip(table = TRUE, sort = TRUE) %>%
+  hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
+  hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
+  hc_yAxis(title = list(text = "Number of Users")) %>%
+  hc_colors(cols) %>%
+  hc_exporting(
+    enabled = TRUE, filename="newuser_generation", 
+              formAttributes=list(target="_blank"),
+               buttons=list(contextButton=list(
+               text="Export", theme=list(fill="transparent"))))
+```
+
+
+Percentage Monthly Increase
+===================================== 
+
+Column {data-width=200}
+-----------------------------------------------------------------------
+
+### Users Definitions
+
+* ***New sign-ups***: Counts users who clicked the 'sign-up' button on specific pages
+
+* ***New invites***: Counts the number of unregistered contributors who were added to a new product.
+
+* ***New claims***: Counts unregistered contributors who claimed their account & which product they claimed it from.
+
+### Product Definitions
+
+* ***Registries***: Includes OSFRegistries and Pre-reg and ERP campaign pages
+
+* ***Preprints***: Includes OSFPreprints and all branded preprint pages.
+
+* ***OSF4M***: Anyone who created an account by emailing in an osf4m talk/poster.
+
+* ***OSF***: Everyone else [OSF pages, collections, instituional pages, & SSO]
+
+
+Column {data-width = 500}
+-----------------------------------------------------------------------
+
+### Percentage Quarterly User Generation {data-height=500}
+
+```{r}
+perc_numbers <- quarterly_numbers %>% 
+                  mutate(across(where(is.numeric), ~paste0(round(100 *./sum(.),2),'%')))
+
+perc_numbers %>%
+    rename(` ` = 'product_type',
+           `New Signed-Ups` = 'new_signups',
+           `New Invites` = 'new_invitees',
+           `New Claims` = 'new_claims') %>%
+    kable(align = 'c') %>%
+    kable_styling('striped', full_width = F)
+```
+
+
+### Percentage unregistered contributor invitations {data-height=500}
+
+```{r}
+user_generation_data %>%
+  filter(month >= '2020-05-01' & new_invitees != 0) %>%
+  group_by(month) %>% 
+  mutate(perc_invitees = round(100 * new_invitees/sum(new_invitees),2)) %>%
+  ungroup() %>%
+  hchart(., type = 'line',
+         hcaes(x = month,
+               y = perc_invitees,
+               group = product_type)) %>%
+  hc_tooltip(table = TRUE, sort = TRUE) %>%
+  hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
+  hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
+  hc_yAxis(title = list(text = "Percentage of Users")) %>%
+  hc_colors(cols) %>%
+  hc_exporting(
+    enabled = TRUE, filename="newuser_generation", 
+              formAttributes=list(target="_blank"),
+               buttons=list(contextButton=list(
+               text="Export", theme=list(fill="transparent"))))  
+```
+
+
+Column {data-width = 500}
+-----------------------------------------------------------------------
+
+### Percentage direct user sign-ups {data-height=500}
+
+```{r}
+user_generation_data %>%
+  filter(month >= '2020-05-01') %>%  # restrict graph to time when new tag logic was added, even though we have some of this information historically
+  group_by(month) %>% 
+  mutate(perc_signups = round(100 * new_signups/sum(new_signups),2)) %>%
+  ungroup() %>%
+  hchart(., type = 'line',
+         hcaes(x = month,
+               y = perc_signups,
+               group = product_type)) %>%
+  hc_tooltip(table = TRUE, sort = TRUE) %>%
+  hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
+  hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
+  hc_yAxis(title = list(text = "Percentage of Users")) %>%
+  hc_colors(cols) %>%
+  hc_exporting(
+    enabled = TRUE, filename="newuser_generation", 
+              formAttributes=list(target="_blank"),
+               buttons=list(contextButton=list(
+               text="Export", theme=list(fill="transparent"))))
+```
+
+### Percentage unregistered accounts claimed {data-height=500}
+
+```{r}
+user_generation_data %>%
+  filter(month >= '2020-05-01') %>%
+  group_by(month) %>% 
+  mutate(perc_claims = round(100 * new_claims/sum(new_claims),2)) %>%
+  ungroup() %>%
+  hchart(., type = 'line',
+         hcaes(x = month,
+               y = perc_claims,
+               group = product_type)) %>%
+  hc_tooltip(table = TRUE, sort = TRUE) %>%
+  hc_plotOptions(series = list(marker = list(enabled = FALSE))) %>%
+  hc_xAxis(title = list(text = ""), tickInterval = 86400000 * 30) %>% #tick interval for date in milliseconds
+  hc_yAxis(title = list(text = "Percentage of Users")) %>%
+  hc_colors(cols) %>%
+  hc_exporting(
+    enabled = TRUE, filename="newuser_generation", 
+              formAttributes=list(target="_blank"),
+               buttons=list(contextButton=list(
+               text="Export", theme=list(fill="transparent"))))
+```
+

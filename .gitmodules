@@ -10,3 +10,6 @@
 [submodule "cosmetrics"]
 	path = cosmetrics
 	url = git@github.com:alexjakubow/cosmetrics.git
+[submodule "stagehand"]
+	path = stagehand
+	url = git@github.com:alexjakubow/stagehand.git

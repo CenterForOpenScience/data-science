@@ -13,3 +13,6 @@
 [submodule "stagehand"]
 	path = stagehand
 	url = git@github.com:alexjakubow/stagehand.git
+[submodule "kpi-forecast"]
+	path = kpi-forecast
+	url = git@github.com:alexjakubow/kpi-forecast.git

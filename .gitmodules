@@ -19,3 +19,6 @@
 [submodule "mother"]
 	path = mother
 	url = git@github.com:alexjakubow/mother.git
+[submodule "data-requests"]
+	path = data-requests
+	url = git@github.com:cos-data-science/data-requests.git

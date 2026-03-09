@@ -4,3 +4,6 @@
 [submodule "cosr"]
 	path = cosr
 	url = git@github.com:alexjakubow/cosr.git
+[submodule "truenorth"]
+	path = truenorth
+	url = git@github.com:alexjakubow/truenorth.git

@@ -16,3 +16,6 @@
 [submodule "kpi-forecast"]
 	path = kpi-forecast
 	url = git@github.com:alexjakubow/kpi-forecast.git
+[submodule "mother"]
+	path = mother
+	url = git@github.com:alexjakubow/mother.git

@@ -7,3 +7,6 @@
 [submodule "truenorth"]
 	path = truenorth
 	url = git@github.com:alexjakubow/truenorth.git
+[submodule "cosmetrics"]
+	path = cosmetrics
+	url = git@github.com:alexjakubow/cosmetrics.git

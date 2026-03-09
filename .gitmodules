@@ -1,3 +1,6 @@
 [submodule "vor"]
 	path = vor
 	url = git@github.com:alexjakubow/vor.git
+[submodule "cosr"]
+	path = cosr
+	url = git@github.com:alexjakubow/cosr.git

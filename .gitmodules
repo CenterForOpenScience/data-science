@@ -22,3 +22,6 @@
 [submodule "data-requests"]
 	path = data-requests
 	url = git@github.com:cos-data-science/data-requests.git
+[submodule "ducktape"]
+	path = ducktape
+	url = git@github.com:alexjakubow/ducktape.git
